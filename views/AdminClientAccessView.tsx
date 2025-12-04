@@ -26,6 +26,7 @@ interface AdminClientAccessViewProps {
   clients: ClientData[];
   lang: Language;
   onAddClient: (client: ClientData) => void;
+  onUpdateCredentials: (email: string, pass: string) => void;
 }
 
 interface CredentialModalState {
@@ -35,7 +36,7 @@ interface CredentialModalState {
   step: 'create' | 'success';
 }
 
-export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ clients, lang, onAddClient }) => {
+export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ clients, lang, onAddClient, onUpdateCredentials }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [modal, setModal] = useState<CredentialModalState>({
@@ -102,6 +103,9 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
   };
 
   const handleCreateAccess = () => {
+    if (modal.client) {
+        onUpdateCredentials(modal.client.email, modal.generatedPass);
+    }
     // Simulate API call
     setTimeout(() => {
       setModal(prev => ({ ...prev, step: 'success' }));

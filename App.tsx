@@ -327,8 +327,8 @@ const INITIAL_EMPLOYEES: Employee[] = [
   }
 ];
 
-// HARDCODED CREDENTIALS MAP FOR DEMO
-const AUTH_DB: Record<string, string> = {
+// INITIAL CREDENTIALS MAP FOR DEMO
+const INITIAL_AUTH_DB: Record<string, string> = {
   'contact@mpldigital.com': 'mpl2024',
   'contact@thebrain.ma': 'brain2024',
   'info@gonex.ma': 'gonex2024',
@@ -346,6 +346,7 @@ const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [clients, setClients] = useState<ClientData[]>(INITIAL_CLIENTS);
   const [employees, setEmployees] = useState<Employee[]>(INITIAL_EMPLOYEES);
+  const [authCredentials, setAuthCredentials] = useState<Record<string, string>>(INITIAL_AUTH_DB);
   
   // Navigation State
   const [currentView, setCurrentView] = useState<string>('dashboard');
@@ -364,7 +365,7 @@ const App: React.FC = () => {
     // Simulate network delay
     await new Promise(resolve => setTimeout(resolve, 800));
 
-    const storedPass = AUTH_DB[email.toLowerCase()];
+    const storedPass = authCredentials[email.toLowerCase()];
     if (!storedPass || storedPass !== pass) {
       return false;
     }
@@ -404,6 +405,10 @@ const App: React.FC = () => {
 
   const handleAddClient = (newClient: ClientData) => {
     setClients(prev => [newClient, ...prev]);
+  };
+
+  const handleUpdateCredentials = (email: string, pass: string) => {
+    setAuthCredentials(prev => ({ ...prev, [email.toLowerCase()]: pass }));
   };
 
   const updateClient = (clientId: string, updates: Partial<ClientData>) => {
@@ -575,7 +580,14 @@ const App: React.FC = () => {
         return <AdminTutorialsView lang={language} />;
       }
       if (currentView === 'client-access') {
-        return <AdminClientAccessView clients={clients} lang={language} onAddClient={handleAddClient} />;
+        return (
+            <AdminClientAccessView 
+                clients={clients} 
+                lang={language} 
+                onAddClient={handleAddClient}
+                onUpdateCredentials={handleUpdateCredentials}
+            />
+        );
       }
       return <AdminDashboard clients={clients} onUpdateClient={updateClient} user={user} lang={language} />;
     } else {

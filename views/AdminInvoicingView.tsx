@@ -134,7 +134,6 @@ export const AdminInvoicingView: React.FC<AdminInvoicingViewProps> = ({ clients,
       // Initialize Gemini
       // @ts-ignore
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const model = ai.models.getGenerativeModel({ model: 'gemini-2.5-flash' });
       
       const prompt = `Write a professional, concise, single-sentence invoice line-item description for a client receiving '${client.serviceType}' services in the '${client.companyCategory}' industry. Do not include price.`;
       
