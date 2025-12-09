@@ -1,6 +1,5 @@
 
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { WhatsAppFab } from './components/WhatsAppFab';
 import { Login } from './views/Login';
@@ -345,10 +344,36 @@ const ADMIN_USER: User = {
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
-  const [clients, setClients] = useState<ClientData[]>(INITIAL_CLIENTS);
-  const [employees, setEmployees] = useState<Employee[]>(INITIAL_EMPLOYEES);
-  const [authCredentials, setAuthCredentials] = useState<Record<string, string>>(INITIAL_AUTH_DB);
   
+  // Initialize state from localStorage or fallback to initial constants
+  const [clients, setClients] = useState<ClientData[]>(() => {
+    const saved = localStorage.getItem('crm_clients');
+    return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
+  });
+  
+  const [employees, setEmployees] = useState<Employee[]>(() => {
+    const saved = localStorage.getItem('crm_employees');
+    return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
+  });
+
+  const [authCredentials, setAuthCredentials] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem('crm_auth');
+    return saved ? JSON.parse(saved) : INITIAL_AUTH_DB;
+  });
+  
+  // Persist state changes
+  useEffect(() => {
+    localStorage.setItem('crm_clients', JSON.stringify(clients));
+  }, [clients]);
+
+  useEffect(() => {
+    localStorage.setItem('crm_employees', JSON.stringify(employees));
+  }, [employees]);
+
+  useEffect(() => {
+    localStorage.setItem('crm_auth', JSON.stringify(authCredentials));
+  }, [authCredentials]);
+
   // Navigation State
   const [currentView, setCurrentView] = useState<string>('dashboard');
   const [selectedClientIdForFollowUp, setSelectedClientIdForFollowUp] = useState<string | null>(null);
