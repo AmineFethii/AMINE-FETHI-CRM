@@ -209,7 +209,7 @@ export const AdminInvoicingView: React.FC<AdminInvoicingViewProps> = ({ clients,
               placeholder={t.searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+              className={`w-full py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm placeholder:text-slate-400 ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
             />
           </div>
         </div>
@@ -337,7 +337,7 @@ export const AdminInvoicingView: React.FC<AdminInvoicingViewProps> = ({ clients,
                       onChange={(e) => setNewInvoice({ ...newInvoice, description: e.target.value })}
                       rows={3}
                       placeholder="e.g. Consultation Services for Q3..."
-                      className={`w-full p-4 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none ${isGeneratingAI ? 'border-purple-300 bg-purple-50' : 'border-slate-200'}`}
+                      className={`w-full p-4 bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none placeholder:text-slate-400 ${isGeneratingAI ? 'border-purple-300 bg-purple-50' : 'border-slate-200'}`}
                     />
                     {isGeneratingAI && (
                       <div className="absolute inset-0 flex items-center justify-center bg-white/50 backdrop-blur-[1px] rounded-xl">
@@ -354,7 +354,7 @@ export const AdminInvoicingView: React.FC<AdminInvoicingViewProps> = ({ clients,
                       type="number" 
                       value={newInvoice.amount}
                       onChange={(e) => setNewInvoice({ ...newInvoice, amount: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono placeholder:text-slate-400"
                       placeholder="0.00"
                     />
                   </div>

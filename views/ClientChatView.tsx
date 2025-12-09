@@ -134,7 +134,7 @@ export const ClientChatView: React.FC<ClientChatViewProps> = ({ lang }) => {
              <input 
                type="text" 
                placeholder={t.searchPlaceholder}
-               className={`w-full py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'pr-9 pl-4' : 'pl-9 pr-4'}`}
+               className={`w-full py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 ${isRTL ? 'pr-9 pl-4' : 'pl-9 pr-4'}`}
              />
            </div>
         </div>
@@ -242,7 +242,7 @@ export const ClientChatView: React.FC<ClientChatViewProps> = ({ lang }) => {
                  value={messageInput}
                  onChange={(e) => setMessageInput(e.target.value)}
                  placeholder={t.typeMessage}
-                 className={`w-full py-3 bg-slate-100 border-none rounded-full focus:outline-none focus:ring-2 focus:ring-blue-100 px-5 ${isRTL ? 'text-right' : 'text-left'}`}
+                 className={`w-full py-3 bg-slate-100 border-none rounded-full focus:outline-none focus:ring-2 focus:ring-blue-100 px-5 placeholder:text-slate-400 ${isRTL ? 'text-right' : 'text-left'}`}
                />
                <button type="button" className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 ${isRTL ? 'left-3' : 'right-3'}`}>
                  <Smile size={20} />

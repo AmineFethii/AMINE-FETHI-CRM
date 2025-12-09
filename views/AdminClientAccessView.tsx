@@ -225,7 +225,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
               placeholder={commonT.search}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+              className={`w-full py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm placeholder:text-slate-400 ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
             />
           </div>
         </div>
@@ -434,7 +434,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
                     value={newClientData.name}
                     onChange={(e) => setNewClientData({...newClientData, name: e.target.value})}
                     placeholder="Full Name"
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                   />
                 </div>
               </div>
@@ -449,7 +449,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
                     value={newClientData.companyName}
                     onChange={(e) => setNewClientData({...newClientData, companyName: e.target.value})}
                     placeholder="Company Name SARL"
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                   />
                 </div>
               </div>
@@ -464,7 +464,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
                     value={newClientData.email}
                     onChange={(e) => setNewClientData({...newClientData, email: e.target.value})}
                     placeholder="client@company.com"
-                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                   />
                 </div>
               </div>

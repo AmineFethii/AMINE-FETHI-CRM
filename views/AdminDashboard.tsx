@@ -20,21 +20,19 @@ import {
   Calendar
 } from 'lucide-react';
 import { ClientData, TimelineStep, User } from '../types';
-import { translations, Language } from '../translations';
+import { translations } from '../translations';
 
 interface AdminDashboardProps {
   clients: ClientData[];
   onUpdateClient: (clientId: string, updates: Partial<ClientData>) => void;
   user: User | null;
-  lang: Language;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdateClient, user, lang }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdateClient, user }) => {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'attention' | 'completed'>('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const t = translations[lang].adminDashboard;
-  const isRTL = lang === 'ar';
+  const t = translations.en.adminDashboard;
   
   // Form State
   const [editProgress, setEditProgress] = useState(0);
@@ -49,7 +47,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
   const selectedClient = clients.find(c => c.id === selectedClientId);
 
   // Date for Header
-  const currentDate = new Date().toLocaleDateString(lang === 'ar' ? 'ar-EG' : lang === 'fr' ? 'fr-FR' : 'en-US', { 
+  const currentDate = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
     month: 'long', 
@@ -218,8 +216,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
       {/* Enhanced Hero Header Section */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-8 shadow-xl">
         {/* Decorative Abstract Blobs */}
-        <div className={`absolute top-0 -translate-y-1/2 w-96 h-96 bg-blue-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20 animate-pulse ${isRTL ? 'left-0 -translate-x-1/3' : 'right-0 translate-x-1/3'}`}></div>
-        <div className={`absolute bottom-0 translate-y-1/2 w-96 h-96 bg-purple-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20 ${isRTL ? 'right-0 translate-x-1/3' : 'left-0 -translate-x-1/3'}`}></div>
+        <div className="absolute top-0 right-0 -translate-y-1/2 w-96 h-96 bg-blue-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20 animate-pulse translate-x-1/3"></div>
+        <div className="absolute bottom-0 left-0 translate-y-1/2 w-96 h-96 bg-purple-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -translate-x-1/3"></div>
 
         <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
           
@@ -236,7 +234,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                 </div>
               </div>
-              <div className={`absolute -bottom-1 w-6 h-6 bg-green-500 rounded-full border-4 border-slate-900 flex items-center justify-center shadow-sm ${isRTL ? '-left-1' : '-right-1'}`}>
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full border-4 border-slate-900 flex items-center justify-center shadow-sm">
                 <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
               </div>
             </div>
@@ -265,8 +263,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
             
             {/* Quick Stats Pill */}
             <div className="hidden md:flex items-center bg-white/5 border border-white/10 rounded-2xl p-2 backdrop-blur-sm shadow-lg">
-               <div className={`px-5 py-1 text-center ${isRTL ? 'border-l' : 'border-r'} border-white/10`}>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-0.5">{translations[lang].common.pending}</p>
+               <div className="px-5 py-1 text-center border-r border-white/10">
+                  <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-0.5">{translations.en.common.pending}</p>
                   <div className="flex items-center justify-center gap-2">
                      <span className={`text-xl font-bold ${pendingActionsCount > 0 ? 'text-amber-400' : 'text-white'}`}>
                        {pendingActionsCount}
@@ -356,7 +354,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
 
         {/* Metric 4: Total Revenue (Mock) */}
         <div className="bg-slate-900 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
-           <div className={`absolute top-0 w-32 h-32 bg-blue-500 rounded-full blur-3xl opacity-10 group-hover:opacity-20 transition-opacity -translate-y-10 ${isRTL ? 'left-0 -translate-x-10' : 'right-0 translate-x-10'}`}></div>
+           <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-3xl opacity-10 group-hover:opacity-20 transition-opacity translate-x-10 -translate-y-10"></div>
            
            <div className="relative z-10">
              <div className="flex justify-between items-start mb-4">
@@ -412,23 +410,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                     filterType === 'completed' ? 'bg-white text-green-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'
                   }`}
                 >
-                  {translations[lang].common.completed}
+                  {translations.en.common.completed}
                 </button>
              </div>
 
              <div className="relative w-full md:w-64 px-2 md:px-0">
-               <Search className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? 'right-4 md:right-2' : 'left-4 md:left-2'}`} size={16} />
+               <Search className="absolute top-1/2 -translate-y-1/2 text-slate-400 left-4 md:left-2" size={16} />
                <input 
                  type="text" 
-                 placeholder={translations[lang].common.search}
+                 placeholder={translations.en.common.search}
                  value={searchTerm}
                  onChange={(e) => setSearchTerm(e.target.value)}
-                 className={`w-full py-2 bg-transparent text-sm focus:outline-none focus:placeholder-slate-300 ${isRTL ? 'pr-10 md:pr-8 pl-4' : 'pl-10 md:pl-8 pr-4'}`}
+                 className="w-full py-2 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg pl-10 md:pl-8 pr-4 placeholder:text-slate-400"
                />
                {searchTerm && (
                  <button 
                    onClick={() => setSearchTerm('')}
-                   className={`absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 ${isRTL ? 'left-4' : 'right-4'}`}
+                   className="absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 right-4"
                  >
                    <X size={14} />
                  </button>
@@ -444,7 +442,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                   <tr>
                     <th className="px-6 py-4 font-semibold text-start">{t.clientList}</th>
                     <th className="px-6 py-4 font-semibold text-start">{t.progress}</th>
-                    <th className="px-6 py-4 font-semibold text-start">{translations[lang].common.status}</th>
+                    <th className="px-6 py-4 font-semibold text-start">{translations.en.common.status}</th>
                     <th className="px-6 py-4 font-semibold text-end">{t.lastUpdate}</th>
                   </tr>
                 </thead>
@@ -469,7 +467,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                                   )}
                                 </div>
                                 {hasPending && (
-                                  <span className={`absolute -top-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white animate-pulse ${isRTL ? '-left-1' : '-right-1'}`}></span>
+                                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white animate-pulse"></span>
                                 )}
                               </div>
                               <div>
@@ -565,7 +563,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                     <div className="flex justify-between items-center mb-4">
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.missionStatus}</h4>
                       <div className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded border border-blue-100">
-                        {editProgress}% {translations[lang].common.completed}
+                        {editProgress}% {translations.en.common.completed}
                       </div>
                     </div>
                     
@@ -613,7 +611,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                                  onChange={e => setRejectionReason(e.target.value)}
                                />
                                <div className="flex justify-end gap-2 mt-2">
-                                 <button onClick={() => setRejectingDocId(null)} className="text-xs text-slate-500">{translations[lang].common.cancel}</button>
+                                 <button onClick={() => setRejectingDocId(null)} className="text-xs text-slate-500">{translations.en.common.cancel}</button>
                                  <button onClick={() => handleConfirmReject(selectedClient.id, doc.id)} className="text-xs bg-red-600 text-white px-2 py-1 rounded">{t.reject}</button>
                                </div>
                              </div>
@@ -642,11 +640,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                   {/* Timeline Editor */}
                   <div className="p-5">
                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">{t.phaseControl}</h4>
-                    <div className={`relative space-y-4 ${isRTL ? 'pr-2' : 'pl-2'}`}>
-                       <div className={`absolute top-2 bottom-2 w-0.5 bg-slate-100 ${isRTL ? 'right-[15px]' : 'left-[15px]'}`}></div>
+                    <div className="relative space-y-4 pl-2">
+                       <div className="absolute top-2 bottom-2 w-0.5 bg-slate-100 left-[15px]"></div>
                        {editTimeline.map((step, idx) => (
-                         <div key={step.id} className={`relative ${isRTL ? 'pr-8' : 'pl-8'}`}>
-                            <div className={`absolute top-0.5 w-8 h-8 rounded-full border-2 flex items-center justify-center bg-white z-10 transition-colors ${isRTL ? 'right-0' : 'left-0'} ${
+                         <div key={step.id} className="relative pl-8">
+                            <div className={`absolute top-0.5 w-8 h-8 rounded-full border-2 flex items-center justify-center bg-white z-10 transition-colors left-0 ${
                               step.status === 'completed' ? 'border-green-500 text-green-500' :
                               step.status === 'in-progress' ? 'border-blue-500 text-blue-500 shadow-lg shadow-blue-200' :
                               'border-slate-200 text-slate-300'
@@ -731,7 +729,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                              Uploaded <span className="font-medium text-slate-800">{item.name}</span> for review.
                            </p>
                            <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
-                             {t.reviewNow} <ArrowRight size={10} className={isRTL ? "rotate-180" : ""} />
+                             {t.reviewNow} <ArrowRight size={10} />
                            </div>
                          </div>
                       </div>

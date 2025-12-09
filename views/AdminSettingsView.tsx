@@ -12,18 +12,16 @@ import {
   Building 
 } from 'lucide-react';
 import { User as UserType } from '../types';
-import { translations, Language } from '../translations';
+import { translations } from '../translations';
 
 interface AdminSettingsViewProps {
   user: UserType;
-  lang: Language;
 }
 
-export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ user, lang }) => {
+export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ user }) => {
   const [activeTab, setActiveTab] = useState('profile');
-  const t = translations[lang].settings;
-  const commonT = translations[lang].common;
-  const isRTL = lang === 'ar';
+  const t = translations.en.settings;
+  const commonT = translations.en.common;
   
   // Mock form state
   const [name, setName] = useState(user.name);
@@ -112,35 +110,35 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ user, lang
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{commonT.email}</label>
                   <div className="relative">
-                    <Mail className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} size={16} />
+                    <Mail className="absolute top-1/2 -translate-y-1/2 text-slate-400 left-3" size={16} />
                     <input 
                       type="email" 
                       value={email}
                       readOnly
-                      className={`w-full py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-500 cursor-not-allowed ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+                      className="w-full py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-500 cursor-not-allowed pl-10 pr-4"
                     />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Role</label>
                   <div className="relative">
-                    <Shield className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} size={16} />
+                    <Shield className="absolute top-1/2 -translate-y-1/2 text-slate-400 left-3" size={16} />
                     <input 
                       type="text" 
                       value="Super Admin"
                       readOnly
-                      className={`w-full py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-500 cursor-not-allowed ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+                      className="w-full py-2 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-500 cursor-not-allowed pl-10 pr-4"
                     />
                   </div>
                 </div>
                  <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{commonT.phone}</label>
                   <div className="relative">
-                    <Smartphone className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} size={16} />
+                    <Smartphone className="absolute top-1/2 -translate-y-1/2 text-slate-400 left-3" size={16} />
                     <input 
                       type="tel" 
                       defaultValue="+212 600-000000"
-                      className={`w-full py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'pr-10 pl-4' : 'pl-10 pr-4'}`}
+                      className="w-full py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10 pr-4"
                     />
                   </div>
                 </div>
@@ -248,7 +246,7 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ user, lang
                     <span className="text-sm font-medium text-slate-700">{item}</span>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input type="checkbox" className="sr-only peer" defaultChecked />
-                      <div className={`w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all ${isRTL ? 'peer-checked:after:-translate-x-full after:right-[2px]' : 'peer-checked:after:translate-x-full after:left-[2px]'}`}></div>
+                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full after:left-[2px]"></div>
                     </label>
                   </div>
                 ))}

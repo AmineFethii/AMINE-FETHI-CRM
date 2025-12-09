@@ -14,20 +14,18 @@ import {
   Shield
 } from 'lucide-react';
 import { ClientData, ClientDocument } from '../types';
-import { translations, Language } from '../translations';
+import { translations } from '../translations';
 
 interface ClientDocumentsViewProps {
   client: ClientData;
   onUpload: (fileName: string) => void;
-  lang: Language;
 }
 
-export const ClientDocumentsView: React.FC<ClientDocumentsViewProps> = ({ client, onUpload, lang }) => {
+export const ClientDocumentsView: React.FC<ClientDocumentsViewProps> = ({ client, onUpload }) => {
   const [filter, setFilter] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState('');
-  const t = translations[lang].documents;
-  const commonT = translations[lang].common;
-  const isRTL = lang === 'ar';
+  const t = translations.en.documents;
+  const commonT = translations.en.common;
 
   const categories = ['All', 'Identity', 'Legal', 'Financial', 'Other'];
 
@@ -111,13 +109,13 @@ export const ClientDocumentsView: React.FC<ClientDocumentsViewProps> = ({ client
 
           {/* Search */}
           <div className="relative w-full md:w-64">
-            <Search className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} size={16} />
+            <Search className="absolute top-1/2 -translate-y-1/2 text-slate-400 left-3" size={16} />
             <input 
               type="text" 
               placeholder={commonT.search}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow ${isRTL ? 'pr-9 pl-4' : 'pl-9 pr-4'}`}
+              className="w-full py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow pl-9 pr-4 placeholder:text-slate-400"
             />
           </div>
         </div>

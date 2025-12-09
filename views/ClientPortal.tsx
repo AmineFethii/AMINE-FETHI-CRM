@@ -9,17 +9,15 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { ClientData } from '../types';
-import { translations, Language } from '../translations';
+import { translations } from '../translations';
 
 interface ClientPortalProps {
   client: ClientData;
   onNavigateToDocs: () => void;
-  lang: Language;
 }
 
-export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateToDocs, lang }) => {
-  const t = translations[lang].clientPortal;
-  const isRTL = lang === 'ar';
+export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateToDocs }) => {
+  const t = translations.en.clientPortal;
 
   // Progress Circle Math
   const radius = 80;
@@ -75,7 +73,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 relative overflow-hidden min-h-[400px] flex flex-col justify-center">
              {/* Background decorative gradients */}
-            <div className={`absolute top-0 w-96 h-96 bg-gradient-to-br from-blue-50/80 to-slate-100/50 rounded-full blur-3xl -z-10 -translate-y-1/3 ${isRTL ? 'left-0 -translate-x-1/3' : 'right-0 translate-x-1/3'}`}></div>
+            <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-blue-50/80 to-slate-100/50 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3"></div>
             
             <div className="flex flex-col md:flex-row items-center gap-12">
               
@@ -158,7 +156,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
                         <p className={`text-[10px] uppercase tracking-widest font-bold ${
                           isComplete ? 'text-green-600' : 'text-slate-500'
                         }`}>
-                          {isComplete ? translations[lang].common.completed : translations[lang].common.inProgress}
+                          {isComplete ? translations.en.common.completed : translations.en.common.inProgress}
                         </p>
                       </div>
                     </div>
@@ -166,7 +164,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
               </div>
 
               {/* Status Description */}
-              <div className={`flex-1 w-full text-center ${isRTL ? 'md:text-right' : 'md:text-left'}`}>
+              <div className="flex-1 w-full text-center md:text-left">
                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide mb-4 border ${
                   isComplete 
                     ? 'bg-green-50 text-green-700 border-green-100' 
@@ -187,10 +185,10 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
                   }
                 </p>
 
-                <div className={`flex flex-wrap justify-center gap-x-8 gap-y-4 mt-8 pt-6 border-t border-slate-100 ${isRTL ? 'md:justify-end' : 'md:justify-start'}`}>
+                <div className="flex flex-wrap justify-center md:justify-start gap-x-8 gap-y-4 mt-8 pt-6 border-t border-slate-100">
                    <div>
                      <p className="text-slate-400 text-[10px] uppercase tracking-wider font-bold mb-1">{t.estimatedTime}</p>
-                     <p className="text-slate-900 font-semibold text-sm">{isComplete ? translations[lang].common.completed : `~ 3-5 ${t.businessDays}`}</p>
+                     <p className="text-slate-900 font-semibold text-sm">{isComplete ? translations.en.common.completed : `~ 3-5 ${t.businessDays}`}</p>
                    </div>
                    <div>
                      <p className="text-slate-400 text-[10px] uppercase tracking-wider font-bold mb-1">{t.priority}</p>
@@ -232,14 +230,14 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
                   </div>
                 ))
               ) : (
-                <div className="text-center py-6 text-slate-400 text-sm">{translations[lang].layout.noNotifications}</div>
+                <div className="text-center py-6 text-slate-400 text-sm">{translations.en.layout.noNotifications}</div>
               )}
               
               <button 
                 onClick={onNavigateToDocs}
                 className="w-full mt-2 py-2 text-sm text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-dashed border-slate-300 flex items-center justify-center gap-2"
               >
-                {t.goToDocs} <ArrowRight size={14} className={isRTL ? "rotate-180" : ""} />
+                {t.goToDocs} <ArrowRight size={14} />
               </button>
             </div>
           </div>
@@ -254,12 +252,10 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
               {t.timeline}
             </h3>
             
-            <div className={`relative space-y-8 ${isRTL ? 'pr-4 border-r-2 border-slate-100' : 'pl-4 border-l-2 border-slate-100'}`}>
+            <div className="relative space-y-8 pl-4 border-l-2 border-slate-100">
               {client.timeline.map((step) => (
                 <div key={step.id} className="relative group">
-                  <div className={`absolute top-1 w-4 h-4 rounded-full border-2 transition-all duration-300 ${
-                    isRTL ? '-right-[21px]' : '-left-[21px]'
-                  } ${
+                  <div className={`absolute top-1 w-4 h-4 rounded-full border-2 transition-all duration-300 -left-[21px] ${
                     step.status === 'completed' ? 'bg-green-500 border-green-500' :
                     step.status === 'in-progress' ? 'bg-white border-blue-500 ring-4 ring-blue-50 scale-110' :
                     'bg-slate-100 border-slate-300'
@@ -278,8 +274,8 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
                       {step.label}
                     </p>
                     <p className="text-xs text-slate-400 mt-1">
-                      {step.status === 'completed' ? translations[lang].common.completed : 
-                       step.status === 'in-progress' ? translations[lang].common.inProgress : translations[lang].common.pending}
+                      {step.status === 'completed' ? translations.en.common.completed : 
+                       step.status === 'in-progress' ? translations.en.common.inProgress : translations.en.common.pending}
                     </p>
                   </div>
                 </div>

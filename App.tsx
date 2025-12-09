@@ -1,5 +1,6 @@
 
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { Layout } from './components/Layout';
 import { WhatsAppFab } from './components/WhatsAppFab';
 import { Login } from './views/Login';
@@ -16,8 +17,8 @@ import { AdminClientsView } from './views/AdminClientsView';
 import { AdminInvoicingView } from './views/AdminInvoicingView';
 import { AdminTutorialsView } from './views/AdminTutorialsView';
 import { AdminClientAccessView } from './views/AdminClientAccessView';
+import { AdminFollowUpView } from './views/AdminFollowUpView';
 import { User, ClientData, Role, Notification, Employee } from './types';
-import { Language } from './translations';
 
 // Updated Real Client Data
 const INITIAL_CLIENTS: ClientData[] = [
@@ -350,16 +351,7 @@ const App: React.FC = () => {
   
   // Navigation State
   const [currentView, setCurrentView] = useState<string>('dashboard');
-
-  // Language & Direction State
-  const [language, setLanguage] = useState<Language>('en');
-
-  // Update Document Direction based on Language
-  useEffect(() => {
-    const dir = language === 'ar' ? 'rtl' : 'ltr';
-    document.documentElement.dir = dir;
-    document.documentElement.lang = language;
-  }, [language]);
+  const [selectedClientIdForFollowUp, setSelectedClientIdForFollowUp] = useState<string | null>(null);
 
   const handleLogin = async (email: string, pass: string, role: Role): Promise<boolean> => {
     // Simulate network delay
@@ -558,38 +550,56 @@ const App: React.FC = () => {
   // Render content based on Role and Current View
   const renderContent = () => {
     if (user?.role === 'admin') {
+      if (currentView === 'follow-up') {
+        return (
+          <AdminFollowUpView 
+            clients={clients} 
+            onUpdateClient={updateClient} 
+            lang="en" 
+            initialClientId={selectedClientIdForFollowUp}
+          />
+        );
+      }
       if (currentView === 'finance') {
-        return <FinanceDashboard clients={clients} onUpdateClient={updateClient} lang={language} />;
+        return <FinanceDashboard clients={clients} onUpdateClient={updateClient} />;
       }
       if (currentView === 'documents') {
-        return <AdminDocumentsView clients={clients} onUpdateClient={updateClient} lang={language} />;
+        return <AdminDocumentsView clients={clients} onUpdateClient={updateClient} />;
       }
       if (currentView === 'clients') {
-        return <AdminClientsView clients={clients} lang={language} />;
+        return (
+          <AdminClientsView 
+            clients={clients} 
+            onManageClient={(clientId) => {
+              setSelectedClientIdForFollowUp(clientId);
+              setCurrentView('follow-up');
+            }}
+          />
+        );
       }
       if (currentView === 'team') {
-        return <AdminEmployeesView employees={employees} onAddEmployee={handleAddEmployee} lang={language} />;
+        return <AdminEmployeesView employees={employees} onAddEmployee={handleAddEmployee} />;
       }
       if (currentView === 'settings') {
-        return <AdminSettingsView user={user} lang={language} />;
+        return <AdminSettingsView user={user} />;
       }
       if (currentView === 'invoicing') {
-        return <AdminInvoicingView clients={clients} lang={language} />;
+        return <AdminInvoicingView clients={clients} lang="en" />;
       }
       if (currentView === 'tutorials') {
-        return <AdminTutorialsView lang={language} />;
+        return <AdminTutorialsView lang="en" />;
       }
       if (currentView === 'client-access') {
         return (
             <AdminClientAccessView 
                 clients={clients} 
-                lang={language} 
+                lang="en"
                 onAddClient={handleAddClient}
                 onUpdateCredentials={handleUpdateCredentials}
             />
         );
       }
-      return <AdminDashboard clients={clients} onUpdateClient={updateClient} user={user} lang={language} />;
+      return <AdminDashboard clients={clients} onUpdateClient={updateClient} user={user} />;
     } else {
       const clientData = getCurrentClientData();
       if (!clientData) return <div>Error loading client data</div>;
@@ -599,7 +609,6 @@ const App: React.FC = () => {
           <ClientDocumentsView 
             client={clientData}
             onUpload={handleClientUpload}
-            lang={language}
           />
         );
       }
@@ -609,20 +618,18 @@ const App: React.FC = () => {
           <ClientSettingsView 
             client={clientData}
             onUpdateProfile={handleClientProfileUpdate}
-            lang={language}
           />
         );
       }
 
       if (currentView === 'chat') {
-        return <ClientChatView lang={language} />;
+        return <ClientChatView lang="en" />;
       }
 
       return (
         <ClientPortal 
           client={clientData} 
           onNavigateToDocs={() => setCurrentView('documents')}
-          lang={language}
         />
       );
     }
@@ -640,13 +647,11 @@ const App: React.FC = () => {
           onOpenProfile={() => setCurrentView('settings')}
           activeView={currentView}
           onNavigate={(view) => setCurrentView(view)}
-          currentLanguage={language}
-          onLanguageChange={setLanguage}
         >
           {renderContent()}
         </Layout>
       ) : (
-        <Login onLogin={handleLogin} lang={language} />
+        <Login onLogin={handleLogin} />
       )}
       
       {/* Only show WhatsApp FAB for authenticated clients */}

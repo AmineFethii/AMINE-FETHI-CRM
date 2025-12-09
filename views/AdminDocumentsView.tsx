@@ -17,22 +17,19 @@ import {
   Image as ImageIcon,
   Shield,
   Briefcase,
-  MoreVertical,
-  ChevronRight,
   User
 } from 'lucide-react';
 import { ClientData, ClientDocument } from '../types';
-import { translations, Language } from '../translations';
+import { translations } from '../translations';
 
 interface AdminDocumentsViewProps {
   clients: ClientData[];
   onUpdateClient: (clientId: string, updates: Partial<ClientData>) => void;
-  lang: Language;
 }
 
 type DocStatusFilter = 'pending' | 'approved' | 'rejected' | 'all';
 
-export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients, onUpdateClient, lang }) => {
+export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients, onUpdateClient }) => {
   const [statusFilter, setStatusFilter] = useState<DocStatusFilter>('pending');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -50,9 +47,8 @@ export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients,
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  const t = translations[lang].documents;
-  const commonT = translations[lang].common;
-  const isRTL = lang === 'ar';
+  const t = translations.en.documents;
+  const commonT = translations.en.common;
 
   // Flatten all documents
   const allDocuments = clients.flatMap(client => 
@@ -256,13 +252,13 @@ export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients,
           </div>
 
           <div className="relative w-full sm:w-72">
-            <Search className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} size={16} />
+            <Search className="absolute top-1/2 -translate-y-1/2 text-slate-400 left-3" size={16} />
             <input 
               type="text" 
               placeholder={commonT.search}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className={`w-full py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm ${isRTL ? 'pr-9 pl-4' : 'pl-9 pr-4'}`}
+              className="w-full py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm pl-9 pr-4 placeholder:text-slate-400"
             />
           </div>
         </div>
@@ -272,7 +268,7 @@ export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients,
           <table className="w-full text-left border-collapse">
             <thead className="bg-slate-50 text-slate-500 text-xs uppercase font-semibold border-b border-slate-100">
               <tr>
-                <th className="px-6 py-4 text-start font-bold">{translations[lang].adminDashboard.clientList}</th>
+                <th className="px-6 py-4 text-start font-bold">{translations.en.adminDashboard.clientList}</th>
                 <th className="px-6 py-4 text-start font-bold">{t.docName}</th>
                 <th className="px-6 py-4 text-start font-bold">{t.category}</th>
                 <th className="px-6 py-4 text-start font-bold">{commonT.date}</th>
@@ -315,7 +311,7 @@ export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients,
                             <div className="mt-2 animate-fade-in" onClick={e => e.stopPropagation()}>
                               <input 
                                 type="text" 
-                                placeholder={translations[lang].adminDashboard.reason}
+                                placeholder={translations.en.adminDashboard.reason}
                                 value={rejectionReason}
                                 onChange={(e) => setRejectionReason(e.target.value)}
                                 className="w-full text-xs p-2 border border-red-300 rounded bg-white text-slate-900 mb-2 focus:outline-none focus:ring-1 focus:ring-red-500 shadow-sm"
@@ -427,7 +423,7 @@ export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients,
               
               <form onSubmit={handleUploadSubmit} className="p-6 space-y-4">
                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">{translations[lang].adminDashboard.clientList}</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">{translations.en.adminDashboard.clientList}</label>
                     <select 
                        required
                        value={uploadClientId}

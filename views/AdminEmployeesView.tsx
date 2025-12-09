@@ -14,20 +14,18 @@ import {
   Calendar
 } from 'lucide-react';
 import { Employee } from '../types';
-import { translations, Language } from '../translations';
+import { translations } from '../translations';
 
 interface AdminEmployeesViewProps {
   employees: Employee[];
   onAddEmployee: (employee: Employee) => void;
-  lang: Language;
 }
 
-export const AdminEmployeesView: React.FC<AdminEmployeesViewProps> = ({ employees, onAddEmployee, lang }) => {
+export const AdminEmployeesView: React.FC<AdminEmployeesViewProps> = ({ employees, onAddEmployee }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const t = translations[lang].employees;
-  const commonT = translations[lang].common;
-  const isRTL = lang === 'ar';
+  const t = translations.en.employees;
+  const commonT = translations.en.common;
   
   // New Employee Form State
   const [newEmp, setNewEmp] = useState<Partial<Employee>>({
@@ -99,7 +97,7 @@ export const AdminEmployeesView: React.FC<AdminEmployeesViewProps> = ({ employee
                   required
                   value={newEmp.name}
                   onChange={e => setNewEmp({...newEmp, name: e.target.value})}
-                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                   placeholder="e.g. John Doe"
                 />
               </div>
@@ -110,7 +108,7 @@ export const AdminEmployeesView: React.FC<AdminEmployeesViewProps> = ({ employee
                   required
                   value={newEmp.role}
                   onChange={e => setNewEmp({...newEmp, role: e.target.value})}
-                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                   placeholder="e.g. Marketing Manager"
                 />
               </div>
@@ -136,7 +134,7 @@ export const AdminEmployeesView: React.FC<AdminEmployeesViewProps> = ({ employee
                   required
                   value={newEmp.email}
                   onChange={e => setNewEmp({...newEmp, email: e.target.value})}
-                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                   placeholder="john@company.com"
                 />
               </div>
@@ -146,7 +144,7 @@ export const AdminEmployeesView: React.FC<AdminEmployeesViewProps> = ({ employee
                   type="tel" 
                   value={newEmp.phone}
                   onChange={e => setNewEmp({...newEmp, phone: e.target.value})}
-                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400"
                   placeholder="+212..."
                 />
               </div>
@@ -203,13 +201,13 @@ export const AdminEmployeesView: React.FC<AdminEmployeesViewProps> = ({ employee
 
       {/* Search & Filter */}
       <div className="flex items-center gap-4 bg-white p-2 rounded-xl border border-slate-200 shadow-sm max-w-md">
-        <Search className={`text-slate-400 ${isRTL ? 'mr-2' : 'ml-2'}`} size={20} />
+        <Search className="text-slate-400 ml-2" size={20} />
         <input 
           type="text" 
           placeholder={t.searchPlaceholder} 
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full bg-transparent text-sm focus:outline-none"
+          className="w-full bg-transparent text-sm focus:outline-none placeholder:text-slate-400"
         />
       </div>
 
@@ -219,7 +217,7 @@ export const AdminEmployeesView: React.FC<AdminEmployeesViewProps> = ({ employee
           <div key={employee.id} className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group overflow-hidden">
             {/* Card Header with Banner */}
             <div className="h-24 bg-gradient-to-r from-slate-800 to-slate-900 relative">
-               <div className={`absolute top-3 ${isRTL ? 'left-3' : 'right-3'}`}>
+               <div className="absolute top-3 right-3">
                  <button className="text-slate-400 hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors">
                     <MoreHorizontal size={20} />
                  </button>

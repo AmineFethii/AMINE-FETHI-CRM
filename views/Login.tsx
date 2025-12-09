@@ -2,22 +2,21 @@
 import React, { useState } from 'react';
 import { Shield, ArrowRight, UserCheck, Briefcase, Lock, ShieldCheck, Server, AlertCircle } from 'lucide-react';
 import { Role } from '../types';
-import { translations, Language } from '../translations';
+import { translations } from '../translations';
 
 interface LoginProps {
   onLogin: (email: string, password: string, role: Role) => Promise<boolean>;
-  lang: Language;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [role, setRole] = useState<Role>('client');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  const t = translations[lang].login;
-  const commonT = translations[lang].common;
+  const t = translations.en.login;
+  const commonT = translations.en.common;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,7 +26,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
     try {
       const success = await onLogin(email, password, role);
       if (!success) {
-        setError(lang === 'ar' ? 'بيانات الاعتماد غير صالحة' : lang === 'fr' ? 'Identifiants invalides' : 'Invalid credentials');
+        setError('Invalid credentials');
       }
     } catch (err) {
       setError('An error occurred');
@@ -49,10 +48,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
     }
   };
 
-  const isRTL = lang === 'ar';
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4 relative overflow-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen flex items-center justify-center bg-slate-900 p-4 relative overflow-hidden">
       
       {/* Animated Background Layers */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -185,7 +182,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, lang }) => {
               ) : (
                 <>
                   <span>{t.accessPortal}</span>
-                  <ArrowRight size={18} className={isRTL ? "rotate-180" : ""} />
+                  <ArrowRight size={18} />
                 </>
               )}
             </button>

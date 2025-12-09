@@ -1,8 +1,9 @@
 
+
 import React, { useState } from 'react';
-import { LogOut, LayoutDashboard, FileText, Settings, Shield, Bell, Banknote, Check, CheckCheck, Users, Briefcase, Globe, ChevronDown, Receipt, MonitorPlay, MessageSquare, Key } from 'lucide-react';
+import { LogOut, LayoutDashboard, FileText, Settings, Shield, Bell, Banknote, Check, CheckCheck, Users, Briefcase, ChevronDown, Receipt, MonitorPlay, MessageSquare, Key, Activity } from 'lucide-react';
 import { User, Notification } from '../types';
-import { translations, Language } from '../translations';
+import { translations } from '../translations';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,8 +15,6 @@ interface LayoutProps {
   onMarkAsRead?: (id: string) => void;
   onMarkAllAsRead?: () => void;
   onOpenProfile?: () => void;
-  currentLanguage?: Language;
-  onLanguageChange?: (lang: Language) => void;
 }
 
 export const Layout: React.FC<LayoutProps> = ({ 
@@ -28,13 +27,9 @@ export const Layout: React.FC<LayoutProps> = ({
   onMarkAsRead,
   onMarkAllAsRead,
   onOpenProfile,
-  currentLanguage = 'en',
-  onLanguageChange
 }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isLangMenuOpen, setIsLangMenuOpen] = useState(false);
-  const t = translations[currentLanguage].layout;
-  const isRTL = currentLanguage === 'ar';
+  const t = translations.en.layout;
 
   if (!user) return <>{children}</>;
 
@@ -55,17 +50,16 @@ export const Layout: React.FC<LayoutProps> = ({
           : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
       }`}
     >
-      <Icon size={20} className={isRTL ? "flip-if-needed" : ""} />
+      <Icon size={20} />
       <span className="font-medium">{label}</span>
     </div>
   );
 
   return (
     <div className="min-h-screen flex bg-slate-50">
-      {/* Sidebar - Dynamically positioned based on RTL */}
+      {/* Sidebar */}
       <aside 
-        className={`hidden md:flex flex-col w-64 bg-slate-900 text-slate-300 fixed h-full transition-all z-20 
-        ${isRTL ? 'right-0 border-l border-slate-800' : 'left-0 border-r border-slate-800'}`}
+        className="hidden md:flex flex-col w-64 bg-slate-900 text-slate-300 fixed h-full transition-all z-20 left-0 border-r border-slate-800"
       >
         <div className="p-6 border-b border-slate-800 flex flex-col gap-2 relative">
           <div className="flex items-center gap-2 justify-center py-2 bg-white rounded-lg shadow-sm">
@@ -82,6 +76,7 @@ export const Layout: React.FC<LayoutProps> = ({
           
           {user.role === 'admin' && (
             <>
+              <NavItem id="follow-up" icon={Activity} label={t.followUp} />
               <NavItem id="clients" icon={Briefcase} label={t.clients} />
               <NavItem id="client-access" icon={Key} label={t.clientAccess} />
               <NavItem id="team" icon={Users} label={t.team} />
@@ -143,46 +138,17 @@ export const Layout: React.FC<LayoutProps> = ({
             onClick={onLogout}
             className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
           >
-            <LogOut size={16} className={isRTL ? "rotate-180" : ""} />
+            <LogOut size={16} />
             <span>{t.signout}</span>
           </button>
         </div>
       </aside>
 
-      {/* Main Content - Margin flipped based on RTL */}
-      <main className={`flex-1 relative transition-all duration-300 ${isRTL ? 'md:mr-64' : 'md:ml-64'}`}>
+      {/* Main Content */}
+      <main className="flex-1 relative transition-all duration-300 md:ml-64">
         {/* Top Header Bar */}
         <header className="h-16 bg-white border-b border-slate-200 sticky top-0 z-10 px-4 md:px-8 flex items-center justify-end gap-4">
            
-           {/* Language Selector */}
-           <div className="relative">
-             <button 
-               onClick={() => setIsLangMenuOpen(!isLangMenuOpen)}
-               className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors border border-transparent hover:border-slate-200 text-slate-600"
-             >
-               <Globe size={18} className="text-slate-400" />
-               <span className="text-sm font-medium uppercase">{currentLanguage}</span>
-               <ChevronDown size={14} className="text-slate-400" />
-             </button>
-
-             {isLangMenuOpen && (
-                <>
-                  <div className="fixed inset-0 z-10" onClick={() => setIsLangMenuOpen(false)}></div>
-                  <div className={`absolute top-full mt-2 w-40 bg-white rounded-lg shadow-xl border border-slate-100 z-20 py-1 overflow-hidden animate-fade-in-down ${isRTL ? 'left-0' : 'right-0'}`}>
-                     <button onClick={() => { onLanguageChange?.('en'); setIsLangMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-3 ${currentLanguage === 'en' ? 'text-blue-600 bg-blue-50' : 'text-slate-700'}`}>
-                        <span className="text-lg">🇺🇸</span> English
-                     </button>
-                     <button onClick={() => { onLanguageChange?.('fr'); setIsLangMenuOpen(false); }} className={`w-full text-left px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-3 ${currentLanguage === 'fr' ? 'text-blue-600 bg-blue-50' : 'text-slate-700'}`}>
-                        <span className="text-lg">🇫🇷</span> Français
-                     </button>
-                     <button onClick={() => { onLanguageChange?.('ar'); setIsLangMenuOpen(false); }} className={`w-full text-right px-4 py-2 text-sm hover:bg-slate-50 flex items-center gap-3 justify-end ${currentLanguage === 'ar' ? 'text-blue-600 bg-blue-50' : 'text-slate-700'}`}>
-                        Arabic <span className="text-lg">🇲🇦</span>
-                     </button>
-                  </div>
-                </>
-             )}
-           </div>
-
            {/* Notifications */}
            <div className="relative">
              <button 
@@ -202,7 +168,7 @@ export const Layout: React.FC<LayoutProps> = ({
                    className="fixed inset-0 z-0" 
                    onClick={() => setIsNotificationsOpen(false)}
                  ></div>
-                 <div className={`absolute mt-3 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-slate-100 z-20 overflow-hidden animate-fade-in-down ${isRTL ? 'left-0' : 'right-0'}`}>
+                 <div className="absolute mt-3 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-slate-100 z-20 overflow-hidden animate-fade-in-down right-0">
                    <div className="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
                      <div className="flex items-center gap-2">
                        <h3 className="font-semibold text-slate-900">{t.notifications}</h3>
@@ -239,7 +205,7 @@ export const Layout: React.FC<LayoutProps> = ({
                                !notification.read ? 'bg-blue-500' : 'bg-slate-200'
                              }`}></div>
                              
-                             <div className={`flex-1 ${isRTL ? 'pl-6' : 'pr-6'}`}>
+                             <div className="flex-1 pr-6">
                                <div className="flex justify-between items-start mb-1">
                                  <p className={`text-sm ${!notification.read ? 'font-bold text-slate-900' : 'font-medium text-slate-600'}`}>
                                    {notification.title}
@@ -260,7 +226,7 @@ export const Layout: React.FC<LayoutProps> = ({
                                    e.stopPropagation();
                                    handleNotificationClick(notification.id);
                                  }}
-                                 className={`absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white shadow-md border border-slate-100 text-blue-600 p-1.5 rounded-full hover:bg-blue-50 transform hover:scale-110 ${isRTL ? 'left-3' : 'right-3'}`}
+                                 className="absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity bg-white shadow-md border border-slate-100 text-blue-600 p-1.5 rounded-full hover:bg-blue-50 transform hover:scale-110 right-3"
                                  title="Mark as read"
                                >
                                  <Check size={14} />

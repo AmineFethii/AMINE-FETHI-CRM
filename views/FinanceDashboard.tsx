@@ -13,25 +13,23 @@ import {
   Search,
   Filter,
   ArrowUpDown,
-  MoreVertical,
   Plus,
   Receipt,
   Mail,
   X
 } from 'lucide-react';
 import { ClientData } from '../types';
-import { translations, Language } from '../translations';
+import { translations } from '../translations';
 
 interface FinanceDashboardProps {
   clients: ClientData[];
   onUpdateClient: (clientId: string, updates: Partial<ClientData>) => void;
-  lang: Language;
 }
 
 type TimeRange = 'this-month' | 'last-month' | '3-months' | '6-months' | 'ytd';
 type SortKey = 'companyName' | 'contractValue' | 'amountPaid' | 'outstanding';
 
-export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ clients, onUpdateClient, lang }) => {
+export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ clients, onUpdateClient }) => {
   const [timeRange, setTimeRange] = useState<TimeRange>('this-month');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -43,9 +41,8 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ clients, onU
   const [paymentAmount, setPaymentAmount] = useState('');
   const [paymentNote, setPaymentNote] = useState('');
   
-  const t = translations[lang].finance;
-  const commonT = translations[lang].common;
-  const isRTL = lang === 'ar';
+  const t = translations.en.finance;
+  const commonT = translations.en.common;
 
   // --- Calculations ---
 
@@ -176,7 +173,7 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ clients, onU
           <select 
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-            className={`bg-transparent text-sm font-medium text-slate-700 py-1.5 px-3 outline-none cursor-pointer ${isRTL ? 'pl-8' : 'pr-8'}`}
+            className="bg-transparent text-sm font-medium text-slate-700 py-1.5 px-3 outline-none cursor-pointer pr-8"
           >
             <option value="this-month">This Month</option>
             <option value="last-month">Last Month</option>
@@ -184,7 +181,7 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ clients, onU
             <option value="6-months">Last 6 Months</option>
             <option value="ytd">Year to Date</option>
           </select>
-          <Calendar size={16} className={`text-slate-400 ${isRTL ? 'ml-2' : 'mr-2'}`} />
+          <Calendar size={16} className="text-slate-400 mr-2" />
         </div>
       </div>
 
@@ -193,14 +190,14 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ clients, onU
         
         {/* Total Pipeline */}
         <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl shadow-slate-900/10 relative overflow-hidden group">
-          <div className={`absolute top-0 w-32 h-32 bg-blue-500 rounded-full blur-3xl opacity-20 -translate-y-1/2 group-hover:opacity-30 transition-opacity ${isRTL ? 'left-0 -translate-x-1/2' : 'right-0 translate-x-1/2'}`}></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-3xl opacity-20 -translate-y-1/2 group-hover:opacity-30 transition-opacity translate-x-1/2"></div>
           <div className="relative z-10">
             <div className="flex justify-between items-start mb-4">
               <div className="p-2 bg-slate-800/50 rounded-lg">
                 <TrendingUp size={20} className="text-blue-400" />
               </div>
               <span className="text-xs font-medium bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full flex items-center gap-1">
-                <ArrowUpRight size={12} className={isRTL ? "rotate-180" : ""} /> +{getTrend()}%
+                <ArrowUpRight size={12} /> +{getTrend()}%
               </span>
             </div>
             <p className="text-slate-400 text-sm font-medium uppercase tracking-wider">{t.totalContract}</p>
@@ -262,13 +259,13 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ clients, onU
 
             <div className="flex gap-2 w-full sm:w-auto">
               <div className="relative flex-1 sm:w-48">
-                <Search size={14} className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} />
+                <Search size={14} className="absolute top-1/2 -translate-y-1/2 text-slate-400 left-3" />
                 <input 
                   type="text" 
                   placeholder={commonT.search}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className={`w-full py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 ${isRTL ? 'pr-9 pl-3' : 'pl-9 pr-3'}`}
+                  className="w-full py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 pl-9 pr-3 placeholder:text-slate-400"
                 />
               </div>
               <div className="flex items-center bg-white border border-slate-200 rounded-lg px-2">
@@ -497,7 +494,7 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ clients, onU
           <div className="space-y-4">
              {/* Current Month KPI */}
              <div className="p-5 bg-slate-50 rounded-xl border border-slate-100 relative overflow-hidden">
-               <div className={`absolute top-0 w-32 h-32 bg-white/40 rounded-full blur-3xl -translate-y-1/2 ${isRTL ? 'left-0 -translate-x-1/2' : 'right-0 translate-x-1/2'}`}></div>
+               <div className="absolute top-0 right-0 w-32 h-32 bg-white/40 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
                
                <div className="flex justify-between items-start mb-2 relative z-10">
                  <div>
@@ -573,7 +570,7 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ clients, onU
                     rows={2}
                     value={paymentNote}
                     onChange={(e) => setPaymentNote(e.target.value)}
-                    className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                    className="w-full p-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none placeholder:text-slate-400"
                     placeholder="e.g. Bank Transfer Ref: 123456"
                  ></textarea>
               </div>
