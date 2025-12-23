@@ -89,6 +89,7 @@ export const Layout: React.FC<LayoutProps> = ({
           {user.role === 'client' && (
              <>
                <NavItem id="chat" icon={MessageSquare} label={t.chat} />
+               <NavItem id="tutorials" icon={MonitorPlay} label={t.tutorials} />
                <NavItem id="guide" icon={BookOpen} label={t.guide} />
              </>
           )}

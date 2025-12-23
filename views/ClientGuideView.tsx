@@ -58,7 +58,11 @@ const MOCK_ASSETS: Asset[] = [
   }
 ];
 
-export const ClientGuideView: React.FC = () => {
+interface ClientGuideViewProps {
+  onNavigate?: (view: string) => void;
+}
+
+export const ClientGuideView: React.FC<ClientGuideViewProps> = ({ onNavigate }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const t = translations.en.clientGuide;
   const commonT = translations.en.common;
@@ -180,9 +184,12 @@ export const ClientGuideView: React.FC = () => {
               <p className="text-slate-500 mt-1">{t.assetsSubtitle}</p>
             </div>
             <div className="hidden md:block">
-               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                  Verified by Amine Fethi
-               </span>
+               <div className="flex items-center gap-2 bg-green-50 text-green-700 px-4 py-1.5 rounded-full border border-green-100 shadow-sm transition-all hover:bg-green-100 group cursor-default">
+                  <ShieldCheck size={14} className="fill-green-600/10 group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest">
+                    Verified by Amine Fethi
+                  </span>
+               </div>
             </div>
          </div>
 
@@ -236,7 +243,10 @@ export const ClientGuideView: React.FC = () => {
             <div className="relative z-10">
                <h4 className="font-bold text-xl text-slate-900 mb-2">Watch Video Guides</h4>
                <p className="text-sm text-slate-500 leading-relaxed mb-6">Prefer visual learning? Visit the tutorials section for detailed step-by-step walk-throughs of our platform features.</p>
-               <button className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-2">
+               <button 
+                 onClick={() => onNavigate && onNavigate('tutorials')}
+                 className="text-sm font-bold text-blue-600 hover:underline flex items-center gap-2"
+               >
                   Browse Tutorials <ChevronRight size={16} />
                </button>
             </div>

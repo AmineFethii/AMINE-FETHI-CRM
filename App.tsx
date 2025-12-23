@@ -283,7 +283,8 @@ const App: React.FC = () => {
       if (currentView === 'documents') return <ClientDocumentsView client={clientData} onUpload={(f) => {}} />;
       if (currentView === 'settings') return <ClientSettingsView client={clientData} onUpdateProfile={(u) => updateClient(clientData.id, u)} />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
-      if (currentView === 'guide') return <ClientGuideView />;
+      if (currentView === 'guide') return <ClientGuideView onNavigate={(view) => setCurrentView(view)} />;
+      if (currentView === 'tutorials') return <AdminTutorialsView lang="en" />;
       return <ClientPortal client={clientData} onNavigateToDocs={() => setCurrentView('documents')} />;
     }
   };
