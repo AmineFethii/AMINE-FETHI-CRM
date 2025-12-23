@@ -18,6 +18,7 @@ import { AdminInvoicingView } from './views/AdminInvoicingView';
 import { AdminTutorialsView } from './views/AdminTutorialsView';
 import { AdminClientAccessView } from './views/AdminClientAccessView';
 import { AdminFollowUpView } from './views/AdminFollowUpView';
+import { AdminCalendarView } from './views/AdminCalendarView';
 import { User, ClientData, Role, Notification, Employee } from './types';
 
 // Updated Real Client Data with Cycle Dates
@@ -266,6 +267,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (user?.role === 'admin') {
       if (currentView === 'follow-up') return <AdminFollowUpView clients={clients} onUpdateClient={updateClient} lang="en" initialClientId={selectedClientIdForFollowUp} />;
+      if (currentView === 'calendar') return <AdminCalendarView clients={clients} />;
       if (currentView === 'finance') return <FinanceDashboard clients={clients} onUpdateClient={updateClient} />;
       if (currentView === 'documents') return <AdminDocumentsView clients={clients} onUpdateClient={updateClient} />;
       if (currentView === 'clients') return <AdminClientsView clients={clients} onManageClient={(clientId) => { setSelectedClientIdForFollowUp(clientId); setCurrentView('follow-up'); }} onUpdateClient={updateClient} />;

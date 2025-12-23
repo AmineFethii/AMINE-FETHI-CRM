@@ -102,6 +102,7 @@ export const Layout: React.FC<LayoutProps> = ({
           {user.role === 'admin' && (
             <>
               <NavItem id="follow-up" icon={Activity} label={t.followUp} />
+              <NavItem id="calendar" icon={Calendar} label={t.calendar} />
               <NavItem id="clients" icon={Briefcase} label={t.clients} />
               <NavItem id="client-access" icon={Key} label={t.clientAccess} />
               <NavItem id="team" icon={Users} label={t.team} />

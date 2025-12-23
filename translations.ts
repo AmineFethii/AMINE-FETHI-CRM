@@ -61,7 +61,8 @@ export const translations = {
       chat: "Chat & Support",
       clientAccess: "Client Access",
       followUp: "Mission Follow-up",
-      guide: "Platform Guide"
+      guide: "Platform Guide",
+      calendar: "Calendar"
     },
     clientPortal: {
       greeting: "Hello",
@@ -181,6 +182,26 @@ export const translations = {
       currentProgress: "Current Progress",
       downloadReport: "Download Full Report",
       clientList: "Client List"
+    },
+    calendar: {
+      title: "Consultant Schedule",
+      subtitle: "Plan your strategy, meetings, and legal deadlines.",
+      addEvent: "Schedule Event",
+      today: "Today",
+      month: "Month",
+      week: "Week",
+      day: "Day",
+      upcomingEvents: "Upcoming Agenda",
+      noEvents: "No events scheduled for today.",
+      meeting: "Client Meeting",
+      deadline: "Legal Deadline",
+      followup: "Tax Follow-up",
+      eventTitle: "Event Title",
+      eventTime: "Event Time",
+      eventCategory: "Category",
+      selectClient: "Related Client",
+      saveEvent: "Save Event",
+      allDay: "All Day"
     },
     documents: {
       title: "Document Management",
