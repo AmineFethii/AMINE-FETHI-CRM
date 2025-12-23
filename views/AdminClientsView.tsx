@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -14,7 +14,11 @@ import {
   MapPin,
   Clock,
   TrendingUp,
-  CheckCircle2
+  CheckCircle2,
+  Calendar,
+  X,
+  Save,
+  Settings2
 } from 'lucide-react';
 import { ClientData } from '../types';
 import { translations } from '../translations';
@@ -22,16 +26,38 @@ import { translations } from '../translations';
 interface AdminClientsViewProps {
   clients: ClientData[];
   onManageClient: (clientId: string) => void;
+  onUpdateClient: (clientId: string, updates: Partial<ClientData>) => void;
 }
 
 type GroupBy = 'category' | 'service';
 
-export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onManageClient }) => {
+export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onManageClient, onUpdateClient }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [groupBy, setGroupBy] = useState<GroupBy>('category');
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  
+  // Mission Configuration Modal State
+  const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<ClientData | null>(null);
+  const [newStartDate, setNewStartDate] = useState('');
+
+  // Dropdown menu state
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const t = translations.en.clients;
   const commonT = translations.en.common;
+
+  // Handle menu clicks outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setActiveMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Filter clients based on search
   const filteredClients = useMemo(() => {
@@ -65,6 +91,21 @@ export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onM
   const displayClients = selectedCategory 
     ? (groupedClients[selectedCategory] || [])
     : filteredClients;
+
+  const handleOpenConfig = (client: ClientData) => {
+    setEditingClient(client);
+    setNewStartDate(client.missionStartDate || new Date().toISOString().split('T')[0]);
+    setIsConfigModalOpen(true);
+    setActiveMenuId(null);
+  };
+
+  const handleSaveConfig = () => {
+    if (editingClient) {
+      onUpdateClient(editingClient.id, { missionStartDate: newStartDate });
+      setIsConfigModalOpen(false);
+      setEditingClient(null);
+    }
+  };
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
@@ -188,9 +229,6 @@ export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onM
               {selectedCategory || t.allCategories}
               <span className="text-sm font-normal text-slate-400">({displayClients.length})</span>
             </h2>
-            <div className="text-xs text-slate-500">
-               Showing {displayClients.length} results
-            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -199,10 +237,26 @@ export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onM
                 {/* Card Header Pattern */}
                 <div className="h-20 bg-slate-900 relative overflow-hidden">
                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '12px 12px' }}></div>
-                   <div className="absolute top-2 right-2">
-                      <button className="p-1.5 bg-black/20 text-white rounded-lg hover:bg-black/40 transition-colors">
+                   <div className="absolute top-2 right-2" ref={activeMenuId === client.id ? menuRef : null}>
+                      <button 
+                        onClick={() => setActiveMenuId(activeMenuId === client.id ? null : client.id)}
+                        className="p-1.5 bg-black/20 text-white rounded-lg hover:bg-black/40 transition-colors"
+                      >
                          <MoreHorizontal size={16} />
                       </button>
+                      
+                      {activeMenuId === client.id && (
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 py-1 z-50 animate-scale-up origin-top-right">
+                           <button onClick={() => handleOpenConfig(client)} className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">
+                              <Calendar size={14} className="text-blue-600" />
+                              Configure Mission
+                           </button>
+                           <button onClick={() => onManageClient(client.id)} className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">
+                              <TrendingUp size={14} className="text-green-600" />
+                              Manage Timeline
+                           </button>
+                        </div>
+                      )}
                    </div>
                 </div>
 
@@ -256,12 +310,15 @@ export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onM
                       </div>
 
                       <div className="flex gap-2">
-                        <button className="flex-1 py-2 bg-slate-50 text-slate-600 text-xs font-bold rounded-lg border border-slate-200 hover:bg-slate-100 hover:text-blue-600 transition-colors flex items-center justify-center gap-2">
+                        <button 
+                          onClick={() => onManageClient(client.id)}
+                          className="flex-1 py-2 bg-slate-50 text-slate-600 text-xs font-bold rounded-lg border border-slate-200 hover:bg-slate-100 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
+                        >
                            <FolderOpen size={14} />
                            View
                         </button>
                         <button 
-                          onClick={() => onManageClient(client.id)}
+                          onClick={() => handleOpenConfig(client)}
                           className="flex-1 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 shadow-sm transition-colors"
                         >
                            Manage
@@ -272,22 +329,118 @@ export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onM
               </div>
             ))}
           </div>
-          
-          {displayClients.length === 0 && (
-             <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-12 text-center">
-                <Search size={48} className="mx-auto text-slate-300 mb-4" />
-                <h3 className="text-slate-900 font-bold text-lg">No clients found</h3>
-                <p className="text-slate-500 text-sm mt-1">Try adjusting your filters or search terms.</p>
-                <button 
-                  onClick={() => { setSearchTerm(''); setSelectedCategory(null); }}
-                  className="mt-4 px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50"
-                >
-                   Clear Filters
-                </button>
-             </div>
-          )}
         </div>
       </div>
+
+      {/* --- Mission Configuration Modal --- */}
+      {isConfigModalOpen && editingClient && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsConfigModalOpen(false)}></div>
+           <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-scale-up">
+              <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                 <div className="flex items-center gap-3">
+                    <div className="p-2 bg-blue-600 text-white rounded-xl shadow-lg shadow-blue-200">
+                       <Settings2 size={20} />
+                    </div>
+                    <div>
+                       <h3 className="text-lg font-bold text-slate-900 leading-tight">Mission Config</h3>
+                       <p className="text-xs text-slate-500">{editingClient.companyName}</p>
+                    </div>
+                 </div>
+                 <button onClick={() => setIsConfigModalOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all">
+                    <X size={20} />
+                 </button>
+              </div>
+              
+              <div className="p-8 space-y-8">
+                 <div className="bg-amber-50 border border-amber-100 p-4 rounded-2xl flex gap-4">
+                    <div className="p-2 bg-amber-100 text-amber-600 rounded-lg h-fit">
+                       <Calendar size={20} />
+                    </div>
+                    <div>
+                       <h4 className="text-sm font-bold text-amber-800 mb-1">Yearly Cycle Start</h4>
+                       <p className="text-xs text-amber-700/70 leading-relaxed">
+                          This date defines when the annual advisory service begins. The client will see a countdown to the renewal based on this date.
+                       </p>
+                    </div>
+                 </div>
+
+                 <div className="space-y-4">
+                    <label className="block">
+                       <span className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1 mb-2 block">Service Commencement Date</span>
+                       <div className="relative group">
+                          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-blue-500 transition-colors pointer-events-none">
+                             <Clock size={18} />
+                          </div>
+                          <input 
+                            type="date"
+                            value={newStartDate}
+                            onChange={(e) => setNewStartDate(e.target.value)}
+                            className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all hover:bg-white"
+                          />
+                       </div>
+                    </label>
+
+                    <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                       <div className="p-2 bg-white rounded-lg border border-slate-200 text-slate-400">
+                          <RefreshCw size={14} className="animate-spin-slow" />
+                       </div>
+                       <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Next Renewal</p>
+                          <p className="text-sm font-bold text-slate-700">
+                             {new Date(new Date(newStartDate).setFullYear(new Date(newStartDate).getFullYear() + 1)).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                          </p>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+
+              <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3">
+                 <button 
+                   onClick={() => setIsConfigModalOpen(false)}
+                   className="flex-1 py-3.5 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all active:scale-95"
+                 >
+                   Discard
+                 </button>
+                 <button 
+                   onClick={handleSaveConfig}
+                   className="flex-1 py-3.5 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 shadow-xl shadow-slate-900/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                 >
+                   <Save size={18} />
+                   Apply Config
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+
+      <style>{`
+        .animate-spin-slow {
+          animation: spin 3s linear infinite;
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
+
+// Helper for spin-slow since it's not standard tailwind
+const RefreshCw = ({ size, className }: { size: number, className?: string }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+  </svg>
+);

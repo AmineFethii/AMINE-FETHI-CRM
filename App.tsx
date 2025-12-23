@@ -268,7 +268,7 @@ const App: React.FC = () => {
       if (currentView === 'follow-up') return <AdminFollowUpView clients={clients} onUpdateClient={updateClient} lang="en" initialClientId={selectedClientIdForFollowUp} />;
       if (currentView === 'finance') return <FinanceDashboard clients={clients} onUpdateClient={updateClient} />;
       if (currentView === 'documents') return <AdminDocumentsView clients={clients} onUpdateClient={updateClient} />;
-      if (currentView === 'clients') return <AdminClientsView clients={clients} onManageClient={(clientId) => { setSelectedClientIdForFollowUp(clientId); setCurrentView('follow-up'); }} />;
+      if (currentView === 'clients') return <AdminClientsView clients={clients} onManageClient={(clientId) => { setSelectedClientIdForFollowUp(clientId); setCurrentView('follow-up'); }} onUpdateClient={updateClient} />;
       if (currentView === 'team') return <AdminEmployeesView employees={employees} onAddEmployee={handleAddEmployee} />;
       if (currentView === 'settings') return <AdminSettingsView user={user} />;
       if (currentView === 'invoicing') return <AdminInvoicingView clients={clients} lang="en" />;
