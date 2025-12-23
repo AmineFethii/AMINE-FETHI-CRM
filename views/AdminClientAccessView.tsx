@@ -115,6 +115,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
   const handleAddNewClient = (e: React.FormEvent) => {
     e.preventDefault();
     if (newClientData.name && newClientData.email && newClientData.companyName) {
+      // Added missionStartDate to satisfy ClientData type requirement
       const newClient: ClientData = {
         id: `c-${Date.now()}`,
         email: newClientData.email,
@@ -132,7 +133,8 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
         contractValue: 0,
         amountPaid: 0,
         currency: 'MAD',
-        paymentStatus: 'pending'
+        paymentStatus: 'pending',
+        missionStartDate: new Date().toISOString()
       };
       
       onAddClient(newClient);

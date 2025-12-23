@@ -131,18 +131,19 @@ export const AdminInvoicingView: React.FC<AdminInvoicingViewProps> = ({ clients,
 
     setIsGeneratingAI(true);
     try {
-      // Initialize Gemini
-      // @ts-ignore
+      // Initialize Gemini with API key from environment variable
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       
       const prompt = `Write a professional, concise, single-sentence invoice line-item description for a client receiving '${client.serviceType}' services in the '${client.companyCategory}' industry. Do not include price.`;
       
+      // Use gemini-3-flash-preview for basic text tasks
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-flash-preview',
         contents: prompt
       });
       
-      const text = response.text.trim();
+      // Property text returns string directly
+      const text = response.text?.trim() || '';
       setNewInvoice(prev => ({ ...prev, description: text }));
     } catch (error) {
       console.error("AI Generation Error:", error);

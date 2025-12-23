@@ -50,7 +50,6 @@ export interface ClientData {
   id: string;
   email: string;
   name: string;
-  // New Profile Fields
   firstName?: string;
   lastName?: string;
   nationality?: string;
@@ -62,7 +61,7 @@ export interface ClientData {
   avatarUrl?: string;
   
   serviceType: string;
-  progress: number; // 0 to 100
+  progress: number;
   statusMessage: string;
   timeline: TimelineStep[];
   documents: ClientDocument[];
@@ -74,4 +73,7 @@ export interface ClientData {
   currency: string;
   paymentStatus: 'paid' | 'partial' | 'pending' | 'overdue';
   lastPaymentDate?: string;
+
+  // Mission Lifecycle
+  missionStartDate: string; // ISO Date for yearly cycle tracking
 }

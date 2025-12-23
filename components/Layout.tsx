@@ -1,7 +1,7 @@
 
-import React, { useState } from 'react';
-import { LogOut, LayoutDashboard, FileText, Settings, Shield, Bell, Banknote, Check, CheckCheck, Users, Briefcase, ChevronDown, Receipt, MonitorPlay, MessageSquare, Key, Activity, BookOpen } from 'lucide-react';
-import { User, Notification } from '../types';
+import React, { useState, useMemo } from 'react';
+import { LogOut, LayoutDashboard, FileText, Settings, Shield, Bell, Banknote, Check, CheckCheck, Users, Briefcase, ChevronDown, Receipt, MonitorPlay, MessageSquare, Key, Activity, BookOpen, Calendar, Clock } from 'lucide-react';
+import { User, Notification, ClientData } from '../types';
 import { translations } from '../translations';
 
 interface LayoutProps {
@@ -14,6 +14,7 @@ interface LayoutProps {
   onMarkAsRead?: (id: string) => void;
   onMarkAllAsRead?: () => void;
   onOpenProfile?: () => void;
+  clients?: ClientData[];
 }
 
 export const Layout: React.FC<LayoutProps> = ({ 
@@ -26,6 +27,7 @@ export const Layout: React.FC<LayoutProps> = ({
   onMarkAsRead,
   onMarkAllAsRead,
   onOpenProfile,
+  clients = []
 }) => {
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const t = translations.en.layout;
@@ -39,6 +41,30 @@ export const Layout: React.FC<LayoutProps> = ({
       onMarkAsRead(id);
     }
   };
+
+  // Calculate Yearly Cycle Stats for Clients
+  const cycleData = useMemo(() => {
+    if (user.role !== 'client' || !clients.length) return null;
+    const client = clients.find(c => c.id === user.id);
+    if (!client || !client.missionStartDate) return null;
+
+    const startDate = new Date(client.missionStartDate);
+    const today = new Date();
+    const renewalDate = new Date(startDate);
+    renewalDate.setFullYear(startDate.getFullYear() + 1);
+
+    const totalDays = 365;
+    const diffTime = renewalDate.getTime() - today.getTime();
+    const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const elapsedDays = totalDays - daysLeft;
+    const percentage = Math.min(100, Math.max(0, (elapsedDays / totalDays) * 100));
+
+    return {
+      daysLeft,
+      percentage,
+      renewalDate: renewalDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+    };
+  }, [user, clients]);
 
   const NavItem = ({ id, icon: Icon, label }: { id: string, icon: any, label: string }) => (
     <div 
@@ -109,11 +135,46 @@ export const Layout: React.FC<LayoutProps> = ({
           </div>
         </nav>
 
-        <div className="p-4 border-t border-slate-800">
-          {/* User Profile Section in Sidebar Footer */}
-          <div className="flex items-center justify-between gap-2 mb-4 px-2 group">
+        {/* --- NEW CREATIVE Sidebar Footer --- */}
+        <div className="p-4 bg-slate-900 border-t border-slate-800 space-y-4">
+          
+          {/* Yearly Mission Cycle Tracking (Client Only) */}
+          {user.role === 'client' && cycleData && (
+            <div className="bg-slate-800/50 rounded-xl p-3 border border-slate-700/50 group hover:border-blue-500/30 transition-all duration-300">
+               <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="p-1 bg-blue-500/10 rounded text-blue-400">
+                      <Calendar size={12} />
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Annual Mission</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-blue-400">{cycleData.daysLeft}d left</span>
+               </div>
+               
+               {/* Animated Progress Bar */}
+               <div className="h-1.5 w-full bg-slate-700 rounded-full overflow-hidden mb-2 relative">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-600 to-blue-400 rounded-full transition-all duration-1000 ease-out"
+                    style={{ width: `${cycleData.percentage}%` }}
+                  ></div>
+                  {/* Subtle pulsing glow at the end of the bar */}
+                  <div 
+                    className="absolute top-0 w-4 h-full bg-blue-400/50 blur-sm animate-pulse"
+                    style={{ left: `${cycleData.percentage - 5}%` }}
+                  ></div>
+               </div>
+
+               <div className="flex justify-between items-center text-[9px] text-slate-500 font-medium">
+                  <span className="flex items-center gap-1"><Clock size={10} /> Active Cycle</span>
+                  <span>Ends {cycleData.renewalDate}</span>
+               </div>
+            </div>
+          )}
+
+          {/* User Profile Section */}
+          <div className="flex items-center justify-between gap-2 px-2">
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 border border-slate-700 overflow-hidden">
+              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 border border-slate-700 overflow-hidden shadow-lg shadow-blue-900/20">
                 {user.avatarUrl ? (
                   <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                 ) : (
@@ -121,39 +182,26 @@ export const Layout: React.FC<LayoutProps> = ({
                 )}
               </div>
               <div className="overflow-hidden text-start">
-                <p className="text-sm font-medium text-white truncate">{user.name}</p>
-                <p className="text-xs text-slate-500 capitalize">{user.role}</p>
+                <p className="text-sm font-bold text-white truncate leading-tight">{user.name}</p>
+                <p className="text-[10px] text-slate-500 capitalize tracking-wider font-semibold">{user.role}</p>
               </div>
             </div>
             
-            {/* Settings Trigger in Footer */}
-            {user.role === 'client' && (
-              <button 
-                onClick={onOpenProfile}
-                className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded-md transition-colors"
-                title={t.editProfile}
-              >
-                <Settings size={16} />
-              </button>
-            )}
+            <button 
+              onClick={onLogout}
+              className="p-2 text-slate-500 hover:text-white hover:bg-slate-800 rounded-lg transition-all active:scale-95"
+              title={t.signout}
+            >
+              <LogOut size={16} />
+            </button>
           </div>
-
-          <button
-            onClick={onLogout}
-            className="w-full flex items-center gap-2 px-4 py-2 text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
-          >
-            <LogOut size={16} />
-            <span>{t.signout}</span>
-          </button>
         </div>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 relative transition-all duration-300 md:ml-64">
-        {/* Top Header Bar */}
         <header className="h-16 bg-white border-b border-slate-200 sticky top-0 z-10 px-4 md:px-8 flex items-center justify-end gap-4">
            
-           {/* Notifications */}
            <div className="relative">
              <button 
                onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
@@ -165,7 +213,6 @@ export const Layout: React.FC<LayoutProps> = ({
                )}
              </button>
 
-             {/* Notifications Dropdown */}
              {isNotificationsOpen && (
                <>
                  <div 
@@ -204,7 +251,6 @@ export const Layout: React.FC<LayoutProps> = ({
                                  : 'hover:bg-slate-50'
                              }`}
                            >
-                             {/* Status Indicator Dot */}
                              <div className={`mt-1.5 flex-shrink-0 w-2 h-2 rounded-full transition-colors ${
                                !notification.read ? 'bg-blue-500' : 'bg-slate-200'
                              }`}></div>
@@ -223,7 +269,6 @@ export const Layout: React.FC<LayoutProps> = ({
                                </p>
                              </div>
 
-                             {/* Individual Mark as Read Action */}
                              {!notification.read && (
                                <button
                                  onClick={(e) => {

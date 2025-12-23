@@ -20,7 +20,7 @@ import { AdminClientAccessView } from './views/AdminClientAccessView';
 import { AdminFollowUpView } from './views/AdminFollowUpView';
 import { User, ClientData, Role, Notification, Employee } from './types';
 
-// Updated Real Client Data
+// Updated Real Client Data with Cycle Dates
 const INITIAL_CLIENTS: ClientData[] = [
   {
     id: 'c1',
@@ -41,7 +41,8 @@ const INITIAL_CLIENTS: ClientData[] = [
     contractValue: 12000,
     amountPaid: 12000,
     currency: 'MAD',
-    paymentStatus: 'paid'
+    paymentStatus: 'paid',
+    missionStartDate: '2024-01-10'
   },
   {
     id: 'c2',
@@ -63,7 +64,8 @@ const INITIAL_CLIENTS: ClientData[] = [
     contractValue: 24000,
     amountPaid: 6000,
     currency: 'MAD',
-    paymentStatus: 'partial'
+    paymentStatus: 'partial',
+    missionStartDate: '2024-03-15'
   }
 ];
 
@@ -206,7 +208,6 @@ const App: React.FC = () => {
       return { ...c, ...updates, notifications: newNotifications };
     }));
 
-    // CRITICAL: Synchronize the logged-in user state if they updated their own profile
     if (user && user.id === clientId && user.role === 'client') {
       setUser(prev => prev ? ({
         ...prev,
@@ -228,7 +229,6 @@ const App: React.FC = () => {
     };
 
     if (user?.role === 'admin') {
-      // Admin sent message to client
       setClients(prev => prev.map(c => {
         if (c.id === recipientId) {
           return { ...c, notifications: [notification, ...c.notifications] };
@@ -236,7 +236,6 @@ const App: React.FC = () => {
         return c;
       }));
     } else {
-      // Client sent message to admin
       const clientName = clients.find(c => c.id === senderId)?.companyName || 'A client';
       const adminNotif = { ...notification, title: `Message from ${clientName}` };
       setAdminNotifications(prev => [adminNotif, ...prev]);
@@ -301,6 +300,7 @@ const App: React.FC = () => {
           onOpenProfile={() => setCurrentView('settings')}
           activeView={currentView}
           onNavigate={(view) => setCurrentView(view)}
+          clients={clients}
         >
           {renderContent()}
         </Layout>
