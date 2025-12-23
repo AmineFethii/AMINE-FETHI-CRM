@@ -44,9 +44,10 @@ interface ChatViewProps {
   lang: Language;
   user: User;
   clients: ClientData[];
+  onNotify?: (senderId: string, recipientId: string, text: string) => void;
 }
 
-export const ChatView: React.FC<ChatViewProps> = ({ lang, user, clients }) => {
+export const ChatView: React.FC<ChatViewProps> = ({ lang, user, clients, onNotify }) => {
   const [activeThreadId, setActiveThreadId] = useState<string>('');
   const [messageInput, setMessageInput] = useState('');
   const [threads, setThreads] = useState<Record<string, Thread>>({});
@@ -140,6 +141,12 @@ export const ChatView: React.FC<ChatViewProps> = ({ lang, user, clients }) => {
       };
     });
     
+    // Trigger notification in parent
+    if (onNotify) {
+      const recipientId = isAdmin ? activeThreadId : 'admin-portal'; // Simplified for mock
+      onNotify(user.id, recipientId, messageInput.trim() || `Sent a ${attachment?.type || 'file'}`);
+    }
+
     setMessageInput('');
   };
 
