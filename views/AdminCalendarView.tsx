@@ -33,22 +33,30 @@ interface AdminCalendarViewProps {
   clients: ClientData[];
 }
 
+const MOCK_EVENTS: CalendarEvent[] = [
+  { id: 'e1', title: 'Consultation - SARL Setup', type: 'meeting', time: '10:00', duration: '1h', client: 'MPL DIGITAL', date: 15 },
+  { id: 'e2', title: 'Tax Filing Deadline', type: 'deadline', time: 'All Day', date: 20 },
+  { id: 'e3', title: 'Follow-up Call', type: 'followup', time: '14:30', client: 'The Brain', date: 10 },
+  { id: 'e4', title: 'NDA Signing', type: 'meeting', time: '11:00', client: 'New Tech', date: 15 },
+  { id: 'e5', title: 'Document Audit', type: 'followup', time: '09:00', date: 5 },
+];
+
 export const AdminCalendarView: React.FC<AdminCalendarViewProps> = ({ clients }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(new Date().getDate());
+  
+  // Dynamic Events State
+  const [allEvents, setAllEvents] = useState<CalendarEvent[]>(MOCK_EVENTS);
+
+  // Form State
+  const [newTitle, setNewTitle] = useState('');
+  const [newTime, setNewTime] = useState('09:00');
+  const [newCategory, setNewCategory] = useState<'meeting' | 'deadline' | 'followup'>('meeting');
+  const [newClientId, setNewClientId] = useState('');
 
   const t = translations.en.calendar;
   const commonT = translations.en.common;
-
-  // Mock Events for the current month
-  const events: CalendarEvent[] = [
-    { id: 'e1', title: 'Consultation - SARL Setup', type: 'meeting', time: '10:00 AM', duration: '1h', client: 'MPL DIGITAL', date: 15 },
-    { id: 'e2', title: 'Tax Filing Deadline', type: 'deadline', time: 'All Day', date: 20 },
-    { id: 'e3', title: 'Follow-up Call', type: 'followup', time: '02:30 PM', client: 'The Brain', date: 10 },
-    { id: 'e4', title: 'NDA Signing', type: 'meeting', time: '11:00 AM', client: 'New Tech', date: 15 },
-    { id: 'e5', title: 'Document Audit', type: 'followup', time: '09:00 AM', date: 5 },
-  ];
 
   // Calendar Math
   const daysInMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0).getDate();
@@ -65,14 +73,40 @@ export const AdminCalendarView: React.FC<AdminCalendarViewProps> = ({ clients })
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1));
   };
 
-  const getDayEvents = (day: number) => events.filter(e => e.date === day);
+  const getDayEvents = (day: number) => allEvents.filter(e => e.date === day);
 
   const selectedDayEvents = useMemo(() => {
     return selectedDay ? getDayEvents(selectedDay) : [];
-  }, [selectedDay]);
+  }, [selectedDay, allEvents]);
+
+  const handleSaveEvent = (e: React.FormEvent) => {
+    e.preventDefault(); // CRITICAL: Fixes the app "exiting"/refreshing issue
+    
+    if (!newTitle.trim() || !selectedDay) return;
+
+    const selectedClient = clients.find(c => c.id === newClientId);
+
+    const event: CalendarEvent = {
+      id: `e-${Date.now()}`,
+      title: newTitle,
+      time: newTime,
+      type: newCategory,
+      client: selectedClient?.companyName,
+      date: selectedDay
+    };
+
+    setAllEvents(prev => [...prev, event]);
+    
+    // Reset Form & Close
+    setNewTitle('');
+    setNewTime('09:00');
+    setNewCategory('meeting');
+    setNewClientId('');
+    setIsAddEventOpen(false);
+  };
 
   return (
-    <div className="animate-fade-in space-y-8 pb-12">
+    <div className="animate-fade-in space-y-8 pb-12 font-sans">
       {/* Header Area */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
         <div>
@@ -272,11 +306,14 @@ export const AdminCalendarView: React.FC<AdminCalendarViewProps> = ({ clients })
                     </button>
                  </div>
 
-                 <form className="space-y-6">
+                 <form onSubmit={handleSaveEvent} className="space-y-6">
                     <div className="space-y-2">
                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.eventTitle}</label>
                        <input 
                          type="text" 
+                         required
+                         value={newTitle}
+                         onChange={(e) => setNewTitle(e.target.value)}
                          placeholder="e.g. Audit with OCP" 
                          className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-bold focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
                        />
@@ -287,12 +324,22 @@ export const AdminCalendarView: React.FC<AdminCalendarViewProps> = ({ clients })
                           <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.eventTime}</label>
                           <div className="relative">
                              <Clock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                             <input type="time" className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-bold focus:outline-none focus:border-blue-500 transition-all" />
+                             <input 
+                               type="time" 
+                               required
+                               value={newTime}
+                               onChange={(e) => setNewTime(e.target.value)}
+                               className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-bold focus:outline-none focus:border-blue-500 transition-all" 
+                             />
                           </div>
                        </div>
                        <div className="space-y-2">
                           <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.eventCategory}</label>
-                          <select className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-bold focus:outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer">
+                          <select 
+                            value={newCategory}
+                            onChange={(e) => setNewCategory(e.target.value as any)}
+                            className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-bold focus:outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer"
+                          >
                              <option value="meeting">{t.meeting}</option>
                              <option value="deadline">{t.deadline}</option>
                              <option value="followup">{t.followup}</option>
@@ -302,7 +349,11 @@ export const AdminCalendarView: React.FC<AdminCalendarViewProps> = ({ clients })
 
                     <div className="space-y-2">
                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">{t.selectClient}</label>
-                       <select className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-bold focus:outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer">
+                       <select 
+                        value={newClientId}
+                        onChange={(e) => setNewClientId(e.target.value)}
+                        className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl text-slate-900 font-bold focus:outline-none focus:border-blue-500 transition-all appearance-none cursor-pointer"
+                       >
                           <option value="">No specific client</option>
                           {clients.map(c => <option key={c.id} value={c.id}>{c.companyName}</option>)}
                        </select>

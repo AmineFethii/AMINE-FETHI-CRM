@@ -76,4 +76,5 @@ export interface ClientData {
 
   // Mission Lifecycle
   missionStartDate: string; // ISO Date for yearly cycle tracking
+  lastLogin?: string; // ISO Date for activity tracking
 }

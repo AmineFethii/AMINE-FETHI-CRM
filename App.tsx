@@ -43,7 +43,8 @@ const INITIAL_CLIENTS: ClientData[] = [
     amountPaid: 12000,
     currency: 'MAD',
     paymentStatus: 'paid',
-    missionStartDate: '2024-01-10'
+    missionStartDate: '2024-01-10',
+    lastLogin: '2024-10-25T10:30:00Z'
   },
   {
     id: 'c2',
@@ -66,7 +67,8 @@ const INITIAL_CLIENTS: ClientData[] = [
     amountPaid: 6000,
     currency: 'MAD',
     paymentStatus: 'partial',
-    missionStartDate: '2024-03-15'
+    missionStartDate: '2024-03-15',
+    lastLogin: '2024-10-24T15:45:00Z'
   }
 ];
 
@@ -153,6 +155,9 @@ const App: React.FC = () => {
     if (role === 'client') {
       const clientData = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
       if (clientData) {
+        // Track near-accurate last login timestamp
+        updateClient(clientData.id, { lastLogin: new Date().toISOString() });
+
         setUser({
           id: clientData.id,
           name: clientData.name,
