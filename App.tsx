@@ -6,7 +6,7 @@ import { Login } from './views/Login';
 import { ClientPortal } from './views/ClientPortal';
 import { ClientDocumentsView } from './views/ClientDocumentsView';
 import { ClientSettingsView } from './views/ClientSettingsView';
-import { ClientChatView } from './views/ClientChatView';
+import { ChatView } from './views/ChatView';
 import { AdminDashboard } from './views/AdminDashboard';
 import { FinanceDashboard } from './views/FinanceDashboard';
 import { AdminDocumentsView } from './views/AdminDocumentsView';
@@ -614,6 +614,9 @@ const App: React.FC = () => {
       if (currentView === 'tutorials') {
         return <AdminTutorialsView lang="en" />;
       }
+      if (currentView === 'chat') {
+        return <ChatView lang="en" user={user} clients={clients} />;
+      }
       if (currentView === 'client-access') {
         return (
             <AdminClientAccessView 
@@ -648,7 +651,7 @@ const App: React.FC = () => {
       }
 
       if (currentView === 'chat') {
-        return <ClientChatView lang="en" />;
+        return <ChatView lang="en" user={user} clients={clients} />;
       }
 
       return (

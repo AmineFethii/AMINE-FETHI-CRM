@@ -279,7 +279,7 @@ export const translations = {
       lastSeen: "Last seen",
       consultant: "Lead Consultant",
       supportTeam: "Support Team",
-      repliesTime: "Replies typically in 2 hrs",
+      repliesTime: "Quick Response Guaranteed",
       attach: "Attach",
       send: "Send"
     },

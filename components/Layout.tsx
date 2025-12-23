@@ -1,5 +1,4 @@
 
-
 import React, { useState } from 'react';
 import { LogOut, LayoutDashboard, FileText, Settings, Shield, Bell, Banknote, Check, CheckCheck, Users, Briefcase, ChevronDown, Receipt, MonitorPlay, MessageSquare, Key, Activity } from 'lucide-react';
 import { User, Notification } from '../types';
@@ -71,7 +70,7 @@ export const Layout: React.FC<LayoutProps> = ({
           </div>
         </div>
 
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto font-sans">
           <NavItem id="dashboard" icon={LayoutDashboard} label={t.dashboard} />
           
           {user.role === 'admin' && (
@@ -82,6 +81,7 @@ export const Layout: React.FC<LayoutProps> = ({
               <NavItem id="team" icon={Users} label={t.team} />
               <NavItem id="finance" icon={Banknote} label={t.finance} />
               <NavItem id="invoicing" icon={Receipt} label={t.invoicing} />
+              <NavItem id="chat" icon={MessageSquare} label={t.chat} />
               <NavItem id="tutorials" icon={MonitorPlay} label={t.tutorials} />
             </>
           )}
