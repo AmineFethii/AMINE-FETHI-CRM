@@ -3,29 +3,18 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Send, 
   Paperclip, 
-  Smile, 
   MoreVertical, 
   Search, 
-  Clock, 
-  Check, 
   CheckCheck, 
   MessageSquare, 
-  Sparkles, 
-  Loader2, 
-  X, 
-  BrainCircuit,
   Zap,
-  ShieldCheck,
   Download,
   Archive,
   Star,
   Inbox,
-  Filter,
   FileText,
-  Image as ImageIcon,
   File as FileIcon
 } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 import { translations, Language } from '../translations';
 import { User, ClientData } from '../types';
 
@@ -61,8 +50,6 @@ export const ChatView: React.FC<ChatViewProps> = ({ lang, user, clients }) => {
   const [activeThreadId, setActiveThreadId] = useState<string>('');
   const [messageInput, setMessageInput] = useState('');
   const [threads, setThreads] = useState<Record<string, Thread>>({});
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [sidebarView, setSidebarView] = useState<'active' | 'archived'>('active');
   
@@ -238,26 +225,6 @@ END OF EXPORT
     setIsMenuOpen(false);
   };
 
-  const handleAnalyzeHistory = async () => {
-    if (!activeThreadId || !threads[activeThreadId]) return;
-    setIsAnalyzing(true);
-    setAnalysisResult(null);
-    try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const currentThread = threads[activeThreadId];
-      const historyText = (currentThread.messages || []).slice(-20).map(m => `${m.senderName}: ${m.text}`).join('\n');
-      const prompt = `Analyze this chat with ${currentThread.clientName}. Identify core issues, sentiment, and next steps.\n\nHistory:\n${historyText}`;
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
-        contents: prompt,
-        config: { thinkingConfig: { thinkingBudget: 32768 } }
-      });
-      setAnalysisResult(response.text || "Could not generate analysis.");
-    } catch (error) {
-      setAnalysisResult("An error occurred during analysis.");
-    } finally { setIsAnalyzing(false); }
-  };
-
   const currentThread = threads[activeThreadId];
   const currentMessages = currentThread?.messages || [];
 
@@ -276,10 +243,12 @@ END OF EXPORT
                 </div>
               )}
            </div>
-           <div className="relative">
-             <Search className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} size={16} />
-             <input type="text" placeholder={isAdmin ? "Search..." : t.searchPlaceholder} className={`w-full py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 ${isRTL ? 'pr-9 pl-4' : 'pl-9 pr-4'}`} />
-           </div>
+           {isAdmin && (
+             <div className="relative">
+               <Search className={`absolute top-1/2 -translate-y-1/2 text-slate-400 ${isRTL ? 'right-3' : 'left-3'}`} size={16} />
+               <input type="text" placeholder={isAdmin ? "Search..." : t.searchPlaceholder} className={`w-full py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-slate-400 ${isRTL ? 'pr-9 pl-4' : 'pl-9 pr-4'}`} />
+             </div>
+           )}
         </div>
         
         <div className="flex-1 overflow-y-auto">
@@ -350,13 +319,6 @@ END OF EXPORT
              </div>
           </div>
           <div className="flex items-center gap-3">
-            {isAdmin && (
-              <button onClick={handleAnalyzeHistory} disabled={isAnalyzing || currentMessages.length === 0} className="flex items-center gap-3 px-6 py-2.5 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-all text-sm font-bold shadow-[0_4px_14px_rgba(37,99,235,0.39)] disabled:opacity-50 disabled:shadow-none transform active:scale-95 group">
-                {isAnalyzing ? <Loader2 size={18} className="animate-spin" /> : <BrainCircuit size={18} className="text-white group-hover:scale-110 transition-transform" />}
-                AI Analysis
-              </button>
-            )}
-            <div className="h-6 w-px bg-slate-200 mx-1"></div>
             <div className="relative" ref={menuRef}>
               <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-colors"><MoreVertical size={20} /></button>
               {isMenuOpen && (
@@ -373,16 +335,6 @@ END OF EXPORT
         {/* Messages Feed */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4" style={{ backgroundImage: 'radial-gradient(#e2e8f0 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
            
-           {analysisResult && (
-             <div className="bg-white border-2 border-blue-500 p-6 rounded-2xl shadow-xl mb-6 relative animate-scale-up overflow-hidden">
-                <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                <button onClick={() => setAnalysisResult(null)} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 transition-colors"><X size={18} /></button>
-                <div className="flex items-center gap-3 mb-4"><div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Sparkles size={20} /></div><h4 className="font-bold text-slate-900 text-lg">AI Case Intelligence</h4></div>
-                <div className="text-sm leading-relaxed text-slate-700 space-y-2 whitespace-pre-wrap">{analysisResult}</div>
-                <div className="mt-4 pt-4 border-t border-slate-100 text-[10px] uppercase font-bold tracking-widest text-slate-400 flex items-center gap-2"><ShieldCheck size={12} className="text-blue-500" />Powered by Gemini 3 Pro (Thinking Mode)</div>
-             </div>
-           )}
-
            {currentMessages.length > 0 ? (
              currentMessages.map((msg) => (
               <div key={msg.id} className={`flex ${msg.senderId === user.id ? 'justify-end' : 'justify-start'}`}>
