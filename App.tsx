@@ -6,6 +6,7 @@ import { Login } from './views/Login';
 import { ClientPortal } from './views/ClientPortal';
 import { ClientDocumentsView } from './views/ClientDocumentsView';
 import { ClientSettingsView } from './views/ClientSettingsView';
+import { ClientGuideView } from './views/ClientGuideView';
 import { ChatView } from './views/ChatView';
 import { AdminDashboard } from './views/AdminDashboard';
 import { FinanceDashboard } from './views/FinanceDashboard';
@@ -204,6 +205,15 @@ const App: React.FC = () => {
 
       return { ...c, ...updates, notifications: newNotifications };
     }));
+
+    // CRITICAL: Synchronize the logged-in user state if they updated their own profile
+    if (user && user.id === clientId && user.role === 'client') {
+      setUser(prev => prev ? ({
+        ...prev,
+        name: updates.name || prev.name,
+        avatarUrl: updates.avatarUrl || prev.avatarUrl
+      }) : null);
+    }
   };
 
   const handleNewChatMessage = (senderId: string, recipientId: string, text: string) => {
@@ -273,6 +283,7 @@ const App: React.FC = () => {
       if (currentView === 'documents') return <ClientDocumentsView client={clientData} onUpload={(f) => {}} />;
       if (currentView === 'settings') return <ClientSettingsView client={clientData} onUpdateProfile={(u) => updateClient(clientData.id, u)} />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
+      if (currentView === 'guide') return <ClientGuideView />;
       return <ClientPortal client={clientData} onNavigateToDocs={() => setCurrentView('documents')} />;
     }
   };

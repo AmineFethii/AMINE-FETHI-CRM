@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { LogOut, LayoutDashboard, FileText, Settings, Shield, Bell, Banknote, Check, CheckCheck, Users, Briefcase, ChevronDown, Receipt, MonitorPlay, MessageSquare, Key, Activity } from 'lucide-react';
+import { LogOut, LayoutDashboard, FileText, Settings, Shield, Bell, Banknote, Check, CheckCheck, Users, Briefcase, ChevronDown, Receipt, MonitorPlay, MessageSquare, Key, Activity, BookOpen } from 'lucide-react';
 import { User, Notification } from '../types';
 import { translations } from '../translations';
 
@@ -87,7 +87,10 @@ export const Layout: React.FC<LayoutProps> = ({
           )}
 
           {user.role === 'client' && (
-             <NavItem id="chat" icon={MessageSquare} label={t.chat} />
+             <>
+               <NavItem id="chat" icon={MessageSquare} label={t.chat} />
+               <NavItem id="guide" icon={BookOpen} label={t.guide} />
+             </>
           )}
 
           <NavItem id="documents" icon={FileText} label={t.documents} />

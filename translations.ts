@@ -1,5 +1,4 @@
 
-
 export type Language = 'en';
 
 export const translations = {
@@ -61,7 +60,8 @@ export const translations = {
       tutorials: "Tutorials",
       chat: "Chat & Support",
       clientAccess: "Client Access",
-      followUp: "Mission Follow-up"
+      followUp: "Mission Follow-up",
+      guide: "Platform Guide"
     },
     clientPortal: {
       greeting: "Hello",
@@ -82,6 +82,34 @@ export const translations = {
       timeline: "Process Timeline",
       projectCompleted: "Project completed successfully.",
       projectMoving: "Your project is moving forward. Check back soon for updates."
+    },
+    clientGuide: {
+      title: "User Guide",
+      subtitle: "Learn how to master the Amine El Fethi Business Solutions platform.",
+      next: "Next",
+      back: "Back",
+      finish: "Got it!",
+      stepOf: "Step {current} of {total}",
+      assetsTitle: "Legal Assets & Templates",
+      assetsSubtitle: "Download essential forms and contract templates for your business.",
+      steps: [
+        {
+          title: "Welcome to Your Portal",
+          description: "This is your central hub for all legal and business consulting services. You can track your mission progress in real-time from the dashboard."
+        },
+        {
+          title: "Document Management",
+          description: "Upload required documents securely in the 'Documents' tab. Our team will review them and update their status (Approved/Rejected) automatically."
+        },
+        {
+          title: "Real-time Communication",
+          description: "Use the 'Chat' feature to speak directly with Amine or our support team. You can attach files and receive instant notifications for new messages."
+        },
+        {
+          title: "Stay Informed",
+          description: "Check the notification bell at the top right for status updates, message alerts, and document approvals. We keep you updated every step of the way."
+        }
+      ]
     },
     adminDashboard: {
       goodMorning: "Good Morning",
