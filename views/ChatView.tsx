@@ -13,7 +13,8 @@ import {
   Star,
   Inbox,
   FileText,
-  File as FileIcon
+  File as FileIcon,
+  FileType
 } from 'lucide-react';
 import { translations, Language } from '../translations';
 import { User, ClientData } from '../types';
@@ -232,6 +233,13 @@ END OF EXPORT
     setIsMenuOpen(false);
   };
 
+  const getFileIcon = (fileName: string) => {
+    const ext = fileName.toLowerCase().split('.').pop();
+    if (ext === 'pdf') return <FileText size={20} />;
+    if (['txt', 'csv'].includes(ext || '')) return <FileType size={20} />;
+    return <FileIcon size={20} />;
+  };
+
   const currentThread = threads[activeThreadId];
   const currentMessages = currentThread?.messages || [];
 
@@ -357,7 +365,7 @@ END OF EXPORT
                       ) : (
                         <div className={`flex items-center gap-3 p-3 rounded-xl border ${msg.senderId === user.id ? 'bg-white/10 border-white/20' : 'bg-slate-50 border-slate-100'}`}>
                            <div className={`p-2 rounded-lg ${msg.senderId === user.id ? 'bg-white/20 text-white' : 'bg-blue-100 text-blue-600'}`}>
-                              {msg.attachment.name.toLowerCase().endsWith('.pdf') ? <FileText size={20} /> : <FileIcon size={20} />}
+                              {getFileIcon(msg.attachment.name)}
                            </div>
                            <div className="min-w-0">
                               <p className={`text-sm font-bold truncate ${msg.senderId === user.id ? 'text-white' : 'text-slate-900'}`}>{msg.attachment.name}</p>
@@ -395,7 +403,13 @@ END OF EXPORT
         {/* Input Area */}
         <div className="bg-white p-4 border-t border-slate-200 shadow-lg">
            <form onSubmit={handleSendMessage} className="flex items-center gap-3">
-             <input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/*,.pdf,.doc,.docx" />
+             <input 
+               type="file" 
+               ref={fileInputRef} 
+               onChange={handleFileUpload} 
+               className="hidden" 
+               accept="image/*,.pdf,.txt,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv" 
+             />
              <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors border border-slate-200">
                <Paperclip size={20} />
              </button>
