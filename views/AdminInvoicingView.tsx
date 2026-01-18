@@ -63,7 +63,8 @@ export const AdminInvoicingView: React.FC<AdminInvoicingViewProps> = ({ clients,
 
   const t = translations[lang].invoicing;
   const commonT = translations[lang].common;
-  const isRTL = lang === 'ar';
+  // Fix: Cast lang to string to avoid comparison error with 'ar' since Language is only 'en'
+  const isRTL = (lang as string) === 'ar';
 
   // Mock Data Generation based on Clients
   const invoices: Invoice[] = useMemo(() => {
@@ -197,7 +198,8 @@ export const AdminInvoicingView: React.FC<AdminInvoicingViewProps> = ({ clients,
                     : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
                 }`}
               >
-                {status === 'all' ? commonT.all : t[status as keyof typeof t] || status}
+                {/* Fix: Cast t to any because some properties (like 'generator') are objects, preventing safe indexing */}
+                {status === 'all' ? commonT.all : (t as any)[status] || status}
               </button>
             ))}
           </div>
@@ -222,7 +224,8 @@ export const AdminInvoicingView: React.FC<AdminInvoicingViewProps> = ({ clients,
               <tr>
                 <th className="px-6 py-4">{t.invoiceNum}</th>
                 <th className="px-6 py-4">{t.client}</th>
-                <th className="px-6 py-4">{t.date}</th>
+                {/* Fix: use commonT.date as invoicing does not have a date property */}
+                <th className="px-6 py-4">{commonT.date}</th>
                 <th className="px-6 py-4 text-right">{t.amount}</th>
                 <th className="px-6 py-4 text-center">{commonT.status}</th>
                 <th className="px-6 py-4 text-right">{commonT.actions}</th>
@@ -503,7 +506,8 @@ const StatusBadge = ({ status, t }: { status: string, t: any }) => {
 
   return (
     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border capitalize ${styles[status as keyof typeof styles]}`}>
-      {t[status] || status}
+      {/* Fix: Cast t as any to access translation properties safely */}
+      {(t as any)[status] || status}
     </span>
   );
 };

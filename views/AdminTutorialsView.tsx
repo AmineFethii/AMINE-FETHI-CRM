@@ -33,7 +33,8 @@ export const AdminTutorialsView: React.FC<AdminTutorialsViewProps> = ({ lang }) 
   const [playingVideo, setPlayingVideo] = useState<Video | null>(null);
   
   const t = translations[lang].tutorials;
-  const isRTL = lang === 'ar';
+  // Fix: Cast lang to string to avoid comparison error with 'ar' as Language is only 'en'
+  const isRTL = (lang as string) === 'ar';
 
   const categories = ['All', 'Onboarding', 'Finance', 'Legal', 'Platform'];
 

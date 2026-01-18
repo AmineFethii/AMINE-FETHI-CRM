@@ -61,7 +61,8 @@ export const ChatView: React.FC<ChatViewProps> = ({ lang, user, clients, onNotif
   
   const t = translations[lang].chat;
   const isAdmin = user.role === 'admin';
-  const isRTL = lang === 'ar';
+  // Fix: Cast lang to string to avoid comparison error with 'ar' as Language is only 'en'
+  const isRTL = (lang as string) === 'ar';
 
   // Load and persist threads
   useEffect(() => {

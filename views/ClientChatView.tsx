@@ -52,7 +52,8 @@ export const ClientChatView: React.FC<ClientChatViewProps> = ({ lang }) => {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const t = translations[lang].chat;
-  const isRTL = lang === 'ar';
+  // Fix: Cast lang to string to avoid comparison error with 'ar' as Language is only 'en'
+  const isRTL = (lang as string) === 'ar';
 
   const contacts: Contact[] = [
     {

@@ -60,7 +60,8 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
   
   const t = translations[lang].clientAccess;
   const commonT = translations[lang].common;
-  const isRTL = lang === 'ar';
+  // Fix: Cast lang to string to avoid comparison error with 'ar' as Language is currently only 'en'
+  const isRTL = (lang as string) === 'ar';
 
   const formatLastLogin = (dateString?: string) => {
     if (!dateString) return 'Never';
@@ -349,7 +350,8 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
 
                   <div>
                      <div className="flex justify-between items-center mb-2">
-                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t.password}</label>
+                        {/* Fix: use login.password as clientAccess doesn't have it */}
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].login.password}</label>
                         <button 
                           onClick={() => setModal(prev => ({...prev, generatedPass: generatePassword()}))}
                           className="text-[10px] flex items-center gap-1 text-blue-600 font-bold hover:text-blue-700 transition-colors uppercase tracking-wider"
@@ -462,7 +464,8 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
               {/* PASSWORD FIELD INTEGRATED */}
               <div>
                 <div className="flex justify-between items-center mb-2">
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{t.password}</label>
+                  {/* Fix: use login.password as clientAccess doesn't have it */}
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].login.password}</label>
                   <button 
                     type="button"
                     onClick={() => setNewClientData(prev => ({ ...prev, password: generatePassword() }))}

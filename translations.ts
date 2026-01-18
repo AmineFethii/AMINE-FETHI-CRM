@@ -57,6 +57,8 @@ export const translations = {
       noNotifications: "No notifications yet",
       editProfile: "Edit Profile",
       invoicing: "Invoicing",
+      invoiceHub: "Invoice Hub",
+      invoiceGen: "Invoice Generator",
       tutorials: "Tutorials",
       chat: "Chat & Support",
       clientAccess: "Client Access",
@@ -302,7 +304,23 @@ export const translations = {
       searchPlaceholder: "Search invoices...",
       noInvoices: "No invoices found.",
       aiGenerate: "Magic Auto-Fill",
-      draft: "Draft"
+      draft: "Draft",
+      generator: {
+        title: "Invoice Generator",
+        subtitle: "Generate high-fidelity legal invoices using the ACT Consulting template.",
+        details: "Invoice Details",
+        clientInfo: "Client Recipient",
+        items: "Billable Items",
+        preview: "Live Template Preview",
+        billTo: "A l'ordre de :",
+        doneAt: "Fait le :",
+        subTotal: "SOUS-TOTAL HT",
+        discount: "REMISE",
+        subTotalAfterDiscount: "SOUS-TOTAL MOINS LES REMISES",
+        vat: "TVA 20%",
+        shipping: "EXPEDITION, MANUTENTION",
+        totalTtc: "TOTAL TTC"
+      }
     },
     tutorials: {
       title: "Tutorials & Guides",

@@ -15,6 +15,7 @@ import { AdminSettingsView } from './views/AdminSettingsView';
 import { AdminEmployeesView } from './views/AdminEmployeesView';
 import { AdminClientsView } from './views/AdminClientsView';
 import { AdminInvoicingView } from './views/AdminInvoicingView';
+import { AdminInvoiceGeneratorView } from './views/AdminInvoiceGeneratorView';
 import { AdminTutorialsView } from './views/AdminTutorialsView';
 import { AdminClientAccessView } from './views/AdminClientAccessView';
 import { AdminFollowUpView } from './views/AdminFollowUpView';
@@ -356,7 +357,8 @@ const App: React.FC = () => {
       if (currentView === 'clients') return <AdminClientsView clients={clients} onManageClient={(clientId) => { setSelectedClientIdForFollowUp(clientId); setCurrentView('follow-up'); }} onUpdateClient={updateClient} />;
       if (currentView === 'team') return <AdminEmployeesView employees={employees} onAddEmployee={handleAddEmployee} />;
       if (currentView === 'settings') return <AdminSettingsView user={user} />;
-      if (currentView === 'invoicing') return <AdminInvoicingView clients={clients} lang="en" />;
+      if (currentView === 'invoicing-hub') return <AdminInvoicingView clients={clients} lang="en" />;
+      if (currentView === 'invoicing-generator') return <AdminInvoiceGeneratorView clients={clients} lang="en" />;
       if (currentView === 'tutorials') return <AdminTutorialsView lang="en" />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
       if (currentView === 'client-access') return <AdminClientAccessView clients={clients} lang="en" onAddClient={handleAddClient} onUpdateCredentials={handleUpdateCredentials} />;
