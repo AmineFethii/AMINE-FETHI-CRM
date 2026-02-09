@@ -60,6 +60,24 @@ export interface ClientData {
   whatsapp?: string;
   avatarUrl?: string;
   
+  // French Legal Advisory Fields
+  birthDate?: string;
+  fullAddress?: string;
+  province?: string;
+  companyNameProposals?: string[]; // Three propositions
+  businessActivity?: string;
+  annualTurnover?: string;
+  desiredMonthlySalary?: '5000' | '7000' | '8500';
+  moneyTransferMethod?: string;
+  monthlyTransfer?: 'Oui' | 'Non';
+  paymentPlatforms?: string; // PayPal, Payoneer, etc.
+  existingEntityLLCLTD?: 'Oui' | 'Non';
+  hasEmployees?: 'Oui' | 'Non';
+  employeeCount?: string;
+  ownerCount?: string;
+  plannedStartDate?: string;
+  monthlyBusinessExpenses?: string;
+
   serviceType: string;
   progress: number;
   statusMessage: string;
@@ -75,6 +93,6 @@ export interface ClientData {
   lastPaymentDate?: string;
 
   // Mission Lifecycle
-  missionStartDate: string; // ISO Date for yearly cycle tracking
-  lastLogin?: string; // ISO Date for activity tracking
+  missionStartDate: string; 
+  lastLogin?: string; 
 }

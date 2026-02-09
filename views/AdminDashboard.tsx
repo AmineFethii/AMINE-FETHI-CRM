@@ -17,15 +17,16 @@ import {
   Clock,
   ArrowRight,
   Bell,
-  Calendar
+  Calendar,
+  User
 } from 'lucide-react';
-import { ClientData, TimelineStep, User } from '../types';
+import { ClientData, TimelineStep, User as UserType } from '../types';
 import { translations } from '../translations';
 
 interface AdminDashboardProps {
   clients: ClientData[];
   onUpdateClient: (clientId: string, updates: Partial<ClientData>) => void;
-  user: User | null;
+  user: UserType | null;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdateClient, user }) => {
@@ -225,12 +226,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
           <div className="flex items-center gap-6">
             <div className="relative group cursor-pointer" onClick={() => {}}>
               <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-1 shadow-lg transition-transform duration-300 group-hover:scale-105">
-                <div className="w-full h-full rounded-xl overflow-hidden bg-slate-800 flex items-center justify-center relative">
-                  {user?.avatarUrl ? (
-                    <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <span className="text-2xl font-bold text-white">{user?.name?.charAt(0) || 'A'}</span>
-                  )}
+                <div className="w-full h-full rounded-xl overflow-hidden bg-blue-600 flex items-center justify-center relative shadow-inner">
+                  <User size={32} className="text-white" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors"></div>
                 </div>
               </div>
@@ -459,12 +456,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-4">
                               <div className="relative">
-                                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 text-slate-500 font-bold overflow-hidden">
-                                  {client.avatarUrl ? (
-                                    <img src={client.avatarUrl} alt="" className="w-full h-full object-cover" />
-                                  ) : (
-                                    client.companyName.charAt(0)
-                                  )}
+                                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center border border-blue-500 text-white font-bold overflow-hidden shadow-sm">
+                                  <User size={20} />
                                 </div>
                                 {hasPending && (
                                   <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white animate-pulse"></span>
@@ -541,8 +534,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                 {/* Panel Header */}
                 <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl backdrop-blur-sm">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 p-1 shadow-sm">
-                        {selectedClient.avatarUrl ? <img src={selectedClient.avatarUrl} className="w-full h-full object-cover rounded-md" /> : <div className="w-full h-full bg-slate-100 rounded-md"></div>}
+                    <div className="w-10 h-10 rounded-lg bg-blue-600 border border-blue-500 p-1 shadow-md flex items-center justify-center">
+                        <User size={18} className="text-white" />
                     </div>
                     <div>
                       <h3 className="font-bold text-slate-900 leading-tight">{selectedClient.companyName}</h3>
@@ -716,8 +709,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                     globalPendingDocs.map((item, idx) => (
                       <div key={`${item.client.id}-${item.id}`} className="flex gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors cursor-pointer group" onClick={() => handleEditClick(item.client)}>
                          <div className="mt-1">
-                           <div className="w-8 h-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-slate-400 font-bold text-xs">
-                             {item.client.companyName.charAt(0)}
+                           <div className="w-8 h-8 rounded-full bg-blue-600 border border-blue-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
+                             <User size={14} />
                            </div>
                          </div>
                          <div className="flex-1">

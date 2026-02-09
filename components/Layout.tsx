@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { LogOut, LayoutDashboard, FileText, Settings, Shield, Bell, Banknote, Check, CheckCheck, Users, Briefcase, ChevronDown, ChevronRight, Receipt, MonitorPlay, MessageSquare, Key, Activity, BookOpen, Calendar, Clock, Sparkles } from 'lucide-react';
+import { LogOut, LayoutDashboard, FileText, Settings, Shield, Bell, Banknote, Check, CheckCheck, Users, Briefcase, ChevronDown, ChevronRight, Receipt, MonitorPlay, MessageSquare, Key, Activity, BookOpen, Calendar, Clock, Sparkles, User as UserIcon } from 'lucide-react';
 import { User, Notification, ClientData } from '../types';
 import { translations } from '../translations';
 
@@ -43,13 +43,16 @@ export const Layout: React.FC<LayoutProps> = ({
     }
   };
 
+  // Get current client data if applicable
+  const currentClient = useMemo(() => {
+    return clients.find(c => c.id === user.id);
+  }, [user.id, clients]);
+
   // Calculate Yearly Cycle Stats for Clients
   const cycleData = useMemo(() => {
-    if (user.role !== 'client' || !clients.length) return null;
-    const client = clients.find(c => c.id === user.id);
-    if (!client || !client.missionStartDate) return null;
+    if (user.role !== 'client' || !currentClient || !currentClient.missionStartDate) return null;
 
-    const startDate = new Date(client.missionStartDate);
+    const startDate = new Date(currentClient.missionStartDate);
     const today = new Date();
     const renewalDate = new Date(startDate);
     renewalDate.setFullYear(startDate.getFullYear() + 1);
@@ -65,7 +68,7 @@ export const Layout: React.FC<LayoutProps> = ({
       percentage,
       renewalDate: renewalDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
     };
-  }, [user, clients]);
+  }, [user, currentClient]);
 
   const NavItem = ({ id, icon: Icon, label, hasChildren, isOpen, onToggle }: { id: string, icon: any, label: string, hasChildren?: boolean, isOpen?: boolean, onToggle?: () => void }) => (
     <div 
@@ -201,23 +204,28 @@ export const Layout: React.FC<LayoutProps> = ({
             </div>
           )}
           <div className="flex items-center justify-between gap-2 px-2">
-            <div className="flex items-center gap-3 overflow-hidden text-start">
-              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 border border-slate-700 overflow-hidden shadow-lg shadow-blue-900/20">
-                {user.avatarUrl ? <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" /> : user.name.charAt(0)}
+            <div className="flex items-center gap-3 overflow-hidden text-start min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center text-white flex-shrink-0 border border-blue-500 overflow-hidden shadow-lg shadow-blue-900/20">
+                <UserIcon size={18} />
               </div>
-              <div className="overflow-hidden">
-                <p className="text-sm font-bold text-white truncate leading-tight">{user.name}</p>
-                <p className="text-[10px] text-slate-500 capitalize tracking-wider font-semibold">{user.role}</p>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-bold text-white truncate leading-tight" title={user.role === 'client' ? currentClient?.companyName : user.name}>
+                  {user.role === 'client' ? (currentClient?.companyName || user.name) : user.name}
+                </p>
+                {user.role === 'admin' && (
+                  <p className="text-[10px] text-slate-500 capitalize tracking-wider font-semibold">{user.role}</p>
+                )}
               </div>
             </div>
-            <button onClick={onLogout} className="p-2 text-slate-500 hover:text-white hover:bg-slate-800 rounded-lg transition-all active:scale-95" title={t.signout}><LogOut size={16} /></button>
+            <button onClick={onLogout} className="p-2 text-slate-500 hover:text-white hover:bg-slate-800 rounded-lg transition-all active:scale-95 flex-shrink-0" title={t.signout}><LogOut size={16} /></button>
           </div>
         </div>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 relative transition-all duration-300 md:ml-64">
-        <header className="h-16 bg-white border-b border-slate-200 sticky top-0 z-10 px-4 md:px-8 flex items-center justify-end gap-4">
+        {/* Fixed Layering: Bumped z-index to ensure header and notifications are above dashboard elements */}
+        <header className="h-16 bg-white border-b border-slate-200 sticky top-0 z-[100] px-4 md:px-8 flex items-center justify-end gap-4 shadow-sm">
            <div className="relative">
              <button onClick={() => setIsNotificationsOpen(!isNotificationsOpen)} className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/20">
                <Bell size={20} />
@@ -226,7 +234,7 @@ export const Layout: React.FC<LayoutProps> = ({
              {isNotificationsOpen && (
                <>
                  <div className="fixed inset-0 z-0" onClick={() => setIsNotificationsOpen(false)}></div>
-                 <div className="absolute mt-3 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-slate-100 z-20 overflow-hidden animate-fade-in-down right-0">
+                 <div className="absolute mt-3 w-80 md:w-96 bg-white rounded-xl shadow-2xl border border-slate-100 z-[110] overflow-hidden animate-fade-in-down right-0">
                    <div className="p-4 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
                      <div className="flex items-center gap-2">
                        <h3 className="font-semibold text-slate-900">{t.notifications}</h3>

@@ -220,7 +220,11 @@ export const translations = {
       docList: "Document List",
       confirmReject: "Confirm",
       cancelReject: "Cancel",
-      noDocs: "No documents found matching your filters."
+      noDocs: "No documents found matching your filters.",
+      folderReceipts: "RECEIPTS DOC",
+      folderInvoices: "INVOICES DOC",
+      folderBanking: "BANKING DOC",
+      folderLegal: "LEGAL DOC"
     },
     settings: {
       title: "Settings",
@@ -322,20 +326,14 @@ export const translations = {
         totalTtc: "TOTAL TTC"
       }
     },
+    // Fix: Added missing tutorials translation object required by AdminTutorialsView
     tutorials: {
-      title: "Tutorials & Guides",
-      subtitle: "Master the platform with these video guides.",
-      gettingStarted: "Getting Started",
-      featured: "Featured Tutorial",
-      watchNow: "Watch Now",
-      searchPlaceholder: "Search videos...",
+      title: "Tutorials & Training",
+      subtitle: "Video guides to help you master the platform.",
+      featured: "Featured",
       allCategories: "All Categories",
-      duration: "Duration",
-      level: "Level",
-      beginner: "Beginner",
-      advanced: "Advanced",
-      watched: "Watched",
-      play: "Play"
+      searchPlaceholder: "Search tutorials...",
+      watched: "watched"
     },
     chat: {
       title: "Messages",

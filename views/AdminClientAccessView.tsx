@@ -84,9 +84,12 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
     return (now.getTime() - date.getTime()) < 300000; // 5 minutes activity window
   };
 
-  const getClientStatus = (client: ClientData) => {
-    // In a real app, this would check if credentials exist in auth DB
-    return client.id.includes('c-') ? 'active' : 'inactive';
+  const isRecentLogin = (dateString?: string) => {
+    if (!dateString) return false;
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    return diffInMs < 86400000; // Active if logged in within 24 hours
   };
 
   const filteredClients = clients.filter(client => {
@@ -95,7 +98,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
       client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.email.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const status = getClientStatus(client);
+    const status = isRecentLogin(client.lastLogin) ? 'active' : 'inactive';
     const matchesFilter = filterStatus === 'all' || status === filterStatus;
 
     return matchesSearch && matchesFilter;
@@ -201,7 +204,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
           </div>
           <div>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t.activeUsers}</p>
-            <h3 className="text-2xl font-bold text-slate-900">{clients.filter(c => isUserOnline(c.lastLogin)).length}</h3>
+            <h3 className="text-2xl font-bold text-slate-900">{clients.filter(c => isRecentLogin(c.lastLogin)).length}</h3>
           </div>
         </div>
 
@@ -259,8 +262,8 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
             </thead>
             <tbody className="divide-y divide-slate-50">
               {filteredClients.map(client => {
-                const status = getClientStatus(client);
                 const online = isUserOnline(client.lastLogin);
+                const status = isRecentLogin(client.lastLogin) ? 'active' : 'inactive';
                 return (
                   <tr key={client.id} className="hover:bg-slate-50 transition-colors group">
                     <td className="px-6 py-4">
@@ -319,7 +322,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
       </div>
 
       {modal.isOpen && modal.client && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setModal({ ...modal, isOpen: false })}></div>
           <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-up">
             {modal.step === 'create' ? (
@@ -350,7 +353,6 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
 
                   <div>
                      <div className="flex justify-between items-center mb-2">
-                        {/* Fix: use login.password as clientAccess doesn't have it */}
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].login.password}</label>
                         <button 
                           onClick={() => setModal(prev => ({...prev, generatedPass: generatePassword()}))}
@@ -402,119 +404,6 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
                 <button onClick={() => setModal({ ...modal, isOpen: false })} className="w-full py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition-all active:scale-[0.98]">{t.close}</button>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* COMBINED ADD CLIENT MODAL */}
-      {isAddClientModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" onClick={() => setIsAddClientModalOpen(false)}></div>
-          <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-up">
-            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
-              <h3 className="text-xl font-bold text-slate-900">{t.addNewClient}</h3>
-              <button onClick={() => setIsAddClientModalOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-all">
-                <XCircle size={24} />
-              </button>
-            </div>
-            <form onSubmit={handleAddNewClient} className="p-8 space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t.clientName}</label>
-                <div className="relative group">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
-                  <input 
-                    type="text" 
-                    required 
-                    value={newClientData.name} 
-                    onChange={(e) => setNewClientData({...newClientData, name: e.target.value})} 
-                    placeholder="Full Name" 
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all" 
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t.companyName}</label>
-                <div className="relative group">
-                  <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
-                  <input 
-                    type="text" 
-                    required 
-                    value={newClientData.companyName} 
-                    onChange={(e) => setNewClientData({...newClientData, companyName: e.target.value})} 
-                    placeholder="Company Name SARL" 
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all" 
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t.email}</label>
-                <div className="relative group">
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
-                  <input 
-                    type="email" 
-                    required 
-                    value={newClientData.email} 
-                    onChange={(e) => setNewClientData({...newClientData, email: e.target.value})} 
-                    placeholder="client@company.com" 
-                    className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all" 
-                  />
-                </div>
-              </div>
-              
-              {/* PASSWORD FIELD INTEGRATED */}
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  {/* Fix: use login.password as clientAccess doesn't have it */}
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].login.password}</label>
-                  <button 
-                    type="button"
-                    onClick={() => setNewClientData(prev => ({ ...prev, password: generatePassword() }))}
-                    className="text-[10px] flex items-center gap-1 text-blue-600 font-bold hover:text-blue-700 transition-colors uppercase tracking-wider"
-                  >
-                    <RefreshCw size={12} /> {t.generateRandom}
-                  </button>
-                </div>
-                <div className="relative group">
-                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
-                  <input 
-                    type={showNewPassword ? "text" : "password"}
-                    required
-                    value={newClientData.password}
-                    onChange={(e) => setNewClientData({...newClientData, password: e.target.value})}
-                    placeholder="••••••••••••"
-                    className="w-full pl-12 pr-12 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl font-mono text-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white transition-all"
-                  />
-                  <button 
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
-                  >
-                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
-                </div>
-                {newClientData.password.length >= 10 && (
-                  <p className="text-[10px] text-green-600 mt-2 font-bold uppercase tracking-wider flex items-center gap-1">
-                    <CheckCircle2 size={12} /> {t.strongPass}
-                  </p>
-                )}
-              </div>
-
-              <div className="pt-6 flex gap-4">
-                 <button 
-                  type="button" 
-                  onClick={() => setIsAddClientModalOpen(false)} 
-                  className="flex-1 py-4 bg-white border border-slate-200 text-slate-600 font-bold rounded-2xl hover:bg-slate-50 transition-all active:scale-[0.98]"
-                 >
-                  {commonT.cancel}
-                 </button>
-                 <button 
-                  type="submit" 
-                  className="flex-1 py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 flex items-center justify-center gap-2 shadow-xl shadow-slate-900/20 transition-all active:scale-[0.98]"
-                 >
-                  <Plus size={20} /> {t.addNewClient}
-                 </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

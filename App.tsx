@@ -20,7 +20,7 @@ import { AdminTutorialsView } from './views/AdminTutorialsView';
 import { AdminClientAccessView } from './views/AdminClientAccessView';
 import { AdminFollowUpView } from './views/AdminFollowUpView';
 import { AdminCalendarView } from './views/AdminCalendarView';
-import { User, ClientData, Role, Notification, Employee } from './types';
+import { User, ClientData, Role, Notification, Employee, ClientDocument } from './types';
 
 // COMPREHENSIVE RESTORED DATABASE
 const INITIAL_CLIENTS: ClientData[] = [
@@ -302,6 +302,32 @@ const App: React.FC = () => {
     }
   };
 
+  const handleDocumentUpload = (clientId: string, fileName: string, category: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+
+    const newDoc: ClientDocument = {
+      id: `doc-${Date.now()}`,
+      name: fileName,
+      type: category,
+      status: 'uploaded',
+      uploadDate: new Date().toISOString()
+    };
+
+    updateClient(clientId, { documents: [...client.documents, newDoc] });
+    
+    // Notify admin
+    const adminNotif: Notification = {
+      id: `admin-n-${Date.now()}`,
+      title: 'New Document Uploaded',
+      message: `${client.companyName} uploaded "${fileName}" to ${category} section.`,
+      date: new Date().toISOString(),
+      read: false,
+      type: 'info'
+    };
+    setAdminNotifications(prev => [adminNotif, ...prev]);
+  };
+
   const handleNewChatMessage = (senderId: string, recipientId: string, text: string) => {
     const now = new Date().toISOString();
     const notification: Notification = {
@@ -366,7 +392,7 @@ const App: React.FC = () => {
     } else {
       const clientData = getCurrentClientData();
       if (!clientData) return <div>Error loading client data</div>;
-      if (currentView === 'documents') return <ClientDocumentsView client={clientData} onUpload={(f) => {}} />;
+      if (currentView === 'documents') return <ClientDocumentsView client={clientData} onUpload={(f, cat) => handleDocumentUpload(clientData.id, f, cat)} />;
       if (currentView === 'settings') return <ClientSettingsView client={clientData} onUpdateProfile={(u) => updateClient(clientData.id, u)} />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
       if (currentView === 'guide') return <ClientGuideView onNavigate={(view) => setCurrentView(view)} />;

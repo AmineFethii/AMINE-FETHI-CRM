@@ -18,7 +18,9 @@ import {
   Calendar,
   X,
   Save,
-  Settings2
+  Settings2,
+  User,
+  RefreshCw
 } from 'lucide-react';
 import { ClientData } from '../types';
 import { translations } from '../translations';
@@ -264,8 +266,8 @@ export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onM
                    {/* Avatar & Info */}
                    <div className="relative -mt-10 mb-3 flex justify-between items-end">
                       <div className="w-16 h-16 rounded-xl bg-white p-1 shadow-md">
-                         <div className="w-full h-full rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-100 text-slate-400 font-bold text-xl">
-                            {client.avatarUrl ? <img src={client.avatarUrl} className="w-full h-full object-cover" /> : client.companyName.charAt(0)}
+                         <div className="w-full h-full rounded-lg bg-blue-600 flex items-center justify-center overflow-hidden border border-blue-500 text-white font-bold text-xl shadow-inner">
+                            <User size={28} />
                          </div>
                       </div>
                       <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide border ${
@@ -426,21 +428,3 @@ export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onM
     </div>
   );
 };
-
-// Helper for spin-slow since it's not standard tailwind
-const RefreshCw = ({ size, className }: { size: number, className?: string }) => (
-  <svg 
-    xmlns="http://www.w3.org/2000/svg" 
-    width={size} 
-    height={size} 
-    viewBox="0 0 24 24" 
-    fill="none" 
-    stroke="currentColor" 
-    strokeWidth="2" 
-    strokeLinecap="round" 
-    strokeLinejoin="round" 
-    className={className}
-  >
-    <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
-  </svg>
-);

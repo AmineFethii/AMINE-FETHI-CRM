@@ -6,7 +6,10 @@ import {
   Building2,
   TrendingUp,
   Bell,
-  ArrowRight
+  ArrowRight,
+  User,
+  Circle,
+  MoreHorizontal
 } from 'lucide-react';
 import { ClientData } from '../types';
 import { translations } from '../translations';
@@ -36,20 +39,14 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
       {/* Header Section */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div className="flex items-center gap-5 w-full md:w-auto">
-          <div className="w-16 h-16 rounded-full bg-slate-100 p-1 border border-slate-200 shadow-sm flex-shrink-0">
-            <div className="w-full h-full rounded-full overflow-hidden bg-slate-200 relative">
-              {client.avatarUrl ? (
-                <img src={client.avatarUrl} alt={client.name} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-500 to-blue-700 text-white text-xl font-bold">
-                  {client.name.charAt(0)}
-                </div>
-              )}
+          <div className="w-16 h-16 rounded-full bg-blue-50 p-1 border border-blue-100 shadow-sm flex-shrink-0">
+            <div className="w-full h-full rounded-full overflow-hidden bg-blue-600 relative flex items-center justify-center shadow-inner">
+              <User size={32} className="text-white" />
             </div>
           </div>
           <div>
             <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">
-              {t.greeting}, {client.firstName || client.name.split(' ')[0]}
+              {t.greeting}, {client.companyName}
               <span className="inline-block origin-[70%_70%] hover:animate-pulse cursor-default">👋</span>
             </h1>
             <p className="text-slate-500 text-sm mt-1">{t.overview}</p>
@@ -88,17 +85,6 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
                       viewBox="0 0 200 200" 
                       className="transform -rotate-90 drop-shadow-xl"
                     >
-                      <defs>
-                        <linearGradient id="progressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#2563EB" /> {/* blue-600 */}
-                          <stop offset="100%" stopColor="#0F172A" /> {/* slate-900 */}
-                        </linearGradient>
-                        <linearGradient id="completeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                          <stop offset="0%" stopColor="#22c55e" /> {/* green-500 */}
-                          <stop offset="100%" stopColor="#15803d" /> {/* green-700 */}
-                        </linearGradient>
-                      </defs>
-
                       <circle
                         stroke="#E2E8F0"
                         strokeWidth="1"
@@ -130,7 +116,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
                       />
 
                       <circle
-                        stroke={isComplete ? "url(#completeGradient)" : "url(#progressGradient)"}
+                        stroke={isComplete ? "#22c55e" : "#2563EB"}
                         strokeWidth={strokeWidth}
                         strokeDasharray={`${circumference} ${circumference}`}
                         style={{ strokeDashoffset }}
@@ -216,7 +202,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
               {recentNotifications.length > 0 ? (
                 recentNotifications.map(note => (
                   <div key={note.id} className="flex gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100">
-                    <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
+                    <div className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${
                       note.type === 'alert' ? 'bg-red-500' : 
                       note.type === 'success' ? 'bg-green-500' : 'bg-blue-500'
                     }`} />
@@ -244,50 +230,84 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
 
         </div>
 
-        {/* Timeline Sidebar */}
+        {/* --- ORGANIZED PROCESS TIMELINE SIDEBAR --- */}
         <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 h-full">
-            <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-              <TrendingUp className="text-blue-500" size={20} />
-              {t.timeline}
-            </h3>
-            
-            <div className="relative space-y-8 pl-4 border-l-2 border-slate-100">
-              {client.timeline.map((step) => (
-                <div key={step.id} className="relative group">
-                  <div className={`absolute top-1 w-4 h-4 rounded-full border-2 transition-all duration-300 -left-[21px] ${
-                    step.status === 'completed' ? 'bg-green-500 border-green-500' :
-                    step.status === 'in-progress' ? 'bg-white border-blue-500 ring-4 ring-blue-50 scale-110' :
-                    'bg-slate-100 border-slate-300'
-                  }`}>
-                    {step.status === 'completed' && <CheckCircle2 size={12} className="text-white absolute top-0 left-0" />}
-                    {step.status === 'in-progress' && <div className="absolute inset-0 m-auto w-1.5 h-1.5 bg-blue-500 rounded-full animate-ping" />}
-                  </div>
-                  
-                  <div className={`transition-all duration-300 ${
-                    step.status === 'pending' ? 'opacity-50 group-hover:opacity-80' : 'opacity-100'
-                  }`}>
-                    <p className={`text-sm font-bold ${
-                      step.status === 'completed' ? 'text-green-700' : 
-                      step.status === 'in-progress' ? 'text-blue-700' : 'text-slate-700'
-                    }`}>
-                      {step.label}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      {step.status === 'completed' ? translations.en.common.completed : 
-                       step.status === 'in-progress' ? translations.en.common.inProgress : translations.en.common.pending}
-                    </p>
-                  </div>
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden h-full flex flex-col">
+            <div className="p-6 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-600 rounded-xl text-white shadow-lg shadow-blue-900/20">
+                   <TrendingUp size={20} />
                 </div>
-              ))}
+                <h3 className="font-bold text-slate-900">{t.timeline}</h3>
+              </div>
+              <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-white rounded-lg transition-colors">
+                 <MoreHorizontal size={18} />
+              </button>
             </div>
+            
+            <div className="flex-1 p-6 relative">
+              {/* Path connector line */}
+              <div className="absolute left-[39px] top-8 bottom-8 w-0.5 bg-slate-100"></div>
 
-            <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-100">
-               <p className="text-xs text-blue-700 font-medium leading-relaxed">
-                  {isComplete 
-                    ? t.projectCompleted
-                    : t.projectMoving}
-               </p>
+              <div className="space-y-6">
+                {client.timeline.map((step, idx) => {
+                  const isLast = idx === client.timeline.length - 1;
+                  const isActive = step.status === 'in-progress';
+                  const isDone = step.status === 'completed';
+
+                  return (
+                    <div key={step.id} className="relative flex items-start gap-4 group">
+                      {/* Step Indicator */}
+                      <div className="relative z-10 flex-shrink-0">
+                        <div className={`w-8 h-8 rounded-full border-4 border-white shadow-sm flex items-center justify-center transition-all duration-500 ${
+                          isDone ? 'bg-green-500 text-white' :
+                          isActive ? 'bg-blue-600 text-white scale-110 ring-4 ring-blue-50' :
+                          'bg-slate-100 text-slate-400 border-slate-200'
+                        }`}>
+                           {isDone ? <CheckCircle2 size={16} /> :
+                            isActive ? <Clock size={16} className="animate-pulse" /> :
+                            <Circle size={14} className="opacity-40" />}
+                        </div>
+                      </div>
+
+                      {/* Step Content Card */}
+                      <div className={`flex-1 p-4 rounded-2xl border transition-all duration-300 ${
+                        isActive ? 'bg-blue-50/50 border-blue-200 shadow-sm' :
+                        isDone ? 'bg-white border-slate-100' :
+                        'bg-white border-transparent opacity-60'
+                      }`}>
+                        <div className="flex justify-between items-start">
+                          <p className={`text-sm font-bold leading-tight ${
+                            isDone ? 'text-slate-500 line-through' :
+                            isActive ? 'text-blue-900' :
+                            'text-slate-600'
+                          }`}>
+                            {step.label}
+                          </p>
+                        </div>
+                        <p className={`text-[10px] font-bold uppercase tracking-widest mt-1.5 ${
+                          isDone ? 'text-green-600' :
+                          isActive ? 'text-blue-600' :
+                          'text-slate-400'
+                        }`}>
+                          {step.status === 'completed' ? translations.en.common.completed : 
+                           step.status === 'in-progress' ? translations.en.common.inProgress : translations.en.common.pending}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Progress Summary Card at bottom of timeline */}
+              <div className="mt-8 p-4 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl text-white shadow-lg shadow-blue-900/20">
+                 <p className="text-[10px] font-bold uppercase tracking-widest opacity-70 mb-1">Status Update</p>
+                 <p className="text-xs font-medium leading-relaxed">
+                    {isComplete 
+                      ? t.projectCompleted
+                      : "Your process is currently being handled with priority by our legal advisors."}
+                 </p>
+              </div>
             </div>
           </div>
         </div>

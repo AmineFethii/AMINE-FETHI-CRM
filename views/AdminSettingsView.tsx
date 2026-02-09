@@ -86,14 +86,12 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ user }) =>
               </h3>
               
               <div className="flex items-center gap-6 mb-8">
-                <div className="w-24 h-24 rounded-full bg-slate-100 border-4 border-white shadow-lg flex items-center justify-center text-2xl font-bold text-slate-400">
-                  {user.name.charAt(0)}
+                <div className="w-24 h-24 rounded-full bg-slate-100 border-4 border-white shadow-lg flex items-center justify-center text-2xl font-bold text-slate-400 overflow-hidden">
+                  {user.avatarUrl ? <img src={user.avatarUrl} className="w-full h-full object-cover" alt={user.name} /> : user.name.charAt(0)}
                 </div>
                 <div>
-                   <button className="px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors">
-                     {t.uploadNew}
-                   </button>
-                   <p className="text-xs text-slate-400 mt-2">{t.uploadMsg}</p>
+                   <h4 className="font-bold text-slate-900">{user.name}</h4>
+                   <p className="text-xs text-slate-400 mt-1">Profile images are managed by administration.</p>
                 </div>
               </div>
 
@@ -138,7 +136,7 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ user }) =>
                     <input 
                       type="tel" 
                       defaultValue="+212 600-000000"
-                      className="w-full py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10 pr-4"
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 pl-10 pr-4"
                     />
                   </div>
                 </div>
@@ -162,7 +160,7 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ user }) =>
               <div className="space-y-4 max-w-lg">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{t.currentPwd}</label>
-                  <input type="password" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="password" placeholder="••••••••" className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">{t.newPwd}</label>
