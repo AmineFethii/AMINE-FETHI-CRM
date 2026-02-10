@@ -19,7 +19,8 @@ import {
   X,
   Check,
   ListTodo,
-  UserCheck
+  UserCheck,
+  AlertTriangle
 } from 'lucide-react';
 import { ClientData, TimelineStep, ClientTask } from '../types';
 import { translations, Language } from '../translations';
@@ -40,6 +41,7 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
   const [localClient, setLocalClient] = useState<ClientData | null>(null);
   const [newStepLabel, setNewStepLabel] = useState('');
   const [newTaskTitle, setNewTaskTitle] = useState('');
+  const [newTaskPriority, setNewTaskPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [isDirty, setIsDirty] = useState(false);
 
   // Step Editing State
@@ -113,12 +115,13 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
       title: newTaskTitle,
       description: 'Requirement from Legal Advisor',
       status: 'pending',
-      priority: 'medium',
+      priority: newTaskPriority,
       createdAt: new Date().toISOString()
     };
     const updatedTasks = [...(localClient.clientTasks || []), newTask];
     setLocalClient({ ...localClient, clientTasks: updatedTasks });
     setNewTaskTitle('');
+    setNewTaskPriority('medium');
     setIsDirty(true);
   };
 
@@ -286,14 +289,25 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
                       <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 shadow-sm border-t-4 border-t-amber-400">
                          {localClient.clientTasks?.map((task) => (
                            <div key={task.id} className="flex items-start gap-3 group p-2 hover:bg-slate-50 rounded-lg transition-colors">
-                              <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
+                              <div className={`mt-1 w-2.5 h-2.5 rounded-full flex-shrink-0 flex items-center justify-center ${
                                 task.status === 'completed' ? 'bg-green-500' :
                                 task.status === 'in-progress' ? 'bg-blue-500' :
                                 'bg-slate-200'
-                              }`} />
+                              }`}>
+                                {task.priority === 'high' && <div className="w-1 h-1 bg-white rounded-full animate-ping" />}
+                              </div>
                               <div className="flex-1 min-w-0">
                                  <p className={`text-sm font-bold truncate ${task.status === 'completed' ? 'text-slate-400' : 'text-slate-800'}`}>{task.title}</p>
-                                 <span className="text-[10px] text-slate-400 uppercase font-black tracking-tighter">{task.status}</span>
+                                 <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] text-slate-400 uppercase font-black tracking-tighter">{task.status}</span>
+                                    <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded border ${
+                                      task.priority === 'high' ? 'bg-red-50 text-red-600 border-red-100' : 
+                                      task.priority === 'medium' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                      'bg-slate-50 text-slate-500 border-slate-100'
+                                    }`}>
+                                      {task.priority}
+                                    </span>
+                                 </div>
                               </div>
                               <button onClick={() => handleDeleteTask(task.id)} className="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity">
                                  <Trash2 size={14} />
@@ -305,15 +319,42 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
                            <p className="text-center py-4 text-xs text-slate-400 italic">No tasks assigned to client yet.</p>
                          )}
 
-                         <div className="pt-4 flex gap-2">
-                            <input 
-                              type="text" 
-                              value={newTaskTitle}
-                              onChange={(e) => setNewTaskTitle(e.target.value)}
-                              placeholder={t.assignTask}
-                              className="flex-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs focus:ring-1 focus:ring-amber-500"
-                            />
-                            <button onClick={handleAddTaskToClient} className="p-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"><Plus size={16} /></button>
+                         <div className="pt-4 border-t border-slate-50 space-y-3">
+                            <div className="flex items-center gap-2 p-1 bg-slate-50 rounded-xl border border-slate-200 w-fit">
+                               {(['low', 'medium', 'high'] as const).map(p => (
+                                 <button
+                                   key={p}
+                                   type="button"
+                                   onClick={() => setNewTaskPriority(p)}
+                                   className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-tighter transition-all ${
+                                     newTaskPriority === p 
+                                       ? p === 'high' ? 'bg-red-500 text-white shadow-md' : 
+                                         p === 'medium' ? 'bg-amber-500 text-white shadow-md' :
+                                         'bg-blue-600 text-white shadow-md'
+                                       : 'text-slate-400 hover:text-slate-600'
+                                   }`}
+                                 >
+                                   {p}
+                                 </button>
+                               ))}
+                               <span className="text-[9px] font-bold text-slate-300 uppercase tracking-widest px-2">Set Urgency</span>
+                            </div>
+
+                            <div className="flex gap-2">
+                               <input 
+                                 type="text" 
+                                 value={newTaskTitle}
+                                 onChange={(e) => setNewTaskTitle(e.target.value)}
+                                 placeholder={t.assignTask}
+                                 className="flex-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs focus:ring-1 focus:ring-amber-500 font-semibold"
+                               />
+                               <button 
+                                 onClick={handleAddTaskToClient} 
+                                 className={`p-2 rounded-lg transition-all active:scale-95 ${newTaskPriority === 'high' ? 'bg-red-500 hover:bg-red-600' : 'bg-amber-600 hover:bg-amber-700'} text-white shadow-lg`}
+                               >
+                                 <Plus size={16} />
+                               </button>
+                            </div>
                          </div>
                       </div>
 

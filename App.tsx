@@ -22,9 +22,37 @@ import { AdminClientAccessView } from './views/AdminClientAccessView';
 import { AdminFollowUpView } from './views/AdminFollowUpView';
 import { AdminCalendarView } from './views/AdminCalendarView';
 import { User, ClientData, Role, Notification, Employee, ClientDocument, ClientTask } from './types';
+import { ShieldCheck, Info, X, ChevronRight, User as UserIcon, Building2 } from 'lucide-react';
 
 // COMPREHENSIVE RESTORED DATABASE
 const INITIAL_CLIENTS: ClientData[] = [
+  {
+    id: 'c-demo',
+    email: 'demo@newclient.com',
+    name: 'New Entrepreneur',
+    companyName: 'FUTURE VENTURES SARL',
+    companyCategory: 'Consulting',
+    serviceType: 'Company Creation',
+    progress: 5,
+    statusMessage: 'Awaiting Personal Info',
+    timeline: [
+      { id: 't1', label: 'Negative Certificate', status: 'in-progress' },
+      { id: 't2', label: 'Legal Statutes', status: 'pending' },
+      { id: 't3', label: 'RC Registration', status: 'pending' }
+    ],
+    clientTasks: [
+      { id: 'task-new-1', title: 'Complete Business Profile', description: 'Essential for legal drafting', status: 'pending', priority: 'high', createdAt: new Date().toISOString() }
+    ],
+    documents: [],
+    notifications: [],
+    contractValue: 8000,
+    amountPaid: 0,
+    currency: 'MAD',
+    paymentStatus: 'pending',
+    missionStartDate: new Date().toISOString(),
+    lastLogin: undefined, // First time login scenario
+    hasFilledProfile: false
+  },
   {
     id: 'c1',
     email: 'contact@mpldigital.com',
@@ -53,7 +81,8 @@ const INITIAL_CLIENTS: ClientData[] = [
     currency: 'MAD',
     paymentStatus: 'paid',
     missionStartDate: '2024-01-10',
-    lastLogin: '2024-11-20T10:30:00Z'
+    lastLogin: '2024-11-20T10:30:00Z',
+    hasFilledProfile: true
   },
   {
     id: 'c2',
@@ -81,7 +110,8 @@ const INITIAL_CLIENTS: ClientData[] = [
     currency: 'MAD',
     paymentStatus: 'partial',
     missionStartDate: '2024-03-15',
-    lastLogin: '2024-11-21T15:45:00Z'
+    lastLogin: '2024-11-21T15:45:00Z',
+    hasFilledProfile: true
   },
   {
     id: 'c3',
@@ -107,7 +137,8 @@ const INITIAL_CLIENTS: ClientData[] = [
     currency: 'MAD',
     paymentStatus: 'overdue',
     missionStartDate: '2024-10-01',
-    lastLogin: '2024-11-19T09:20:00Z'
+    lastLogin: '2024-11-19T09:20:00Z',
+    hasFilledProfile: true
   },
   {
     id: 'c4',
@@ -131,7 +162,8 @@ const INITIAL_CLIENTS: ClientData[] = [
     currency: 'MAD',
     paymentStatus: 'partial',
     missionStartDate: '2024-05-12',
-    lastLogin: '2024-11-21T11:10:00Z'
+    lastLogin: '2024-11-21T11:10:00Z',
+    hasFilledProfile: true
   },
   {
     id: 'c5',
@@ -159,7 +191,8 @@ const INITIAL_CLIENTS: ClientData[] = [
     currency: 'MAD',
     paymentStatus: 'paid',
     missionStartDate: '2024-11-01',
-    lastLogin: '2024-11-20T16:05:00Z'
+    lastLogin: '2024-11-20T16:05:00Z',
+    hasFilledProfile: true
   }
 ];
 
@@ -178,6 +211,7 @@ const INITIAL_EMPLOYEES: Employee[] = [
 ];
 
 const INITIAL_AUTH_DB: Record<string, string> = {
+  'demo@newclient.com': 'welcome2025',
   'contact@mpldigital.com': 'mpl2024',
   'contact@thebrain.ma': 'brain2024',
   'yassine@atlas-trading.com': 'atlas2024',
@@ -195,6 +229,7 @@ const ADMIN_USER: User = {
 
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   
   const [clients, setClients] = useState<ClientData[]>(() => {
     const saved = localStorage.getItem('crm_clients_v2');
@@ -249,6 +284,8 @@ const App: React.FC = () => {
     if (role === 'client') {
       const clientData = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
       if (clientData) {
+        const isFirstTime = !clientData.lastLogin;
+        
         updateClient(clientData.id, { lastLogin: new Date().toISOString() });
         setUser({
           id: clientData.id,
@@ -257,6 +294,11 @@ const App: React.FC = () => {
           role: 'client',
           avatarUrl: clientData.avatarUrl
         });
+        
+        if (isFirstTime || !clientData.hasFilledProfile) {
+          setShowWelcomeModal(true);
+        }
+        
         setCurrentView('dashboard');
         return true;
       }
@@ -267,6 +309,7 @@ const App: React.FC = () => {
   const handleLogout = () => {
     setUser(null);
     setCurrentView('dashboard');
+    setShowWelcomeModal(false);
   };
 
   const handleAddEmployee = (newEmployee: Employee) => setEmployees(prev => [...prev, newEmployee]);
@@ -361,6 +404,21 @@ const App: React.FC = () => {
     updateClient(clientId, { clientTasks: client.clientTasks.filter(t => t.id !== taskId) });
   };
 
+  const handlePushClientUpdate = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    
+    const adminNotif: Notification = {
+      id: `push-${Date.now()}`,
+      title: 'Manual Checklist Update',
+      message: `${client.companyName} has just synced their action items and requested a review.`,
+      date: new Date().toISOString(),
+      read: false,
+      type: 'success'
+    };
+    setAdminNotifications(prev => [adminNotif, ...prev]);
+  };
+
   const handleDocumentUpload = (clientId: string, fileName: string, category: string) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
@@ -445,7 +503,7 @@ const App: React.FC = () => {
       if (currentView === 'invoicing-generator') return <AdminInvoiceGeneratorView clients={clients} lang="en" />;
       if (currentView === 'tutorials') return <AdminTutorialsView lang="en" />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
-      if (currentView === 'client-access') return <AdminClientAccessView clients={clients} lang="en" onAddClient={handleAddClient} onUpdateCredentials={handleUpdateCredentials} />;
+      if (currentView === 'client-access') return <AdminClientAccessView clients={clients} lang="en" onAddClient={handleAddClient} onUpdateCredentials={handleUpdateCredentials} authCredentials={authCredentials} />;
       return <AdminDashboard clients={clients} onUpdateClient={updateClient} user={user} />;
     } else {
       const clientData = getCurrentClientData();
@@ -461,6 +519,7 @@ const App: React.FC = () => {
           onUpdateTask={(tid, stat) => handleUpdateClientTask(clientData.id, tid, stat)} 
           onAddTask={(task) => handleAddClientTask(clientData.id, task)}
           onDeleteTask={(tid) => handleDeleteClientTask(clientData.id, tid)}
+          onPushUpdate={(cid) => handlePushClientUpdate(cid)}
           onNavigate={setCurrentView} 
         />
       );
@@ -487,6 +546,67 @@ const App: React.FC = () => {
       ) : (
         <Login onLogin={handleLogin} />
       )}
+      
+      {/* WELCOME ONBOARDING MODAL */}
+      {showWelcomeModal && user?.role === 'client' && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+           <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" onClick={() => setShowWelcomeModal(false)}></div>
+           <div className="relative bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden animate-scale-up">
+              <div className="absolute top-0 right-0 p-6">
+                <button onClick={() => setShowWelcomeModal(false)} className="text-slate-300 hover:text-slate-900 transition-colors p-2 hover:bg-slate-100 rounded-full">
+                   <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-10 pt-14 text-center">
+                 <div className="relative inline-block mb-8">
+                    <div className="absolute inset-0 bg-blue-100 rounded-3xl rotate-6 scale-110"></div>
+                    <div className="relative bg-blue-600 p-6 rounded-3xl shadow-xl shadow-blue-600/20">
+                       <ShieldCheck size={48} className="text-white" />
+                    </div>
+                 </div>
+
+                 <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Action Required</h2>
+                 <p className="text-slate-500 text-lg leading-relaxed mb-10">
+                   To ensure optimal follow-up and legal accuracy for your mission, please complete your <span className="font-bold text-slate-900">Personal & Business Info</span> in the settings level.
+                 </p>
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
+                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-start gap-4 text-left">
+                       <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm"><UserIcon size={18} /></div>
+                       <div>
+                          <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Onboarding</p>
+                          <p className="text-sm font-bold text-slate-700">Fill Legal Details</p>
+                       </div>
+                    </div>
+                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-start gap-4 text-left">
+                       <div className="p-2 bg-white rounded-lg text-amber-600 shadow-sm"><Building2 size={18} /></div>
+                       <div>
+                          <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Process</p>
+                          <p className="text-sm font-bold text-slate-700">Verify Ownership</p>
+                       </div>
+                    </div>
+                 </div>
+
+                 <button 
+                   onClick={() => { setShowWelcomeModal(false); setCurrentView('settings'); }}
+                   className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/20 group active:scale-95"
+                 >
+                    Start Filling Profile
+                    <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                 </button>
+
+                 <button 
+                   onClick={() => setShowWelcomeModal(false)}
+                   className="mt-6 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
+                 >
+                    Remind me later
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+
       {user?.role === 'client' && <WhatsAppFab />}
     </div>
   );

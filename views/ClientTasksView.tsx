@@ -14,7 +14,10 @@ import {
   Trash2,
   Undo2,
   AlertTriangle,
-  Send
+  Send,
+  RefreshCw,
+  Zap,
+  CloudUpload
 } from 'lucide-react';
 import { ClientData, ClientTask } from '../types';
 import { translations } from '../translations';
@@ -24,6 +27,7 @@ interface ClientTasksViewProps {
   onUpdateTask: (taskId: string, status: ClientTask['status']) => void;
   onAddTask: (task: Omit<ClientTask, 'id' | 'createdAt'>) => void;
   onDeleteTask: (taskId: string) => void;
+  onPushUpdate?: (clientId: string) => void;
   onNavigate?: (view: string) => void;
 }
 
@@ -32,12 +36,16 @@ export const ClientTasksView: React.FC<ClientTasksViewProps> = ({
   onUpdateTask, 
   onAddTask,
   onDeleteTask,
+  onPushUpdate,
   onNavigate 
 }) => {
   const t = translations.en.clientPortal;
   const commonT = translations.en.common;
 
   const [isAdding, setIsAdding] = useState(false);
+  const [isPushing, setIsPushing] = useState(false);
+  const [lastPush, setLastPush] = useState<Date | null>(null);
+  
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
@@ -71,6 +79,17 @@ export const ClientTasksView: React.FC<ClientTasksViewProps> = ({
     setIsAdding(false);
   };
 
+  const handlePushUpdates = () => {
+    if (!onPushUpdate) return;
+    setIsPushing(true);
+    // Visual delay to simulate processing
+    setTimeout(() => {
+      onPushUpdate(client.id);
+      setIsPushing(false);
+      setLastPush(new Date());
+    }, 1500);
+  };
+
   return (
     <div className="space-y-8 animate-fade-in pb-12 font-sans">
       {/* Header */}
@@ -79,17 +98,46 @@ export const ClientTasksView: React.FC<ClientTasksViewProps> = ({
           <h1 className="text-3xl font-bold text-slate-900">{translations.en.layout.myTasks}</h1>
           <p className="text-slate-500 mt-1">Manage your internal items and advisor requests in one place.</p>
         </div>
-        <button 
-          onClick={() => setIsAdding(!isAdding)}
-          className={`flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg active:scale-95 ${
-            isAdding 
-              ? 'bg-slate-100 text-slate-600 border border-slate-200 shadow-none' 
-              : 'bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700'
-          }`}
-        >
-          {isAdding ? 'Cancel' : <><Plus size={18} /> New Action Item</>}
-        </button>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <button 
+            onClick={handlePushUpdates}
+            disabled={isPushing}
+            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all border ${
+              isPushing 
+                ? 'bg-slate-50 text-slate-400 border-slate-200 cursor-not-allowed' 
+                : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50 shadow-sm active:scale-95'
+            }`}
+          >
+            {isPushing ? (
+              <><RefreshCw size={18} className="animate-spin" /> Pushing Updates...</>
+            ) : (
+              <><CloudUpload size={18} /> Push Updates to Advisor</>
+            )}
+          </button>
+          
+          <button 
+            onClick={() => setIsAdding(!isAdding)}
+            className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg active:scale-95 ${
+              isAdding 
+                ? 'bg-slate-100 text-slate-600 border border-slate-200 shadow-none' 
+                : 'bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700'
+            }`}
+          >
+            {isAdding ? 'Cancel' : <><Plus size={18} /> New Action Item</>}
+          </button>
+        </div>
       </div>
+
+      {/* Sync Status Banner */}
+      {lastPush && !isPushing && (
+        <div className="bg-green-50 border border-green-100 p-3 rounded-2xl flex items-center justify-between animate-fade-in">
+          <div className="flex items-center gap-3 text-green-700">
+            <CheckCircle size={18} />
+            <p className="text-xs font-bold uppercase tracking-wider">Updates successfully synced with advisor logic</p>
+          </div>
+          <span className="text-[10px] font-black text-green-600 opacity-60">Last sync: {lastPush.toLocaleTimeString()}</span>
+        </div>
+      )}
 
       {/* Quick Add Form */}
       {isAdding && (

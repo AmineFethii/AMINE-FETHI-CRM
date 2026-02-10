@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { 
   Shield, 
@@ -17,7 +18,9 @@ import {
   Plus,
   Briefcase,
   User,
-  Activity
+  Activity,
+  // Added Save to the imports from lucide-react to fix the error on line 390
+  Save
 } from 'lucide-react';
 import { ClientData } from '../types';
 import { translations, Language } from '../translations';
@@ -27,6 +30,7 @@ interface AdminClientAccessViewProps {
   lang: Language;
   onAddClient: (client: ClientData) => void;
   onUpdateCredentials: (email: string, pass: string) => void;
+  authCredentials: Record<string, string>;
 }
 
 interface CredentialModalState {
@@ -36,7 +40,7 @@ interface CredentialModalState {
   step: 'create' | 'success';
 }
 
-export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ clients, lang, onAddClient, onUpdateCredentials }) => {
+export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ clients, lang, onAddClient, onUpdateCredentials, authCredentials }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [modal, setModal] = useState<CredentialModalState>({
@@ -59,7 +63,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
   
   const t = translations[lang].clientAccess;
   const commonT = translations[lang].common;
-  // Fix: Cast lang to string to avoid comparison error with 'ar' as Language is currently only 'en'
+  // Fix: Cast lang to string to avoid comparison error with 'ar' as Language is only 'en'
   const isRTL = (lang as string) === 'ar';
 
   const formatLastLogin = (dateString?: string) => {
@@ -113,15 +117,17 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
   };
 
   const handleOpenModal = (client: ClientData) => {
+    // Show current real password if it exists, otherwise generate one
+    const currentPass = authCredentials[client.email.toLowerCase()] || generatePassword();
     setModal({
       isOpen: true,
       client,
-      generatedPass: generatePassword(),
+      generatedPass: currentPass,
       step: 'create'
     });
   };
 
-  const handleCreateAccess = () => {
+  const handleUpdateAccess = () => {
     if (modal.client) {
         onUpdateCredentials(modal.client.email, modal.generatedPass);
     }
@@ -133,7 +139,6 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
   const handleAddNewClient = (e: React.FormEvent) => {
     e.preventDefault();
     if (newClientData.name && newClientData.email && newClientData.companyName && newClientData.password) {
-      // Fix: Added missing clientTasks property to satisfy ClientData interface
       const newClient: ClientData = {
         id: `c-${Date.now()}`,
         email: newClientData.email,
@@ -377,14 +382,15 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
                          {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                        </button>
                      </div>
-                     <p className="text-[10px] text-green-600 mt-2 font-bold uppercase tracking-wider">{t.strongPass}</p>
+                     <p className="text-[10px] text-green-600 mt-2 font-bold uppercase tracking-wider">Access to current client credentials</p>
                   </div>
                 </div>
 
                 <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3">
-                  <button onClick={() => setModal({ ...modal, isOpen: false })} className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition-colors">{commonT.cancel}</button>
-                  <button onClick={handleCreateAccess} className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
-                    <Send size={18} /> {t.createAndSend}
+                  <button onClick={() => setModal({ ...modal, isOpen: false })} className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-100 transition-colors">{commonT.cancel}</button>
+                  <button onClick={handleUpdateAccess} className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+                    {/* Fixed missing Save icon import by adding it to lucide-react imports above */}
+                    <Save size={18} /> {commonT.save}
                   </button>
                 </div>
               </>
@@ -394,9 +400,9 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
                   <CheckCircle2 size={32} />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">{t.accessGranted}</h3>
-                <p className="text-slate-500 mb-8">{t.credentialsSent} <span className="font-bold text-slate-800">{modal.client.email}</span></p>
+                <p className="text-slate-500 mb-8">Access configuration updated for <span className="font-bold text-slate-800">{modal.client.email}</span></p>
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-8 text-left">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Temporary Password</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Stored Password</p>
                   <div className="flex justify-between items-center bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                     <code className="text-lg font-mono text-slate-900">{modal.generatedPass}</code>
                     <button onClick={() => copyToClipboard(modal.generatedPass)} className="text-slate-400 hover:text-blue-600 transition-colors"><Copy size={18} /></button>

@@ -88,6 +88,13 @@ export interface ClientData {
   plannedStartDate?: string;
   monthlyBusinessExpenses?: string;
 
+  // Multi-owner fields
+  hasSecondOwner?: 'Oui' | 'Non';
+  secondOwnerFirstName?: string;
+  secondOwnerLastName?: string;
+  secondOwnerNationality?: string;
+  secondOwnerCin?: string;
+
   serviceType: string;
   progress: number;
   statusMessage: string;
@@ -95,6 +102,9 @@ export interface ClientData {
   clientTasks: ClientTask[]; // Tasks assigned to the client to complete
   documents: ClientDocument[];
   notifications: Notification[];
+
+  // Logic Flags
+  hasFilledProfile?: boolean;
 
   // Financials
   contractValue: number;

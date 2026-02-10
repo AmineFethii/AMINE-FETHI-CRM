@@ -16,7 +16,8 @@ import {
   Settings,
   CreditCard,
   ShieldCheck,
-  Users
+  Users,
+  UserPlus
 } from 'lucide-react';
 import { ClientData } from '../types';
 import { translations } from '../translations';
@@ -58,7 +59,12 @@ export const ClientSettingsView: React.FC<ClientSettingsViewProps> = ({ client, 
       plannedStartDate: client.plannedStartDate || '',
       monthlyBusinessExpenses: client.monthlyBusinessExpenses || '',
       avatarUrl: client.avatarUrl || '',
-      whatsapp: client.whatsapp || ''
+      whatsapp: client.whatsapp || '',
+      hasSecondOwner: client.hasSecondOwner || 'Non',
+      secondOwnerFirstName: client.secondOwnerFirstName || '',
+      secondOwnerLastName: client.secondOwnerLastName || '',
+      secondOwnerNationality: client.secondOwnerNationality || '',
+      secondOwnerCin: client.secondOwnerCin || ''
     });
     setIsDirty(false);
   }, [client]);
@@ -77,7 +83,8 @@ export const ClientSettingsView: React.FC<ClientSettingsViewProps> = ({ client, 
   const handleSave = () => {
     onUpdateProfile({
       ...formData,
-      name: `${formData.firstName} ${formData.lastName}`.trim()
+      name: `${formData.firstName} ${formData.lastName}`.trim(),
+      hasFilledProfile: true // Mark as filled when saving
     });
     setIsDirty(false);
   };
@@ -135,7 +142,7 @@ export const ClientSettingsView: React.FC<ClientSettingsViewProps> = ({ client, 
               <div className="animate-fade-in space-y-8">
                 
                 {/* 1. PERSONAL DETAILS */}
-                <SectionTitle icon={User} title="Personal Details" />
+                <SectionTitle icon={User} title="Primary Owner Details" />
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">First Name</label>
@@ -153,6 +160,57 @@ export const ClientSettingsView: React.FC<ClientSettingsViewProps> = ({ client, 
                     <label className="block text-sm font-bold text-slate-700 mb-2">CIN / Passport ID</label>
                     <input type="text" value={formData.cin} onChange={e => handleChange('cin', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
                   </div>
+                </div>
+
+                {/* 1.1 MULTI-OWNER OPTION */}
+                <div className="bg-blue-50 p-6 rounded-2xl border border-blue-100 flex flex-col md:flex-row items-center justify-between gap-4 mt-8">
+                   <div className="flex items-center gap-4">
+                      <div className="p-3 bg-white rounded-xl text-blue-600 shadow-sm border border-blue-100"><UserPlus size={24} /></div>
+                      <div>
+                         <h4 className="font-bold text-slate-900">Multiple Owners?</h4>
+                         <p className="text-xs text-slate-500">Toggle this if the company has more than one shareholder.</p>
+                      </div>
+                   </div>
+                   <div className="flex gap-2">
+                     {['Oui', 'Non'].map(val => (
+                       <button 
+                        key={val} 
+                        onClick={() => handleChange('hasSecondOwner', val)} 
+                        className={`px-8 py-2 text-sm font-bold rounded-xl border transition-all ${formData.hasSecondOwner === val ? 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/20' : 'bg-white text-slate-500 border-slate-200'}`}
+                       >
+                         {val}
+                       </button>
+                     ))}
+                   </div>
+                </div>
+
+                {/* 1.2 SECOND OWNER DETAILS (CONDITIONAL) */}
+                {formData.hasSecondOwner === 'Oui' && (
+                  <div className="animate-slide-in-down border-l-4 border-blue-500 pl-6 space-y-6">
+                    <SectionTitle icon={Users} title="Second Owner Details" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">First Name (Partner)</label>
+                        <input type="text" value={formData.secondOwnerFirstName} onChange={e => handleChange('secondOwnerFirstName', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Last Name (Partner)</label>
+                        <input type="text" value={formData.secondOwnerLastName} onChange={e => handleChange('secondOwnerLastName', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">Nationality (Partner)</label>
+                        <input type="text" value={formData.secondOwnerNationality} onChange={e => handleChange('secondOwnerNationality', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-bold text-slate-700 mb-2">CIN / Passport ID (Partner)</label>
+                        <input type="text" value={formData.secondOwnerCin} onChange={e => handleChange('secondOwnerCin', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <SectionTitle icon={Calendar} title="General Info" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Date of Birth</label>
                     <input type="date" value={formData.birthDate} onChange={e => handleChange('birthDate', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
