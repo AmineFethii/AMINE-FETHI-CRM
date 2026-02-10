@@ -37,6 +37,16 @@ export interface TimelineStep {
   date?: string;
 }
 
+export interface ClientTask {
+  id: string;
+  title: string;
+  description: string;
+  status: 'pending' | 'in-progress' | 'completed';
+  priority: 'low' | 'medium' | 'high';
+  dueDate?: string;
+  createdAt: string;
+}
+
 export interface ClientDocument {
   id: string;
   name: string;
@@ -82,6 +92,7 @@ export interface ClientData {
   progress: number;
   statusMessage: string;
   timeline: TimelineStep[];
+  clientTasks: ClientTask[]; // Tasks assigned to the client to complete
   documents: ClientDocument[];
   notifications: Notification[];
 

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Shield, 
@@ -134,6 +133,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
   const handleAddNewClient = (e: React.FormEvent) => {
     e.preventDefault();
     if (newClientData.name && newClientData.email && newClientData.companyName && newClientData.password) {
+      // Fix: Added missing clientTasks property to satisfy ClientData interface
       const newClient: ClientData = {
         id: `c-${Date.now()}`,
         email: newClientData.email,
@@ -144,6 +144,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
         progress: 0,
         statusMessage: 'Onboarding',
         timeline: [{ id: 't1', label: 'Onboarding', status: 'in-progress' }],
+        clientTasks: [],
         documents: [],
         notifications: [],
         contractValue: 0,

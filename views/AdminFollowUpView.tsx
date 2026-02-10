@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, 
-  Filter, 
   CheckCircle2, 
   Circle, 
   Clock, 
@@ -18,9 +17,11 @@ import {
   CheckCircle,
   Edit2,
   X,
-  Check
+  Check,
+  ListTodo,
+  UserCheck
 } from 'lucide-react';
-import { ClientData, TimelineStep } from '../types';
+import { ClientData, TimelineStep, ClientTask } from '../types';
 import { translations, Language } from '../translations';
 
 interface AdminFollowUpViewProps {
@@ -38,6 +39,7 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
   // Selected Client Local State for Editing
   const [localClient, setLocalClient] = useState<ClientData | null>(null);
   const [newStepLabel, setNewStepLabel] = useState('');
+  const [newTaskTitle, setNewTaskTitle] = useState('');
   const [isDirty, setIsDirty] = useState(false);
 
   // Step Editing State
@@ -71,7 +73,7 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
       if (found) {
         setLocalClient(JSON.parse(JSON.stringify(found))); // Deep copy
         setIsDirty(false);
-        setEditingStepId(null); // Reset editing state on client change
+        setEditingStepId(null);
       }
     } else {
       setLocalClient(null);
@@ -81,15 +83,11 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
   // Timeline handlers
   const handleTimelineStatusChange = (stepId: string, newStatus: 'pending' | 'in-progress' | 'completed') => {
     if (!localClient) return;
-
     const updatedTimeline = localClient.timeline.map(step => 
       step.id === stepId ? { ...step, status: newStatus } : step
     );
-
     setLocalClient({ ...localClient, timeline: updatedTimeline });
     setIsDirty(true);
-    
-    // Auto-recalculate progress
     recalculateProgress(updatedTimeline);
   };
 
@@ -107,77 +105,61 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
     recalculateProgress(updatedTimeline);
   };
 
-  const handleDeleteStep = (stepId: string) => {
+  // Client Task handlers
+  const handleAddTaskToClient = () => {
+    if (!localClient || !newTaskTitle.trim()) return;
+    const newTask: ClientTask = {
+      id: `task-${Date.now()}`,
+      title: newTaskTitle,
+      description: 'Requirement from Legal Advisor',
+      status: 'pending',
+      priority: 'medium',
+      createdAt: new Date().toISOString()
+    };
+    const updatedTasks = [...(localClient.clientTasks || []), newTask];
+    setLocalClient({ ...localClient, clientTasks: updatedTasks });
+    setNewTaskTitle('');
+    setIsDirty(true);
+  };
+
+  const handleDeleteTask = (taskId: string) => {
     if (!localClient) return;
-    const updatedTimeline = localClient.timeline.filter(s => s.id !== stepId);
-    setLocalClient({ ...localClient, timeline: updatedTimeline });
+    const updatedTasks = localClient.clientTasks.filter(t => t.id !== taskId);
+    setLocalClient({ ...localClient, clientTasks: updatedTasks });
     setIsDirty(true);
-    recalculateProgress(updatedTimeline);
-  };
-
-  // --- Step Editing Handlers ---
-  const startEditingStep = (step: TimelineStep) => {
-    setEditingStepId(step.id);
-    setTempStepLabel(step.label);
-  };
-
-  const saveStepLabel = () => {
-    if (!localClient || !editingStepId || !tempStepLabel.trim()) return;
-    
-    const updatedTimeline = localClient.timeline.map(step => 
-      step.id === editingStepId ? { ...step, label: tempStepLabel } : step
-    );
-    
-    setLocalClient({ ...localClient, timeline: updatedTimeline });
-    setIsDirty(true);
-    setEditingStepId(null);
-    setTempStepLabel('');
-  };
-
-  const cancelEditingStep = () => {
-    setEditingStepId(null);
-    setTempStepLabel('');
   };
 
   const recalculateProgress = (timeline: TimelineStep[]) => {
     if (!localClient || timeline.length === 0) return;
-    
     const total = timeline.length;
     const completed = timeline.filter(s => s.status === 'completed').length;
     const inProgress = timeline.filter(s => s.status === 'in-progress').length;
-    
-    // Simple logic: Completed = 1pt, In-Progress = 0.5pt
     const progress = Math.round(((completed + (inProgress * 0.5)) / total) * 100);
     setLocalClient(prev => prev ? ({ ...prev, progress }) : null);
-  };
-
-  const handleStatusMessageChange = (msg: string) => {
-    setLocalClient(prev => prev ? ({ ...prev, statusMessage: msg }) : null);
-    setIsDirty(true);
   };
 
   const handleSaveChanges = () => {
     if (!localClient) return;
     onUpdateClient(localClient.id, {
       timeline: localClient.timeline,
+      clientTasks: localClient.clientTasks,
       progress: localClient.progress,
       statusMessage: localClient.statusMessage
     });
     setIsDirty(false);
   };
 
-  const handleQuickNotify = (type: 'whatsapp' | 'email') => {
-     // Simulation
-     alert(`Simulated ${type} sent to ${localClient?.email}`);
-  };
+  const clientCompletionRate = localClient ? (
+    localClient.clientTasks?.length > 0 
+      ? Math.round((localClient.clientTasks.filter(t => t.status === 'completed').length / localClient.clientTasks.length) * 100)
+      : 0
+  ) : 0;
 
   return (
-    <div className="h-[calc(100vh-140px)] flex flex-col md:flex-row gap-6 animate-fade-in">
+    <div className="h-[calc(100vh-140px)] flex flex-col md:flex-row gap-6 animate-fade-in font-sans">
       
       {/* LEFT COLUMN: CLIENT DIRECTORY */}
       <div className="w-full md:w-1/3 flex flex-col bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        
-        {/* Header/Filters */}
         <div className="p-4 border-b border-slate-100 space-y-3">
           <h2 className="text-lg font-bold text-slate-900">{t.title}</h2>
           <div className="relative">
@@ -190,29 +172,8 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
               className="w-full py-2 pl-9 pr-4 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
-          <div className="flex gap-2">
-            <button 
-              onClick={() => setFilterType('all')}
-              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-colors ${filterType === 'all' ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
-            >
-              {commonT.all}
-            </button>
-            <button 
-              onClick={() => setFilterType('in-progress')}
-              className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-colors ${filterType === 'in-progress' ? 'bg-blue-600 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
-            >
-              {commonT.inProgress}
-            </button>
-            <button 
-               onClick={() => setFilterType('completed')}
-               className={`flex-1 py-1.5 text-xs font-bold rounded-md transition-colors ${filterType === 'completed' ? 'bg-green-600 text-white' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
-            >
-              {commonT.completed}
-            </button>
-          </div>
         </div>
 
-        {/* List */}
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {filteredClients.map(client => (
             <div 
@@ -227,258 +188,160 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
               <div className="flex justify-between items-start mb-2">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 overflow-hidden shadow-sm">
-                    {client.avatarUrl ? <img src={client.avatarUrl} className="w-full h-full object-cover" /> : client.companyName.charAt(0)}
+                    {client.companyName.charAt(0)}
                   </div>
                   <div>
-                    <h4 className={`font-bold text-sm ${selectedClientId === client.id ? 'text-blue-900' : 'text-slate-900'}`}>{client.companyName}</h4>
-                    <p className="text-xs text-slate-500">{client.serviceType}</p>
+                    <h4 className="font-bold text-sm text-slate-900">{client.companyName}</h4>
+                    <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{client.serviceType}</p>
                   </div>
                 </div>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                  client.progress === 100 ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'
-                }`}>
-                  {client.progress}%
-                </span>
               </div>
-              <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+              <div className="w-full bg-slate-200 h-1 rounded-full overflow-hidden">
                  <div className={`h-full rounded-full transition-all ${client.progress === 100 ? 'bg-green-500' : 'bg-blue-500'}`} style={{ width: `${client.progress}%` }}></div>
               </div>
             </div>
           ))}
-          {filteredClients.length === 0 && (
-            <div className="p-8 text-center text-slate-400 text-sm">
-              No clients found.
-            </div>
-          )}
         </div>
       </div>
 
-      {/* RIGHT COLUMN: WORKSPACE */}
+      {/* RIGHT COLUMN: DUAL-SIDED WORKSPACE */}
       <div className="w-full md:w-2/3 flex flex-col bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden relative">
         {localClient ? (
           <>
-             {/* Header */}
-             <div className="bg-white p-6 border-b border-slate-200 flex justify-between items-start shadow-sm z-10">
-                <div className="flex items-start gap-4">
-                  <div className="w-16 h-16 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-2xl font-bold text-slate-400 overflow-hidden shadow-inner">
-                    {localClient.avatarUrl ? <img src={localClient.avatarUrl} className="w-full h-full object-cover" /> : localClient.companyName.charAt(0)}
+             <div className="bg-white p-6 border-b border-slate-200 flex justify-between items-center shadow-sm z-10">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-600 border border-blue-500 flex items-center justify-center text-white font-bold text-xl shadow-md">
+                    {localClient.companyName.charAt(0)}
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold text-slate-900">{localClient.companyName}</h2>
-                    <div className="flex items-center gap-3 mt-1 text-sm text-slate-500">
-                      <span className="flex items-center gap-1"><Clock size={14} /> Last update: Today</span>
-                      <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                      <span className="text-blue-600 font-medium">{localClient.serviceType}</span>
-                    </div>
+                    <h2 className="text-xl font-bold text-slate-900">{localClient.companyName}</h2>
+                    <p className="text-xs text-slate-500 font-medium">{localClient.serviceType}</p>
                   </div>
                 </div>
                 
                 <div className="flex gap-2">
-                   <button onClick={() => handleQuickNotify('whatsapp')} className="p-2.5 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-colors border border-green-200" title="WhatsApp">
-                      <Smartphone size={20} />
-                   </button>
-                   <button onClick={() => handleQuickNotify('email')} className="p-2.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors border border-blue-200" title="Email">
-                      <Mail size={20} />
+                   <button onClick={handleSaveChanges} disabled={!isDirty} className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 transition-all ${isDirty ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>
+                      <Save size={14} /> {isDirty ? t.saveChanges : commonT.save}
                    </button>
                 </div>
              </div>
 
              <div className="flex-1 overflow-y-auto p-6 md:p-8">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                    
-                   {/* Timeline Column */}
+                   {/* Column 1: PROJECT TIMELINE (ADMIN SIDE) */}
                    <div className="space-y-6">
                       <div className="flex items-center justify-between">
-                         <h3 className="font-bold text-slate-900 text-lg flex items-center gap-2">
-                           <CheckCircle2 className="text-blue-600" size={20} />
+                         <h3 className="font-bold text-slate-900 text-sm uppercase tracking-widest flex items-center gap-2">
+                           <Clock className="text-blue-600" size={16} />
                            {t.projectTimeline}
                          </h3>
-                         <span className="text-xs font-medium text-slate-400">{localClient.timeline.length} Steps</span>
                       </div>
 
-                      <div className="relative pl-4 space-y-6 before:absolute before:left-[23px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
-                         {localClient.timeline.map((step, index) => (
-                           <div key={step.id} className="relative pl-10 group">
-                              {/* Connector/Dot */}
+                      <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 shadow-sm">
+                         {localClient.timeline.map((step) => (
+                           <div key={step.id} className="flex items-center gap-3 group">
                               <button 
-                                onClick={() => handleTimelineStatusChange(
-                                  step.id, 
-                                  step.status === 'completed' ? 'pending' : 
-                                  step.status === 'in-progress' ? 'completed' : 'in-progress'
-                                )}
-                                className={`absolute left-0 top-0 w-12 h-12 rounded-full border-4 border-slate-50 flex items-center justify-center transition-all z-10 shadow-sm ${
-                                  step.status === 'completed' ? 'bg-green-500 text-white hover:bg-green-600' :
-                                  step.status === 'in-progress' ? 'bg-blue-500 text-white hover:bg-blue-600 ring-4 ring-blue-100' :
-                                  'bg-white text-slate-300 border-slate-200 hover:border-blue-300'
+                                onClick={() => handleTimelineStatusChange(step.id, step.status === 'completed' ? 'pending' : step.status === 'in-progress' ? 'completed' : 'in-progress')}
+                                className={`w-8 h-8 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${
+                                  step.status === 'completed' ? 'bg-green-500 border-green-500 text-white' :
+                                  step.status === 'in-progress' ? 'border-blue-500 text-blue-500' :
+                                  'border-slate-200 text-slate-200'
                                 }`}
                               >
-                                {step.status === 'completed' ? <CheckCircle size={20} /> : 
-                                 step.status === 'in-progress' ? <Clock size={20} /> : 
-                                 <Circle size={20} />}
+                                {step.status === 'completed' ? <Check size={14} /> : <div className={`w-1.5 h-1.5 rounded-full ${step.status === 'in-progress' ? 'bg-blue-500 animate-pulse' : 'bg-slate-200'}`} />}
                               </button>
-                              
-                              <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm group-hover:shadow-md transition-shadow relative">
-                                 <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                       {editingStepId === step.id ? (
-                                         <div className="flex items-center gap-2 mb-1">
-                                            <input 
-                                              type="text" 
-                                              value={tempStepLabel}
-                                              onChange={(e) => setTempStepLabel(e.target.value)}
-                                              className="flex-1 px-2 py-1 text-sm font-bold border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                              autoFocus
-                                              onKeyDown={(e) => {
-                                                if (e.key === 'Enter') saveStepLabel();
-                                                if (e.key === 'Escape') cancelEditingStep();
-                                              }}
-                                            />
-                                            <button onClick={saveStepLabel} className="p-1 text-green-600 hover:bg-green-50 rounded">
-                                              <Check size={16} />
-                                            </button>
-                                            <button onClick={cancelEditingStep} className="p-1 text-red-500 hover:bg-red-50 rounded">
-                                              <X size={16} />
-                                            </button>
-                                         </div>
-                                       ) : (
-                                         <p className={`font-bold text-sm ${step.status === 'completed' ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
-                                            {step.label}
-                                         </p>
-                                       )}
-                                       
-                                       <p className={`text-xs mt-1 font-medium uppercase tracking-wider ${
-                                          step.status === 'completed' ? 'text-green-600' : 
-                                          step.status === 'in-progress' ? 'text-blue-600' : 'text-slate-400'
-                                       }`}>
-                                          {step.status.replace('-', ' ')}
-                                       </p>
-                                    </div>
-                                    
-                                    {/* Action Buttons */}
-                                    {editingStepId !== step.id && (
-                                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                         <button 
-                                           onClick={() => startEditingStep(step)}
-                                           className="text-slate-400 hover:text-blue-600 p-1 rounded hover:bg-slate-100"
-                                           title="Edit Step Name"
-                                         >
-                                            <Edit2 size={14} />
-                                         </button>
-                                         <button 
-                                           onClick={() => handleDeleteStep(step.id)}
-                                           className="text-slate-400 hover:text-red-500 p-1 rounded hover:bg-slate-100"
-                                           title="Delete Step"
-                                         >
-                                            <Trash2 size={14} />
-                                         </button>
-                                      </div>
-                                    )}
-                                 </div>
+                              <div className="flex-1">
+                                 <p className={`text-sm font-bold ${step.status === 'completed' ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{step.label}</p>
                               </div>
+                              <button onClick={() => setLocalClient({...localClient, timeline: localClient.timeline.filter(s => s.id !== step.id), progress: 0})} className="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity">
+                                 <Trash2 size={14} />
+                              </button>
                            </div>
                          ))}
-
-                         {/* Add Step Input */}
-                         <div className="relative pl-10">
-                            <div className="absolute left-[14px] top-3 w-5 h-5 bg-slate-200 rounded-full z-10 border-2 border-white"></div>
-                            <div className="flex gap-2">
-                               <input 
-                                 type="text" 
-                                 value={newStepLabel}
-                                 onChange={(e) => setNewStepLabel(e.target.value)}
-                                 placeholder={t.stepName}
-                                 className="flex-1 px-4 py-3 rounded-xl border border-slate-200 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                 onKeyDown={(e) => e.key === 'Enter' && handleAddStep()}
-                               />
-                               <button 
-                                 onClick={handleAddStep}
-                                 disabled={!newStepLabel.trim()}
-                                 className="px-4 py-2 bg-slate-900 text-white rounded-xl hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                               >
-                                  <Plus size={20} />
-                               </button>
-                            </div>
+                         
+                         <div className="pt-4 flex gap-2">
+                            <input 
+                              type="text" 
+                              value={newStepLabel}
+                              onChange={(e) => setNewStepLabel(e.target.value)}
+                              placeholder="New milestone..."
+                              className="flex-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs focus:ring-1 focus:ring-blue-500"
+                            />
+                            <button onClick={handleAddStep} className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><Plus size={16} /></button>
                          </div>
                       </div>
                    </div>
 
-                   {/* Status & Preview Column */}
+                   {/* Column 2: CLIENT ACTION ITEMS (CLIENT SIDE) */}
                    <div className="space-y-6">
-                      
-                      {/* Live Status Card */}
-                      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                         <h3 className="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
-                            <MessageSquare className="text-blue-600" size={20} />
-                            {t.clientView}
+                      <div className="flex items-center justify-between">
+                         <h3 className="font-bold text-slate-900 text-sm uppercase tracking-widest flex items-center gap-2">
+                           <UserCheck className="text-amber-600" size={16} />
+                           {t.clientActionItems}
                          </h3>
-                         
-                         <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-4">
-                            <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Public Status Message</label>
-                            <textarea 
-                              value={localClient.statusMessage}
-                              onChange={(e) => handleStatusMessageChange(e.target.value)}
-                              className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
-                            />
-                         </div>
-
-                         <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                            <div className="flex-1">
-                               <div className="flex justify-between items-center mb-1">
-                                  <span className="text-xs font-bold text-blue-700 uppercase">Progress Display</span>
-                                  <span className="text-lg font-bold text-blue-900">{localClient.progress}%</span>
-                               </div>
-                               <div className="h-2 w-full bg-white rounded-full overflow-hidden">
-                                  <div className="h-full bg-blue-600 rounded-full transition-all duration-500" style={{ width: `${localClient.progress}%` }}></div>
-                               </div>
-                            </div>
-                         </div>
+                         <span className="text-[10px] font-black text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-100">{clientCompletionRate}% DONE</span>
                       </div>
 
-                      {/* Action Bar */}
-                      <div className="sticky bottom-0 bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-slate-200 shadow-lg">
-                         <div className="flex gap-3">
-                            <button 
-                              onClick={handleSaveChanges}
-                              disabled={!isDirty}
-                              className={`flex-1 py-3.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
-                                isDirty 
-                                  ? 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg shadow-blue-500/20 transform hover:-translate-y-0.5' 
-                                  : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                              }`}
-                            >
-                              <Save size={18} />
-                              {t.saveChanges}
-                            </button>
-                            {isDirty && (
-                              <button 
-                                onClick={() => {
-                                  // Reset
-                                  const original = clients.find(c => c.id === selectedClientId);
-                                  if (original) {
-                                    setLocalClient(JSON.parse(JSON.stringify(original)));
-                                    setEditingStepId(null);
-                                  }
-                                  setIsDirty(false);
-                                }}
-                                className="px-4 py-3.5 rounded-xl font-bold text-sm bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                              >
-                                {t.cancelChanges}
+                      <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 shadow-sm border-t-4 border-t-amber-400">
+                         {localClient.clientTasks?.map((task) => (
+                           <div key={task.id} className="flex items-start gap-3 group p-2 hover:bg-slate-50 rounded-lg transition-colors">
+                              <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
+                                task.status === 'completed' ? 'bg-green-500' :
+                                task.status === 'in-progress' ? 'bg-blue-500' :
+                                'bg-slate-200'
+                              }`} />
+                              <div className="flex-1 min-w-0">
+                                 <p className={`text-sm font-bold truncate ${task.status === 'completed' ? 'text-slate-400' : 'text-slate-800'}`}>{task.title}</p>
+                                 <span className="text-[10px] text-slate-400 uppercase font-black tracking-tighter">{task.status}</span>
+                              </div>
+                              <button onClick={() => handleDeleteTask(task.id)} className="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity">
+                                 <Trash2 size={14} />
                               </button>
-                            )}
+                           </div>
+                         ))}
+                         
+                         {(!localClient.clientTasks || localClient.clientTasks.length === 0) && (
+                           <p className="text-center py-4 text-xs text-slate-400 italic">No tasks assigned to client yet.</p>
+                         )}
+
+                         <div className="pt-4 flex gap-2">
+                            <input 
+                              type="text" 
+                              value={newTaskTitle}
+                              onChange={(e) => setNewTaskTitle(e.target.value)}
+                              placeholder={t.assignTask}
+                              className="flex-1 px-3 py-2 bg-slate-50 border border-slate-100 rounded-lg text-xs focus:ring-1 focus:ring-amber-500"
+                            />
+                            <button onClick={handleAddTaskToClient} className="p-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700"><Plus size={16} /></button>
                          </div>
                       </div>
 
+                      <div className="bg-blue-900 rounded-2xl p-6 text-white shadow-xl shadow-blue-900/20 relative overflow-hidden group">
+                         <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform"></div>
+                         <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Public Status Display</p>
+                         <textarea 
+                           value={localClient.statusMessage}
+                           onChange={(e) => setLocalClient({...localClient, statusMessage: e.target.value})}
+                           className="w-full bg-transparent border-none p-0 text-sm font-semibold text-slate-200 focus:ring-0 resize-none min-h-[60px]"
+                         />
+                         <div className="mt-4 flex justify-between items-center text-[10px] font-black uppercase text-blue-400">
+                            <span>Mission Progress</span>
+                            <span>{localClient.progress}%</span>
+                         </div>
+                         <div className="mt-2 w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
+                            <div className="h-full bg-blue-500 transition-all duration-700" style={{ width: `${localClient.progress}%` }}></div>
+                         </div>
+                      </div>
                    </div>
                 </div>
              </div>
           </>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-slate-400 p-8 text-center">
-             <div className="w-24 h-24 bg-white rounded-full flex items-center justify-center mb-6 shadow-sm border border-slate-100">
-               <Search size={48} className="text-slate-200" />
-             </div>
+             <ListTodo size={64} className="mb-4 opacity-10" />
              <h3 className="text-xl font-bold text-slate-900 mb-2">{t.selectClient}</h3>
-             <p className="max-w-xs mx-auto">{t.selectClientSub}</p>
+             <p className="max-w-xs mx-auto text-sm">{t.selectClientSub}</p>
           </div>
         )}
       </div>

@@ -7,6 +7,7 @@ import { ClientPortal } from './views/ClientPortal';
 import { ClientDocumentsView } from './views/ClientDocumentsView';
 import { ClientSettingsView } from './views/ClientSettingsView';
 import { ClientGuideView } from './views/ClientGuideView';
+import { ClientTasksView } from './views/ClientTasksView';
 import { ChatView } from './views/ChatView';
 import { AdminDashboard } from './views/AdminDashboard';
 import { FinanceDashboard } from './views/FinanceDashboard';
@@ -20,7 +21,7 @@ import { AdminTutorialsView } from './views/AdminTutorialsView';
 import { AdminClientAccessView } from './views/AdminClientAccessView';
 import { AdminFollowUpView } from './views/AdminFollowUpView';
 import { AdminCalendarView } from './views/AdminCalendarView';
-import { User, ClientData, Role, Notification, Employee, ClientDocument } from './types';
+import { User, ClientData, Role, Notification, Employee, ClientDocument, ClientTask } from './types';
 
 // COMPREHENSIVE RESTORED DATABASE
 const INITIAL_CLIENTS: ClientData[] = [
@@ -37,6 +38,10 @@ const INITIAL_CLIENTS: ClientData[] = [
       { id: 't1', label: 'Negative Certificate', status: 'completed' },
       { id: 't2', label: 'Legal Statutes', status: 'completed' },
       { id: 't3', label: 'RC Registration', status: 'completed' }
+    ],
+    clientTasks: [
+      { id: 'task1', title: 'Upload Passport Copy', description: 'Mandatory for RC registration', status: 'completed', priority: 'high', createdAt: '2024-01-10' },
+      { id: 'task2', title: 'Sign Lease Agreement', description: 'Required for domicile address verification', status: 'completed', priority: 'medium', createdAt: '2024-01-12' }
     ],
     documents: [
       { id: 'doc1', name: 'RC_Extraction.pdf', type: 'Legal', status: 'approved', uploadDate: '2024-01-15' },
@@ -64,6 +69,9 @@ const INITIAL_CLIENTS: ClientData[] = [
       { id: 't2', label: 'Monthly Declaration', status: 'in-progress' },
       { id: 't3', label: 'Year-End Audit', status: 'pending' }
     ],
+    clientTasks: [
+      { id: 'task-b1', title: 'Provide Purchase Invoices for Oct', description: 'Needed for VAT calculation', status: 'in-progress', priority: 'high', createdAt: '2024-11-01' }
+    ],
     documents: [
       { id: 'd1', name: 'Purchase_Invoices_Oct.pdf', type: 'Financial', status: 'uploaded', uploadDate: '2024-11-05' }
     ],
@@ -89,6 +97,7 @@ const INITIAL_CLIENTS: ClientData[] = [
       { id: 'at2', label: 'Notary Meeting', status: 'pending' },
       { id: 'at3', label: 'Registry Update', status: 'pending' }
     ],
+    clientTasks: [],
     documents: [
       { id: 'atd1', name: 'Original_Statutes.pdf', type: 'Legal', status: 'uploaded', uploadDate: '2024-11-18' }
     ],
@@ -114,6 +123,7 @@ const INITIAL_CLIENTS: ClientData[] = [
       { id: 'nt2', label: 'Q1 Review', status: 'completed' },
       { id: 'nt3', label: 'Q2 Review', status: 'in-progress' }
     ],
+    clientTasks: [],
     documents: [],
     notifications: [],
     contractValue: 45000,
@@ -136,6 +146,9 @@ const INITIAL_CLIENTS: ClientData[] = [
       { id: 'gb1', label: 'Certificate', status: 'completed' },
       { id: 'gb2', label: 'Bank Account', status: 'completed' },
       { id: 'gb3', label: 'RC Final', status: 'in-progress' }
+    ],
+    clientTasks: [
+      { id: 'task-g1', title: 'Signature Specimen', description: 'Needed for commercial registry', status: 'pending', priority: 'high', createdAt: '2024-11-15' }
     ],
     documents: [
       { id: 'gbd1', name: 'CIN_Copy.jpg', type: 'Identity', status: 'approved', uploadDate: '2024-11-01' }
@@ -290,6 +303,24 @@ const App: React.FC = () => {
         newNotifications.unshift({ id: `n-${Date.now()}-payment`, title: 'Payment Received', message: `A payment of ${diff.toLocaleString()} ${c.currency} has been recorded.`, date: now, read: false, type: 'success' });
       }
 
+      // Check for completed tasks to notify admin
+      if (updates.clientTasks) {
+         updates.clientTasks.forEach(task => {
+            const oldTask = c.clientTasks?.find(ot => ot.id === task.id);
+            if (oldTask && oldTask.status !== 'completed' && task.status === 'completed') {
+               const adminNotif: Notification = {
+                 id: `admin-task-${Date.now()}`,
+                 title: 'Client Action Completed',
+                 message: `${c.companyName} completed task: "${task.title}"`,
+                 date: now,
+                 read: false,
+                 type: 'success'
+               };
+               setAdminNotifications(prev => [adminNotif, ...prev]);
+            }
+         });
+      }
+
       return { ...c, ...updates, notifications: newNotifications };
     }));
 
@@ -300,6 +331,34 @@ const App: React.FC = () => {
         avatarUrl: updates.avatarUrl || prev.avatarUrl
       }) : null);
     }
+  };
+
+  const handleUpdateClientTask = (clientId: string, taskId: string, status: ClientTask['status']) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    
+    const updatedTasks = client.clientTasks.map(t => t.id === taskId ? { ...t, status } : t);
+    updateClient(clientId, { clientTasks: updatedTasks });
+  };
+
+  const handleAddClientTask = (clientId: string, task: Omit<ClientTask, 'id' | 'createdAt'>) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+
+    const newTask: ClientTask = {
+      ...task,
+      id: `client-task-${Date.now()}`,
+      createdAt: new Date().toISOString()
+    };
+
+    updateClient(clientId, { clientTasks: [...client.clientTasks, newTask] });
+  };
+
+  const handleDeleteClientTask = (clientId: string, taskId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+
+    updateClient(clientId, { clientTasks: client.clientTasks.filter(t => t.id !== taskId) });
   };
 
   const handleDocumentUpload = (clientId: string, fileName: string, category: string) => {
@@ -316,7 +375,6 @@ const App: React.FC = () => {
 
     updateClient(clientId, { documents: [...client.documents, newDoc] });
     
-    // Notify admin
     const adminNotif: Notification = {
       id: `admin-n-${Date.now()}`,
       title: 'New Document Uploaded',
@@ -397,6 +455,15 @@ const App: React.FC = () => {
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
       if (currentView === 'guide') return <ClientGuideView onNavigate={(view) => setCurrentView(view)} />;
       if (currentView === 'tutorials') return <AdminTutorialsView lang="en" />;
+      if (currentView === 'tasks') return (
+        <ClientTasksView 
+          client={clientData} 
+          onUpdateTask={(tid, stat) => handleUpdateClientTask(clientData.id, tid, stat)} 
+          onAddTask={(task) => handleAddClientTask(clientData.id, task)}
+          onDeleteTask={(tid) => handleDeleteClientTask(clientData.id, tid)}
+          onNavigate={setCurrentView} 
+        />
+      );
       return <ClientPortal client={clientData} onNavigateToDocs={() => setCurrentView('documents')} />;
     }
   };

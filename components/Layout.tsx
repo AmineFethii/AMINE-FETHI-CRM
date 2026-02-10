@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo } from 'react';
-import { LogOut, LayoutDashboard, FileText, Settings, Shield, Bell, Banknote, Check, CheckCheck, Users, Briefcase, ChevronDown, ChevronRight, Receipt, MonitorPlay, MessageSquare, Key, Activity, BookOpen, Calendar, Clock, Sparkles, User as UserIcon } from 'lucide-react';
+import { LogOut, LayoutDashboard, FileText, Settings, Shield, Bell, Banknote, Check, CheckCheck, Users, Briefcase, ChevronDown, ChevronRight, Receipt, MonitorPlay, MessageSquare, Key, Activity, BookOpen, Calendar, Clock, Sparkles, ListTodo, User as UserIcon } from 'lucide-react';
 import { User, Notification, ClientData } from '../types';
 import { translations } from '../translations';
 
@@ -160,6 +160,7 @@ export const Layout: React.FC<LayoutProps> = ({
 
           {user.role === 'client' && (
              <>
+               <NavItem id="tasks" icon={ListTodo} label={t.myTasks} />
                <NavItem id="chat" icon={MessageSquare} label={t.chat} />
                <NavItem id="tutorials" icon={MonitorPlay} label={t.tutorials} />
                <NavItem id="guide" icon={BookOpen} label={t.guide} />

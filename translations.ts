@@ -64,7 +64,8 @@ export const translations = {
       clientAccess: "Client Access",
       followUp: "Mission Follow-up",
       guide: "Platform Guide",
-      calendar: "Calendar"
+      calendar: "Calendar",
+      myTasks: "My Action Items"
     },
     clientPortal: {
       greeting: "Hello",
@@ -84,7 +85,10 @@ export const translations = {
       goToDocs: "Go to Document Manager",
       timeline: "Process Timeline",
       projectCompleted: "Project completed successfully.",
-      projectMoving: "Your project is moving forward. Check back soon for updates."
+      projectMoving: "Your project is moving forward. Check back soon for updates.",
+      clientTasks: "Action Items for You",
+      completeTask: "Mark as Done",
+      inProgressTask: "Starting Now"
     },
     clientGuide: {
       title: "User Guide",
@@ -166,7 +170,10 @@ export const translations = {
       saveChanges: "Save & Push Update",
       cancelChanges: "Discard",
       lastUpdated: "Last updated",
-      contactClient: "Contact Client"
+      contactClient: "Contact Client",
+      clientActionItems: "Client Action Items",
+      assignTask: "Assign Task to Client",
+      clientProgress: "Client Completion"
     },
     finance: {
       title: "Financial Performance",
@@ -326,7 +333,6 @@ export const translations = {
         totalTtc: "TOTAL TTC"
       }
     },
-    // Fix: Added missing tutorials translation object required by AdminTutorialsView
     tutorials: {
       title: "Tutorials & Training",
       subtitle: "Video guides to help you master the platform.",
