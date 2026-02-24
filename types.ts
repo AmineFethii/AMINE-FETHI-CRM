@@ -59,6 +59,7 @@ export interface ClientDocument {
 export interface ClientData {
   id: string;
   email: string;
+  password?: string;
   name: string;
   firstName?: string;
   lastName?: string;

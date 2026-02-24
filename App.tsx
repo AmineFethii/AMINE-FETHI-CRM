@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, updateDoc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
 import { db } from './src/firebase';
 import { Layout } from './components/Layout';
 import { WhatsAppFab } from './components/WhatsAppFab';
@@ -139,13 +139,6 @@ const INITIAL_EMPLOYEES: Employee[] = [
   }
 ];
 
-const INITIAL_AUTH_DB: Record<string, string> = {
-  'demo@newclient.com': 'welcome2025',
-  'contact@mpldigital.com': 'mpl2024',
-  'contact@thebrain.ma': 'brain2024',
-  'amine@admin.com': 'admin2024'
-};
-
 const ADMIN_USER: User = {
   id: 'admin1',
   name: 'Amine El Fethi',
@@ -166,10 +159,12 @@ const App: React.FC = () => {
     return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
   });
 
-  const [authCredentials, setAuthCredentials] = useState<Record<string, string>>(() => {
-    const saved = localStorage.getItem('crm_auth_v2');
-    return saved ? JSON.parse(saved) : INITIAL_AUTH_DB;
-  });
+  const authCredentials = clients.reduce((acc, client) => {
+    if (client.password) {
+      acc[client.email.toLowerCase()] = client.password;
+    }
+    return acc;
+  }, {} as Record<string, string>);
 
   const [adminNotifications, setAdminNotifications] = useState<Notification[]>(() => {
     const saved = localStorage.getItem('crm_admin_notifications_v2');
@@ -198,10 +193,6 @@ const App: React.FC = () => {
   }, [employees]);
 
   useEffect(() => {
-    localStorage.setItem('crm_auth_v2', JSON.stringify(authCredentials));
-  }, [authCredentials]);
-
-  useEffect(() => {
     localStorage.setItem('crm_admin_notifications_v2', JSON.stringify(adminNotifications));
   }, [adminNotifications]);
 
@@ -210,37 +201,45 @@ const App: React.FC = () => {
   }, [calendarEvents]);
 
   const handleLogin = async (email: string, pass: string, role: Role): Promise<boolean> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    const storedPass = authCredentials[email.toLowerCase()];
-    if (!storedPass || storedPass !== pass) return false;
-
-    if (role === 'admin' && email === 'amine@admin.com') {
-      setUser(ADMIN_USER);
-      setCurrentView('dashboard');
-      return true;
-    } 
-    
-    if (role === 'client') {
-      const clientData = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
-      if (clientData) {
-        const isFirstTime = !clientData.lastLogin;
-        
-        updateClient(clientData.id, { lastLogin: new Date().toISOString() });
-        setUser({
-          id: clientData.id,
-          name: clientData.name,
-          email: clientData.email,
-          role: 'client',
-          avatarUrl: clientData.avatarUrl
-        });
-        
-        if (isFirstTime || !clientData.hasFilledProfile) {
-          setShowWelcomeModal(true);
+    try {
+      if (role === 'admin' && email === 'amine@admin.com') {
+        const adminDocRef = doc(db, 'admins', 'admin1');
+        const adminDocSnap = await getDoc(adminDocRef);
+        if (adminDocSnap.exists() && adminDocSnap.data().password === pass) {
+          setUser(ADMIN_USER);
+          setCurrentView('dashboard');
+          return true;
         }
-        
-        setCurrentView('dashboard');
-        return true;
+        return false;
+      } 
+      
+      if (role === 'client') {
+        const clientData = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
+        if (clientData) {
+          const clientDocSnap = await getDoc(doc(db, 'clients', clientData.id));
+          if (clientDocSnap.exists() && clientDocSnap.data().password === pass) {
+            const isFirstTime = !clientData.lastLogin;
+            
+            updateClient(clientData.id, { lastLogin: new Date().toISOString() });
+            setUser({
+              id: clientData.id,
+              name: clientData.name,
+              email: clientData.email,
+              role: 'client',
+              avatarUrl: clientData.avatarUrl
+            });
+            
+            if (isFirstTime || !clientData.hasFilledProfile) {
+              setShowWelcomeModal(true);
+            }
+            
+            setCurrentView('dashboard');
+            return true;
+          }
+        }
       }
+    } catch (error) {
+      console.error("Login error:", error);
     }
     return false;
   };
@@ -259,7 +258,16 @@ const App: React.FC = () => {
       console.error("Error adding client:", error);
     }
   };
-  const handleUpdateCredentials = (email: string, pass: string) => setAuthCredentials(prev => ({ ...prev, [email.toLowerCase()]: pass }));
+  const handleUpdateCredentials = async (email: string, pass: string) => {
+    const client = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
+    if (client) {
+      try {
+        await updateDoc(doc(db, 'clients', client.id), { password: pass });
+      } catch (error) {
+        console.error("Error updating credentials:", error);
+      }
+    }
+  };
 
   const updateClient = async (clientId: string, updates: Partial<ClientData>) => {
     const c = clients.find(c => c.id === clientId);
