@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Users, 
@@ -27,27 +26,25 @@ interface AdminDashboardProps {
   clients: ClientData[];
   onUpdateClient: (clientId: string, updates: Partial<ClientData>) => void;
   user: UserType | null;
+  onNavigate: (view: string) => void;
 }
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdateClient, user }) => {
+export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdateClient, user, onNavigate }) => {
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<'all' | 'attention' | 'completed'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const t = translations.en.adminDashboard;
   
-  // Form State
   const [editProgress, setEditProgress] = useState(0);
   const [editStatusMessage, setEditStatusMessage] = useState('');
   const [editTimeline, setEditTimeline] = useState<TimelineStep[]>([]);
   const [isDirty, setIsDirty] = useState(false);
   
-  // Rejection State
   const [rejectingDocId, setRejectingDocId] = useState<string | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
   const selectedClient = clients.find(c => c.id === selectedClientId);
 
-  // Date for Header
   const currentDate = new Date().toLocaleDateString('en-US', { 
     weekday: 'long', 
     year: 'numeric', 
@@ -55,7 +52,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
     day: 'numeric' 
   });
 
-  // Initialize form when client is selected
   useEffect(() => {
     if (selectedClient) {
       setEditProgress(selectedClient.progress);
@@ -144,13 +140,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
   };
 
   const handleDownloadReport = () => {
-    // Define headers
     const headers = ['Client Name', 'Company Name', 'Service Type', 'Progress (%)', 'Contract Value (MAD)', 'Amount Paid (MAD)', 'Remaining Amount (MAD)', 'Status'];
-    
-    // Map client data to CSV rows
     const rows = clients.map(client => {
       const remaining = client.contractValue - client.amountPaid;
-      // Escape quotes and wrap fields in quotes to handle commas within data
       return [
         `"${client.name.replace(/"/g, '""')}"`,
         `"${client.companyName.replace(/"/g, '""')}"`,
@@ -162,11 +154,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
         `"${client.statusMessage.replace(/"/g, '""')}"`
       ].join(',');
     });
-
-    // Combine headers and rows
     const csvContent = [headers.join(','), ...rows].join('\n');
-    
-    // Create Blob and download link
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -178,12 +166,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
     document.body.removeChild(link);
   };
 
-  // ---- DERIVED METRICS ----
   const pendingActionsCount = clients.reduce((acc, client) => acc + client.documents.filter(d => d.status === 'uploaded').length, 0);
   const activeClientsCount = clients.filter(c => c.progress < 100).length;
   const completedClientsCount = clients.filter(c => c.progress === 100).length;
   
-  // Global Pending Documents List (for the priority feed)
   const globalPendingDocs = clients.flatMap(client => 
     client.documents
       .filter(d => d.status === 'uploaded')
@@ -191,15 +177,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
   );
 
   const filteredClients = clients.filter(c => {
-    // 1. Status Filter
     let matchesFilter = true;
     if (filterType === 'attention') {
        matchesFilter = c.documents.some(d => d.status === 'uploaded') || c.paymentStatus === 'overdue';
     } else if (filterType === 'completed') {
        matchesFilter = c.progress === 100;
     }
-
-    // 2. Search Filter
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = 
       c.companyName.toLowerCase().includes(searchLower) ||
@@ -213,18 +196,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
-      
-      {/* Enhanced Hero Header Section */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-8 shadow-xl">
-        {/* Decorative Abstract Blobs */}
         <div className="absolute top-0 right-0 -translate-y-1/2 w-96 h-96 bg-blue-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20 animate-pulse translate-x-1/3"></div>
         <div className="absolute bottom-0 left-0 translate-y-1/2 w-96 h-96 bg-purple-600 rounded-full mix-blend-overlay filter blur-3xl opacity-20 -translate-x-1/3"></div>
 
         <div className="relative z-10 flex flex-col xl:flex-row justify-between items-start xl:items-center gap-8">
-          
-          {/* Profile & Greeting */}
           <div className="flex items-center gap-6">
-            <div className="relative group cursor-pointer" onClick={() => {}}>
+            <div className="relative group cursor-pointer">
               <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 p-1 shadow-lg transition-transform duration-300 group-hover:scale-105">
                 <div className="w-full h-full rounded-xl overflow-hidden bg-blue-600 flex items-center justify-center relative shadow-inner">
                   <User size={32} className="text-white" />
@@ -235,7 +213,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                 <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
               </div>
             </div>
-            
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <span className="px-2.5 py-0.5 rounded-md bg-blue-500/20 border border-blue-500/30 text-blue-300 text-[10px] font-bold uppercase tracking-wider shadow-sm backdrop-blur-sm">
@@ -255,10 +232,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
             </div>
           </div>
 
-          {/* Quick Actions & Stats */}
           <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
-            
-            {/* Quick Stats Pill */}
             <div className="hidden md:flex items-center bg-white/5 border border-white/10 rounded-2xl p-2 backdrop-blur-sm shadow-lg">
                <div className="px-5 py-1 text-center border-r border-white/10">
                   <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-0.5">{translations.en.common.pending}</p>
@@ -286,7 +260,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                   <Download size={18} />
                   <span>{t.report}</span>
               </button>
-              <button className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-blue-900/50 transition-all hover:shadow-blue-500/30 hover:-translate-y-0.5">
+              <button 
+                onClick={() => onNavigate('client-access')}
+                className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl text-sm font-semibold shadow-lg shadow-blue-900/50 transition-all hover:shadow-blue-500/30 hover:-translate-y-0.5"
+              >
                   <Plus size={18} />
                   <span>{t.newMission}</span>
               </button>
@@ -295,9 +272,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
         </div>
       </div>
 
-      {/* Metrics Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* Metric 1: Active Cases */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group relative overflow-hidden">
            <div className="flex justify-between items-start mb-4 relative z-10">
              <div className="p-3 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
@@ -313,7 +288,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
            </div>
         </div>
 
-        {/* Metric 2: Actions Required */}
         <div className={`p-5 rounded-2xl border shadow-sm transition-all group relative overflow-hidden ${
           pendingActionsCount > 0 
             ? 'bg-amber-50 border-amber-200 hover:border-amber-300' 
@@ -336,7 +310,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
            </div>
         </div>
 
-        {/* Metric 3: Completed */}
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md transition-shadow group">
            <div className="flex justify-between items-start mb-4">
              <div className="p-3 rounded-xl bg-green-50 text-green-600 group-hover:bg-green-600 group-hover:text-white transition-colors">
@@ -349,10 +322,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
            </div>
         </div>
 
-        {/* Metric 4: Total Revenue (Mock) */}
         <div className="bg-slate-900 p-5 rounded-2xl shadow-lg relative overflow-hidden group">
            <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500 rounded-full blur-3xl opacity-10 group-hover:opacity-20 transition-opacity translate-x-10 -translate-y-10"></div>
-           
            <div className="relative z-10">
              <div className="flex justify-between items-start mb-4">
                <div className="p-3 rounded-xl bg-slate-800 text-blue-400">
@@ -371,13 +342,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
         </div>
       </div>
 
-      {/* Main Content Area - Split View */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-        
-        {/* Left Column: Client Directory */}
         <div className="lg:col-span-2 space-y-4">
-          
-          {/* Filters & Search */}
           <div className="bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 items-center justify-between">
              <div className="flex items-center gap-1 bg-slate-50 p-1 rounded-lg w-full md:w-auto overflow-x-auto">
                 <button 
@@ -410,7 +376,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                   {translations.en.common.completed}
                 </button>
              </div>
-
              <div className="relative w-full md:w-64 px-2 md:px-0">
                <Search className="absolute top-1/2 -translate-y-1/2 text-slate-400 left-4 md:left-2" size={16} />
                <input 
@@ -421,17 +386,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                  className="w-full py-2 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg pl-10 md:pl-8 pr-4 placeholder:text-slate-400"
                />
                {searchTerm && (
-                 <button 
-                   onClick={() => setSearchTerm('')}
-                   className="absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 right-4"
-                 >
+                 <button onClick={() => setSearchTerm('')} className="absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 right-4">
                    <X size={14} />
                  </button>
                )}
              </div>
           </div>
 
-          {/* Client List */}
           <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px]">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -459,9 +420,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                                 <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center border border-blue-500 text-white font-bold overflow-hidden shadow-sm">
                                   <User size={20} />
                                 </div>
-                                {hasPending && (
-                                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white animate-pulse"></span>
-                                )}
+                                {hasPending && <span className="absolute -top-1 -right-1 w-3 h-3 bg-amber-500 rounded-full border-2 border-white animate-pulse"></span>}
                               </div>
                               <div>
                                 <p className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">{client.companyName}</p>
@@ -476,9 +435,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                               </div>
                               <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                                 <div 
-                                  className={`h-full rounded-full transition-all duration-500 ${
-                                    client.progress === 100 ? 'bg-green-500' : 'bg-blue-600'
-                                  }`} 
+                                  className={`h-full rounded-full transition-all duration-500 ${client.progress === 100 ? 'bg-green-500' : 'bg-blue-600'}`} 
                                   style={{ width: `${client.progress}%` }}
                                 ></div>
                               </div>
@@ -497,9 +454,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                             </div>
                           </td>
                           <td className="px-6 py-4 text-end">
-                            <p className="text-xs font-medium text-slate-400 group-hover:text-slate-600">
-                               2h ago
-                            </p>
+                            <p className="text-xs font-medium text-slate-400 group-hover:text-slate-600">2h ago</p>
                           </td>
                         </tr>
                        );
@@ -510,12 +465,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                         <div className="flex flex-col items-center justify-center text-slate-400">
                           <Search size={32} className="mb-2 opacity-20" />
                           <p className="text-sm font-medium">No clients found matching "{searchTerm}"</p>
-                          <button 
-                            onClick={() => { setSearchTerm(''); setFilterType('all'); }} 
-                            className="mt-2 text-xs text-blue-600 hover:underline"
-                          >
-                            Clear filters
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -526,12 +475,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
           </div>
         </div>
 
-        {/* Right Column: Workflow Editor OR Priority Feed */}
         <div className="lg:col-span-1">
           {selectedClient ? (
-             // --- WORKFLOW EDITOR PANEL ---
              <div className="bg-white rounded-2xl border border-slate-200 shadow-lg shadow-slate-200/50 h-full flex flex-col sticky top-24 max-h-[calc(100vh-120px)] animate-slide-in-right">
-                {/* Panel Header */}
                 <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50 rounded-t-2xl backdrop-blur-sm">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-blue-600 border border-blue-500 p-1 shadow-md flex items-center justify-center">
@@ -542,16 +488,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                       <p className="text-xs text-slate-500 font-medium">{selectedClient.serviceType}</p>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => setSelectedClientId(null)} 
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
+                  <button onClick={() => setSelectedClientId(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
                     <X size={20} />
                   </button>
                 </div>
-
                 <div className="flex-1 overflow-y-auto">
-                  {/* Status & Actions */}
                   <div className="p-5 border-b border-slate-100">
                     <div className="flex justify-between items-center mb-4">
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.missionStatus}</h4>
@@ -559,7 +500,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                         {editProgress}% {translations.en.common.completed}
                       </div>
                     </div>
-                    
                     <div className="space-y-4">
                        <div className="bg-slate-50 p-3 rounded-lg border border-slate-200">
                           <p className="text-xs text-slate-500 mb-1">{t.publicStatus}</p>
@@ -567,16 +507,11 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                        </div>
                     </div>
                   </div>
-
-                  {/* Document Queue */}
                   <div className="p-5 border-b border-slate-100 bg-slate-50/30">
                      <div className="flex items-center justify-between mb-3">
                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.reviewQueue}</h4>
-                       {selectedClient.documents.filter(d => d.status === 'uploaded').length > 0 && (
-                         <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-                       )}
+                       {selectedClient.documents.filter(d => d.status === 'uploaded').length > 0 && <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>}
                      </div>
-                     
                      <div className="space-y-3">
                        {selectedClient.documents.map(doc => (
                          <div key={doc.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
@@ -593,16 +528,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                                 {doc.status}
                               </span>
                            </div>
-                           
-                           {/* Rejection UI */}
                            {rejectingDocId === doc.id ? (
                              <div className="mt-2 pt-2 border-t border-slate-100">
-                               <textarea 
-                                 className="w-full text-xs p-2 border border-red-200 rounded bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500"
-                                 placeholder={t.reason}
-                                 value={rejectionReason}
-                                 onChange={e => setRejectionReason(e.target.value)}
-                               />
+                               <textarea className="w-full text-xs p-2 border border-red-200 rounded bg-red-50 focus:outline-none focus:ring-1 focus:ring-red-500" placeholder={t.reason} value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} />
                                <div className="flex justify-end gap-2 mt-2">
                                  <button onClick={() => setRejectingDocId(null)} className="text-xs text-slate-500">{translations.en.common.cancel}</button>
                                  <button onClick={() => handleConfirmReject(selectedClient.id, doc.id)} className="text-xs bg-red-600 text-white px-2 py-1 rounded">{t.reject}</button>
@@ -610,18 +538,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                              </div>
                            ) : doc.status === 'uploaded' ? (
                              <div className="flex gap-2 mt-2">
-                               <button 
-                                 onClick={() => handleApproveDoc(selectedClient.id, doc.id)}
-                                 className="flex-1 bg-green-50 text-green-700 text-xs font-bold py-1.5 rounded-lg hover:bg-green-100 border border-green-200 transition-colors"
-                               >
-                                 {t.approve}
-                               </button>
-                               <button 
-                                 onClick={() => { setRejectingDocId(doc.id); setRejectionReason(''); }}
-                                 className="flex-1 bg-white text-slate-600 text-xs font-bold py-1.5 rounded-lg hover:bg-red-50 hover:text-red-600 border border-slate-200 hover:border-red-200 transition-colors"
-                               >
-                                 {t.reject}
-                               </button>
+                               <button onClick={() => handleApproveDoc(selectedClient.id, doc.id)} className="flex-1 bg-green-50 text-green-700 text-xs font-bold py-1.5 rounded-lg hover:bg-green-100 border border-green-200 transition-colors">{t.approve}</button>
+                               <button onClick={() => { setRejectingDocId(doc.id); setRejectionReason(''); }} className="flex-1 bg-white text-slate-600 text-xs font-bold py-1.5 rounded-lg hover:bg-red-50 hover:text-red-600 border border-slate-200 hover:border-red-200 transition-colors">{t.reject}</button>
                              </div>
                            ) : null}
                          </div>
@@ -629,8 +547,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                        {selectedClient.documents.length === 0 && <p className="text-xs text-slate-400 italic text-center py-2">{t.noPending}</p>}
                      </div>
                   </div>
-
-                  {/* Timeline Editor */}
                   <div className="p-5">
                     <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">{t.phaseControl}</h4>
                     <div className="relative space-y-4 pl-2">
@@ -646,25 +562,15 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                                {step.status === 'in-progress' && <div className="w-2.5 h-2.5 bg-blue-500 rounded-full animate-pulse" />}
                                {step.status === 'pending' && <span className="text-[10px] font-bold">{idx + 1}</span>}
                             </div>
-                            
                             <div className="flex justify-between items-start">
                               <div>
-                                <p className={`text-sm font-semibold ${
-                                  step.status === 'completed' ? 'text-slate-500 line-through' : 'text-slate-900'
-                                }`}>{step.label}</p>
+                                <p className={`text-sm font-semibold ${step.status === 'completed' ? 'text-slate-500 line-through' : 'text-slate-900'}`}>{step.label}</p>
                                 <p className="text-[10px] text-slate-400 capitalize">{step.status.replace('-', ' ')}</p>
                               </div>
-                              
                               <div className="flex gap-1">
-                                {step.status !== 'completed' && (
-                                  <button onClick={() => handleTimelineChange(step.id, 'completed')} className="text-green-600 p-1 hover:bg-green-50 rounded"><CheckCircle2 size={14} /></button>
-                                )}
-                                {step.status !== 'in-progress' && (
-                                  <button onClick={() => handleTimelineChange(step.id, 'in-progress')} className="text-blue-600 p-1 hover:bg-blue-50 rounded"><PlayCircle size={14} /></button>
-                                )}
-                                {step.status !== 'pending' && (
-                                  <button onClick={() => handleTimelineChange(step.id, 'pending')} className="text-slate-400 p-1 hover:bg-slate-100 rounded"><RotateCcw size={14} /></button>
-                                )}
+                                {step.status !== 'completed' && <button onClick={() => handleTimelineChange(step.id, 'completed')} className="text-green-600 p-1 hover:bg-green-50 rounded"><CheckCircle2 size={14} /></button>}
+                                {step.status !== 'in-progress' && <button onClick={() => handleTimelineChange(step.id, 'in-progress')} className="text-blue-600 p-1 hover:bg-blue-50 rounded"><PlayCircle size={14} /></button>}
+                                {step.status !== 'pending' && <button onClick={() => handleTimelineChange(step.id, 'pending')} className="text-slate-400 p-1 hover:bg-slate-100 rounded"><RotateCcw size={14} /></button>}
                               </div>
                             </div>
                          </div>
@@ -672,66 +578,42 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                     </div>
                   </div>
                 </div>
-
-                {/* Footer Action */}
                 <div className="p-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
-                   <button 
-                     onClick={handleSave}
-                     disabled={!isDirty}
-                     className={`w-full py-3 rounded-xl font-bold text-sm shadow-sm transition-all ${
-                       isDirty 
-                         ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20 transform hover:-translate-y-0.5' 
-                         : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-                     }`}
-                   >
+                   <button onClick={handleSave} disabled={!isDirty} className={`w-full py-3 rounded-xl font-bold text-sm shadow-sm transition-all ${isDirty ? 'bg-slate-900 text-white hover:bg-slate-800 shadow-slate-900/20 transform hover:-translate-y-0.5' : 'bg-slate-200 text-slate-400 cursor-not-allowed'}`}>
                      {isDirty ? t.saveWorkflow : t.saved}
                    </button>
                 </div>
              </div>
           ) : (
-            // --- GLOBAL PRIORITY FEED (DEFAULT VIEW) ---
             <div className="h-full flex flex-col space-y-6">
-              
-              {/* Priority Feed Card */}
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 flex-1">
                 <div className="flex items-center justify-between mb-6">
                    <h3 className="font-bold text-slate-900 flex items-center gap-2">
                      <Bell size={18} className="text-amber-500" />
                      {t.priorityFeed}
                    </h3>
-                   <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full font-bold">
-                     {globalPendingDocs.length} {t.pendingCount}
-                   </span>
+                   <span className="text-xs bg-slate-100 text-slate-500 px-2 py-1 rounded-full font-bold">{globalPendingDocs.length} {t.pendingCount}</span>
                 </div>
-
                 <div className="space-y-4">
                   {globalPendingDocs.length > 0 ? (
                     globalPendingDocs.map((item, idx) => (
                       <div key={`${item.client.id}-${item.id}`} className="flex gap-4 p-4 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors cursor-pointer group" onClick={() => handleEditClick(item.client)}>
                          <div className="mt-1">
-                           <div className="w-8 h-8 rounded-full bg-blue-600 border border-blue-500 flex items-center justify-center text-white font-bold text-xs shadow-sm">
-                             <User size={14} />
-                           </div>
+                           <div className="w-8 h-8 rounded-full bg-blue-600 border border-blue-500 flex items-center justify-center text-white font-bold text-xs shadow-sm"><User size={14} /></div>
                          </div>
                          <div className="flex-1">
                            <div className="flex justify-between items-start">
                              <h4 className="text-sm font-bold text-slate-900 group-hover:text-blue-600">{item.client.companyName}</h4>
                              <span className="text-[10px] text-slate-400 whitespace-nowrap">Today</span>
                            </div>
-                           <p className="text-xs text-slate-600 mt-1">
-                             Uploaded <span className="font-medium text-slate-800">{item.name}</span> for review.
-                           </p>
-                           <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
-                             {t.reviewNow} <ArrowRight size={10} />
-                           </div>
+                           <p className="text-xs text-slate-600 mt-1">Uploaded <span className="font-medium text-slate-800">{item.name}</span> for review.</p>
+                           <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-blue-100 px-2 py-0.5 rounded">{t.reviewNow} <ArrowRight size={10} /></div>
                          </div>
                       </div>
                     ))
                   ) : (
                     <div className="text-center py-10">
-                      <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <CheckCircle2 size={32} />
-                      </div>
+                      <div className="w-16 h-16 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-3"><CheckCircle2 size={32} /></div>
                       <p className="text-slate-900 font-bold">{t.caughtUp}</p>
                       <p className="text-slate-500 text-xs mt-1">{t.noPending}</p>
                     </div>
@@ -739,21 +621,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                 </div>
               </div>
 
-              {/* Quick Shortcuts Card */}
               <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-lg p-6 text-white">
                 <h3 className="font-bold mb-4">{t.quickActions}</h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <button className="bg-white/10 hover:bg-white/20 p-3 rounded-xl text-start transition-colors">
+                  <button 
+                    onClick={() => onNavigate('client-access')}
+                    className="bg-white/10 hover:bg-white/20 p-3 rounded-xl text-start transition-colors"
+                  >
                     <Users size={18} className="mb-2 text-blue-400" />
                     <p className="text-xs font-medium">{t.addClient}</p>
                   </button>
-                  <button className="bg-white/10 hover:bg-white/20 p-3 rounded-xl text-start transition-colors">
+                  <button 
+                    onClick={() => onNavigate('documents')}
+                    className="bg-white/10 hover:bg-white/20 p-3 rounded-xl text-start transition-colors"
+                  >
                     <FileCheck size={18} className="mb-2 text-green-400" />
                     <p className="text-xs font-medium">{t.docAudit}</p>
                   </button>
                 </div>
               </div>
-
             </div>
           )}
         </div>

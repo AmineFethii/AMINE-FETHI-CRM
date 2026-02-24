@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { WhatsAppFab } from './components/WhatsAppFab';
@@ -23,6 +22,13 @@ import { AdminFollowUpView } from './views/AdminFollowUpView';
 import { AdminCalendarView } from './views/AdminCalendarView';
 import { User, ClientData, Role, Notification, Employee, ClientDocument, ClientTask } from './types';
 import { ShieldCheck, Info, X, ChevronRight, User as UserIcon, Building2 } from 'lucide-react';
+
+// MOCK EVENTS FOR INITIAL STATE
+const INITIAL_EVENTS = [
+  { id: 'e1', title: 'Consultation - SARL Setup', type: 'meeting', time: '10:00', duration: '1h', client: 'MPL DIGITAL', date: 15 },
+  { id: 'e2', title: 'Tax Filing Deadline', type: 'deadline', time: 'All Day', date: 20 },
+  { id: 'e3', title: 'Follow-up Call', type: 'followup', time: '14:30', client: 'The Brain', date: 10 },
+];
 
 // COMPREHENSIVE RESTORED DATABASE
 const INITIAL_CLIENTS: ClientData[] = [
@@ -50,7 +56,7 @@ const INITIAL_CLIENTS: ClientData[] = [
     currency: 'MAD',
     paymentStatus: 'pending',
     missionStartDate: new Date().toISOString(),
-    lastLogin: undefined, // First time login scenario
+    lastLogin: undefined,
     hasFilledProfile: false
   },
   {
@@ -82,7 +88,8 @@ const INITIAL_CLIENTS: ClientData[] = [
     paymentStatus: 'paid',
     missionStartDate: '2024-01-10',
     lastLogin: '2024-11-20T10:30:00Z',
-    hasFilledProfile: true
+    hasFilledProfile: true,
+    phone: '+212 600-000001'
   },
   {
     id: 'c2',
@@ -111,88 +118,8 @@ const INITIAL_CLIENTS: ClientData[] = [
     paymentStatus: 'partial',
     missionStartDate: '2024-03-15',
     lastLogin: '2024-11-21T15:45:00Z',
-    hasFilledProfile: true
-  },
-  {
-    id: 'c3',
-    email: 'yassine@atlas-trading.com',
-    name: 'Yassine Mansouri',
-    companyName: 'ATLAS TRADING GROUP',
-    companyCategory: 'Import/Export',
-    serviceType: 'Legal Follow-up',
-    progress: 15,
-    statusMessage: 'Statute Revision',
-    timeline: [
-      { id: 'at1', label: 'Document Review', status: 'in-progress' },
-      { id: 'at2', label: 'Notary Meeting', status: 'pending' },
-      { id: 'at3', label: 'Registry Update', status: 'pending' }
-    ],
-    clientTasks: [],
-    documents: [
-      { id: 'atd1', name: 'Original_Statutes.pdf', type: 'Legal', status: 'uploaded', uploadDate: '2024-11-18' }
-    ],
-    notifications: [],
-    contractValue: 15000,
-    amountPaid: 0,
-    currency: 'MAD',
-    paymentStatus: 'overdue',
-    missionStartDate: '2024-10-01',
-    lastLogin: '2024-11-19T09:20:00Z',
-    hasFilledProfile: true
-  },
-  {
-    id: 'c4',
-    email: 'ceo@novatech.ma',
-    name: 'Karim Tazi',
-    companyName: 'NOVATECH SOLUTIONS',
-    companyCategory: 'IT Services',
-    serviceType: 'Full Management',
-    progress: 65,
-    statusMessage: 'Quarterly Reporting',
-    timeline: [
-      { id: 'nt1', label: 'Setup', status: 'completed' },
-      { id: 'nt2', label: 'Q1 Review', status: 'completed' },
-      { id: 'nt3', label: 'Q2 Review', status: 'in-progress' }
-    ],
-    clientTasks: [],
-    documents: [],
-    notifications: [],
-    contractValue: 45000,
-    amountPaid: 25000,
-    currency: 'MAD',
-    paymentStatus: 'partial',
-    missionStartDate: '2024-05-12',
-    lastLogin: '2024-11-21T11:10:00Z',
-    hasFilledProfile: true
-  },
-  {
-    id: 'c5',
-    email: 'admin@greenbuild.ma',
-    name: 'Fatima Zahra',
-    companyName: 'GREEN BUILD MOROCCO',
-    companyCategory: 'Construction',
-    serviceType: 'Company Creation',
-    progress: 90,
-    statusMessage: 'Final Registry Signature',
-    timeline: [
-      { id: 'gb1', label: 'Certificate', status: 'completed' },
-      { id: 'gb2', label: 'Bank Account', status: 'completed' },
-      { id: 'gb3', label: 'RC Final', status: 'in-progress' }
-    ],
-    clientTasks: [
-      { id: 'task-g1', title: 'Signature Specimen', description: 'Needed for commercial registry', status: 'pending', priority: 'high', createdAt: '2024-11-15' }
-    ],
-    documents: [
-      { id: 'gbd1', name: 'CIN_Copy.jpg', type: 'Identity', status: 'approved', uploadDate: '2024-11-01' }
-    ],
-    notifications: [],
-    contractValue: 10000,
-    amountPaid: 10000,
-    currency: 'MAD',
-    paymentStatus: 'paid',
-    missionStartDate: '2024-11-01',
-    lastLogin: '2024-11-20T16:05:00Z',
-    hasFilledProfile: true
+    hasFilledProfile: true,
+    phone: '+212 600-000002'
   }
 ];
 
@@ -214,9 +141,6 @@ const INITIAL_AUTH_DB: Record<string, string> = {
   'demo@newclient.com': 'welcome2025',
   'contact@mpldigital.com': 'mpl2024',
   'contact@thebrain.ma': 'brain2024',
-  'yassine@atlas-trading.com': 'atlas2024',
-  'ceo@novatech.ma': 'nova2024',
-  'admin@greenbuild.ma': 'green2024',
   'amine@admin.com': 'admin2024'
 };
 
@@ -230,6 +154,8 @@ const ADMIN_USER: User = {
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [currentView, setCurrentView] = useState<string>('dashboard');
+  const [selectedClientIdForFollowUp, setSelectedClientIdForFollowUp] = useState<string | null>(null);
   
   const [clients, setClients] = useState<ClientData[]>(() => {
     const saved = localStorage.getItem('crm_clients_v2');
@@ -250,6 +176,11 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('crm_admin_notifications_v2');
     return saved ? JSON.parse(saved) : [];
   });
+
+  const [calendarEvents, setCalendarEvents] = useState<any[]>(() => {
+    const saved = localStorage.getItem('crm_calendar_events');
+    return saved ? JSON.parse(saved) : INITIAL_EVENTS;
+  });
   
   useEffect(() => {
     localStorage.setItem('crm_clients_v2', JSON.stringify(clients));
@@ -267,8 +198,9 @@ const App: React.FC = () => {
     localStorage.setItem('crm_admin_notifications_v2', JSON.stringify(adminNotifications));
   }, [adminNotifications]);
 
-  const [currentView, setCurrentView] = useState<string>('dashboard');
-  const [selectedClientIdForFollowUp, setSelectedClientIdForFollowUp] = useState<string | null>(null);
+  useEffect(() => {
+    localStorage.setItem('crm_calendar_events', JSON.stringify(calendarEvents));
+  }, [calendarEvents]);
 
   const handleLogin = async (email: string, pass: string, role: Role): Promise<boolean> => {
     await new Promise(resolve => setTimeout(resolve, 800));
@@ -346,7 +278,6 @@ const App: React.FC = () => {
         newNotifications.unshift({ id: `n-${Date.now()}-payment`, title: 'Payment Received', message: `A payment of ${diff.toLocaleString()} ${c.currency} has been recorded.`, date: now, read: false, type: 'success' });
       }
 
-      // Check for completed tasks to notify admin
       if (updates.clientTasks) {
          updates.clientTasks.forEach(task => {
             const oldTask = c.clientTasks?.find(ot => ot.id === task.id);
@@ -379,7 +310,6 @@ const App: React.FC = () => {
   const handleUpdateClientTask = (clientId: string, taskId: string, status: ClientTask['status']) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
-    
     const updatedTasks = client.clientTasks.map(t => t.id === taskId ? { ...t, status } : t);
     updateClient(clientId, { clientTasks: updatedTasks });
   };
@@ -387,27 +317,23 @@ const App: React.FC = () => {
   const handleAddClientTask = (clientId: string, task: Omit<ClientTask, 'id' | 'createdAt'>) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
-
     const newTask: ClientTask = {
       ...task,
       id: `client-task-${Date.now()}`,
       createdAt: new Date().toISOString()
     };
-
     updateClient(clientId, { clientTasks: [...client.clientTasks, newTask] });
   };
 
   const handleDeleteClientTask = (clientId: string, taskId: string) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
-
     updateClient(clientId, { clientTasks: client.clientTasks.filter(t => t.id !== taskId) });
   };
 
   const handlePushClientUpdate = (clientId: string) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
-    
     const adminNotif: Notification = {
       id: `push-${Date.now()}`,
       title: 'Manual Checklist Update',
@@ -419,10 +345,9 @@ const App: React.FC = () => {
     setAdminNotifications(prev => [adminNotif, ...prev]);
   };
 
-  const handleDocumentUpload = (clientId: string, fileName: string, category: string) => {
+  const handleDocumentUpload = (clientId: string, fileName: string, category: string, base64?: string) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
-
     const newDoc: ClientDocument = {
       id: `doc-${Date.now()}`,
       name: fileName,
@@ -430,9 +355,7 @@ const App: React.FC = () => {
       status: 'uploaded',
       uploadDate: new Date().toISOString()
     };
-
     updateClient(clientId, { documents: [...client.documents, newDoc] });
-    
     const adminNotif: Notification = {
       id: `admin-n-${Date.now()}`,
       title: 'New Document Uploaded',
@@ -493,7 +416,7 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (user?.role === 'admin') {
       if (currentView === 'follow-up') return <AdminFollowUpView clients={clients} onUpdateClient={updateClient} lang="en" initialClientId={selectedClientIdForFollowUp} />;
-      if (currentView === 'calendar') return <AdminCalendarView clients={clients} />;
+      if (currentView === 'calendar') return <AdminCalendarView clients={clients} events={calendarEvents} onUpdateEvents={setCalendarEvents} />;
       if (currentView === 'finance') return <FinanceDashboard clients={clients} onUpdateClient={updateClient} />;
       if (currentView === 'documents') return <AdminDocumentsView clients={clients} onUpdateClient={updateClient} />;
       if (currentView === 'clients') return <AdminClientsView clients={clients} onManageClient={(clientId) => { setSelectedClientIdForFollowUp(clientId); setCurrentView('follow-up'); }} onUpdateClient={updateClient} />;
@@ -504,11 +427,11 @@ const App: React.FC = () => {
       if (currentView === 'tutorials') return <AdminTutorialsView lang="en" />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
       if (currentView === 'client-access') return <AdminClientAccessView clients={clients} lang="en" onAddClient={handleAddClient} onUpdateCredentials={handleUpdateCredentials} authCredentials={authCredentials} />;
-      return <AdminDashboard clients={clients} onUpdateClient={updateClient} user={user} />;
+      return <AdminDashboard clients={clients} onUpdateClient={updateClient} user={user} onNavigate={setCurrentView} />;
     } else {
       const clientData = getCurrentClientData();
       if (!clientData) return <div>Error loading client data</div>;
-      if (currentView === 'documents') return <ClientDocumentsView client={clientData} onUpload={(f, cat) => handleDocumentUpload(clientData.id, f, cat)} />;
+      if (currentView === 'documents') return <ClientDocumentsView client={clientData} onUpload={handleDocumentUpload} />;
       if (currentView === 'settings') return <ClientSettingsView client={clientData} onUpdateProfile={(u) => updateClient(clientData.id, u)} />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
       if (currentView === 'guide') return <ClientGuideView onNavigate={(view) => setCurrentView(view)} />;
@@ -547,7 +470,6 @@ const App: React.FC = () => {
         <Login onLogin={handleLogin} />
       )}
       
-      {/* WELCOME ONBOARDING MODAL */}
       {showWelcomeModal && user?.role === 'client' && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
            <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" onClick={() => setShowWelcomeModal(false)}></div>
@@ -557,7 +479,6 @@ const App: React.FC = () => {
                    <X size={20} />
                 </button>
               </div>
-
               <div className="p-10 pt-14 text-center">
                  <div className="relative inline-block mb-8">
                     <div className="absolute inset-0 bg-blue-100 rounded-3xl rotate-6 scale-110"></div>
@@ -565,29 +486,10 @@ const App: React.FC = () => {
                        <ShieldCheck size={48} className="text-white" />
                     </div>
                  </div>
-
                  <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Action Required</h2>
                  <p className="text-slate-500 text-lg leading-relaxed mb-10">
                    To ensure optimal follow-up and legal accuracy for your mission, please complete your <span className="font-bold text-slate-900">Personal & Business Info</span> in the settings level.
                  </p>
-
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
-                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-start gap-4 text-left">
-                       <div className="p-2 bg-white rounded-lg text-blue-600 shadow-sm"><UserIcon size={18} /></div>
-                       <div>
-                          <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Onboarding</p>
-                          <p className="text-sm font-bold text-slate-700">Fill Legal Details</p>
-                       </div>
-                    </div>
-                    <div className="bg-slate-50 p-5 rounded-2xl border border-slate-100 flex items-start gap-4 text-left">
-                       <div className="p-2 bg-white rounded-lg text-amber-600 shadow-sm"><Building2 size={18} /></div>
-                       <div>
-                          <p className="text-xs font-black uppercase tracking-widest text-slate-400 mb-1">Process</p>
-                          <p className="text-sm font-bold text-slate-700">Verify Ownership</p>
-                       </div>
-                    </div>
-                 </div>
-
                  <button 
                    onClick={() => { setShowWelcomeModal(false); setCurrentView('settings'); }}
                    className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/20 group active:scale-95"
@@ -595,18 +497,11 @@ const App: React.FC = () => {
                     Start Filling Profile
                     <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
                  </button>
-
-                 <button 
-                   onClick={() => setShowWelcomeModal(false)}
-                   className="mt-6 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors"
-                 >
-                    Remind me later
-                 </button>
+                 <button onClick={() => setShowWelcomeModal(false)} className="mt-6 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">Remind me later</button>
               </div>
            </div>
         </div>
       )}
-
       {user?.role === 'client' && <WhatsAppFab />}
     </div>
   );
