@@ -30,7 +30,6 @@ interface AdminClientAccessViewProps {
   lang: Language;
   onAddClient: (client: ClientData) => void;
   onUpdateCredentials: (email: string, pass: string) => void;
-  authCredentials: Record<string, string>;
 }
 
 interface CredentialModalState {
@@ -40,7 +39,7 @@ interface CredentialModalState {
   step: 'create' | 'success';
 }
 
-export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ clients, lang, onAddClient, onUpdateCredentials, authCredentials }) => {
+export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ clients, lang, onAddClient, onUpdateCredentials }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [modal, setModal] = useState<CredentialModalState>({
@@ -118,7 +117,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
 
   const handleOpenModal = (client: ClientData) => {
     // Show current real password if it exists, otherwise generate one
-    const currentPass = authCredentials[client.email.toLowerCase()] || generatePassword();
+    const currentPass = client.password || generatePassword();
     setModal({
       isOpen: true,
       client,

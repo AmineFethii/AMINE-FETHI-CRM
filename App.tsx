@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, updateDoc, setDoc, getDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, setDoc } from 'firebase/firestore';
 import { db } from './src/firebase';
 import { Layout } from './components/Layout';
 import { WhatsAppFab } from './components/WhatsAppFab';
@@ -33,98 +33,6 @@ const INITIAL_EVENTS = [
 ];
 
 // COMPREHENSIVE RESTORED DATABASE
-const INITIAL_CLIENTS: ClientData[] = [
-  {
-    id: 'c-demo',
-    email: 'demo@newclient.com',
-    name: 'New Entrepreneur',
-    companyName: 'FUTURE VENTURES SARL',
-    companyCategory: 'Consulting',
-    serviceType: 'Company Creation',
-    progress: 5,
-    statusMessage: 'Awaiting Personal Info',
-    timeline: [
-      { id: 't1', label: 'Negative Certificate', status: 'in-progress' },
-      { id: 't2', label: 'Legal Statutes', status: 'pending' },
-      { id: 't3', label: 'RC Registration', status: 'pending' }
-    ],
-    clientTasks: [
-      { id: 'task-new-1', title: 'Complete Business Profile', description: 'Essential for legal drafting', status: 'pending', priority: 'high', createdAt: new Date().toISOString() }
-    ],
-    documents: [],
-    notifications: [],
-    contractValue: 8000,
-    amountPaid: 0,
-    currency: 'MAD',
-    paymentStatus: 'pending',
-    missionStartDate: new Date().toISOString(),
-    lastLogin: undefined,
-    hasFilledProfile: false
-  },
-  {
-    id: 'c1',
-    email: 'contact@mpldigital.com',
-    name: 'Amine El Amrani',
-    companyName: 'MPL DIGITAL WORKS SARL',
-    companyCategory: 'Digital Services',
-    serviceType: 'Company Creation',
-    progress: 100,
-    statusMessage: 'Service Completed',
-    timeline: [
-      { id: 't1', label: 'Negative Certificate', status: 'completed' },
-      { id: 't2', label: 'Legal Statutes', status: 'completed' },
-      { id: 't3', label: 'RC Registration', status: 'completed' }
-    ],
-    clientTasks: [
-      { id: 'task1', title: 'Upload Passport Copy', description: 'Mandatory for RC registration', status: 'completed', priority: 'high', createdAt: '2024-01-10' },
-      { id: 'task2', title: 'Sign Lease Agreement', description: 'Required for domicile address verification', status: 'completed', priority: 'medium', createdAt: '2024-01-12' }
-    ],
-    documents: [
-      { id: 'doc1', name: 'RC_Extraction.pdf', type: 'Legal', status: 'approved', uploadDate: '2024-01-15' },
-      { id: 'doc2', name: 'Statutes_Final.pdf', type: 'Legal', status: 'approved', uploadDate: '2024-01-16' }
-    ],
-    notifications: [],
-    contractValue: 12000,
-    amountPaid: 12000,
-    currency: 'MAD',
-    paymentStatus: 'paid',
-    missionStartDate: '2024-01-10',
-    lastLogin: '2024-11-20T10:30:00Z',
-    hasFilledProfile: true,
-    phone: '+212 600-000001'
-  },
-  {
-    id: 'c2',
-    email: 'contact@thebrain.ma',
-    name: 'Sarah Bennani',
-    companyName: 'THE BRAIN SARL AU',
-    companyCategory: 'IT Services',
-    serviceType: 'Fiscal Advisory',
-    progress: 40,
-    statusMessage: 'Monthly VAT Declaration',
-    timeline: [
-      { id: 't1', label: 'Onboarding', status: 'completed' },
-      { id: 't2', label: 'Monthly Declaration', status: 'in-progress' },
-      { id: 't3', label: 'Year-End Audit', status: 'pending' }
-    ],
-    clientTasks: [
-      { id: 'task-b1', title: 'Provide Purchase Invoices for Oct', description: 'Needed for VAT calculation', status: 'in-progress', priority: 'high', createdAt: '2024-11-01' }
-    ],
-    documents: [
-      { id: 'd1', name: 'Purchase_Invoices_Oct.pdf', type: 'Financial', status: 'uploaded', uploadDate: '2024-11-05' }
-    ],
-    notifications: [],
-    contractValue: 24000,
-    amountPaid: 8000,
-    currency: 'MAD',
-    paymentStatus: 'partial',
-    missionStartDate: '2024-03-15',
-    lastLogin: '2024-11-21T15:45:00Z',
-    hasFilledProfile: true,
-    phone: '+212 600-000002'
-  }
-];
-
 const INITIAL_EMPLOYEES: Employee[] = [
   {
     id: 'e1',
@@ -139,13 +47,6 @@ const INITIAL_EMPLOYEES: Employee[] = [
   }
 ];
 
-const ADMIN_USER: User = {
-  id: 'admin1',
-  name: 'Amine El Fethi',
-  email: 'amine@admin.com',
-  role: 'admin'
-};
-
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -158,13 +59,6 @@ const App: React.FC = () => {
     const saved = localStorage.getItem('crm_employees_v2');
     return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
   });
-
-  const authCredentials = clients.reduce((acc, client) => {
-    if (client.password) {
-      acc[client.email.toLowerCase()] = client.password;
-    }
-    return acc;
-  }, {} as Record<string, string>);
 
   const [adminNotifications, setAdminNotifications] = useState<Notification[]>(() => {
     const saved = localStorage.getItem('crm_admin_notifications_v2');
@@ -202,40 +96,38 @@ const App: React.FC = () => {
 
   const handleLogin = async (email: string, pass: string, role: Role): Promise<boolean> => {
     try {
-      if (role === 'admin' && email === 'amine@admin.com') {
-        const adminDocRef = doc(db, 'admins', 'admin1');
-        const adminDocSnap = await getDoc(adminDocRef);
-        if (adminDocSnap.exists() && adminDocSnap.data().password === pass) {
-          setUser(ADMIN_USER);
+      // Search only the clients state for the user
+      const foundUser = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
+      
+      if (foundUser && foundUser.password === pass && foundUser.role === role) {
+        if (role === 'admin') {
+          setUser({
+            id: foundUser.id,
+            name: foundUser.name,
+            email: foundUser.email,
+            role: 'admin',
+            avatarUrl: foundUser.avatarUrl
+          });
           setCurrentView('dashboard');
           return true;
-        }
-        return false;
-      } 
-      
-      if (role === 'client') {
-        const clientData = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
-        if (clientData) {
-          const clientDocSnap = await getDoc(doc(db, 'clients', clientData.id));
-          if (clientDocSnap.exists() && clientDocSnap.data().password === pass) {
-            const isFirstTime = !clientData.lastLogin;
-            
-            updateClient(clientData.id, { lastLogin: new Date().toISOString() });
-            setUser({
-              id: clientData.id,
-              name: clientData.name,
-              email: clientData.email,
-              role: 'client',
-              avatarUrl: clientData.avatarUrl
-            });
-            
-            if (isFirstTime || !clientData.hasFilledProfile) {
-              setShowWelcomeModal(true);
-            }
-            
-            setCurrentView('dashboard');
-            return true;
+        } else if (role === 'client') {
+          const isFirstTime = !foundUser.lastLogin;
+          
+          updateClient(foundUser.id, { lastLogin: new Date().toISOString() });
+          setUser({
+            id: foundUser.id,
+            name: foundUser.name,
+            email: foundUser.email,
+            role: 'client',
+            avatarUrl: foundUser.avatarUrl
+          });
+          
+          if (isFirstTime || !foundUser.hasFilledProfile) {
+            setShowWelcomeModal(true);
           }
+          
+          setCurrentView('dashboard');
+          return true;
         }
       }
     } catch (error) {
@@ -471,7 +363,7 @@ const App: React.FC = () => {
       if (currentView === 'invoicing-generator') return <AdminInvoiceGeneratorView clients={clients} lang="en" />;
       if (currentView === 'tutorials') return <AdminTutorialsView lang="en" />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
-      if (currentView === 'client-access') return <AdminClientAccessView clients={clients} lang="en" onAddClient={handleAddClient} onUpdateCredentials={handleUpdateCredentials} authCredentials={authCredentials} />;
+      if (currentView === 'client-access') return <AdminClientAccessView clients={clients} lang="en" onAddClient={handleAddClient} onUpdateCredentials={handleUpdateCredentials} />;
       return <AdminDashboard clients={clients} onUpdateClient={updateClient} user={user} onNavigate={setCurrentView} />;
     } else {
       const clientData = getCurrentClientData();
