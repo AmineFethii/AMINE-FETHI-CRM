@@ -70,10 +70,18 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
         setIsDirty(false);
         setEditingStepId(null);
       }
+    } else if (initialClientId && clients.length > 0) {
+      const found = clients.find(c => c.id === initialClientId);
+      if (found) {
+        setSelectedClientId(initialClientId);
+        setLocalClient(JSON.parse(JSON.stringify(found)));
+        setIsDirty(false);
+        setEditingStepId(null);
+      }
     } else {
       setLocalClient(null);
     }
-  }, [selectedClientId, clients]);
+  }, [selectedClientId, clients, initialClientId]);
 
   const handleTimelineStatusChange = (stepId: string, newStatus: 'pending' | 'in-progress' | 'completed') => {
     if (!localClient) return;
@@ -177,7 +185,7 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
           {filteredClients.map(client => (
             <div key={client.id} onClick={() => setSelectedClientId(client.id)} className={`p-3 rounded-xl cursor-pointer transition-all border ${selectedClientId === client.id ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-white border-transparent hover:bg-slate-50 hover:border-slate-100'}`}>
               <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
                   <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 overflow-hidden shadow-sm">{(client.companyName || '').charAt(0)}</div>
                   <div>
                     <h4 className="font-bold text-sm text-slate-900">{client.companyName}</h4>

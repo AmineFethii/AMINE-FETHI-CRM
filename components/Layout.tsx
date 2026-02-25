@@ -45,8 +45,8 @@ export const Layout: React.FC<LayoutProps> = ({
 
   // Get current client data if applicable
   const currentClient = useMemo(() => {
-    return clients.find(c => c.id === user.id);
-  }, [user.id, clients]);
+    return clients.find(c => c.id === user?.id);
+  }, [user?.id, clients]);
 
   // Calculate Yearly Cycle Stats for Clients
   const cycleData = useMemo(() => {

@@ -22,7 +22,7 @@ import { AdminTutorialsView } from './views/AdminTutorialsView';
 import { AdminClientAccessView } from './views/AdminClientAccessView';
 import { AdminFollowUpView } from './views/AdminFollowUpView';
 import { AdminCalendarView } from './views/AdminCalendarView';
-import { User, ClientData, Role, Notification, Employee, ClientDocument, ClientTask } from './types';
+import { User, ClientData, Role, Notification, Employee, ClientDocument, ClientTask, TimelineStep, FirestoreUser } from './src/types';
 import { ShieldCheck, Info, X, ChevronRight, User as UserIcon, Building2 } from 'lucide-react';
 
 // MOCK EVENTS FOR INITIAL STATE
@@ -75,7 +75,11 @@ const App: React.FC = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const clientsData = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        notifications: doc.data().notifications || [],
+        documents: doc.data().documents || [],
+        clientTasks: doc.data().clientTasks || [],
+        timeline: doc.data().timeline || []
       })) as ClientData[];
       setClients(clientsData);
     });
@@ -102,7 +106,7 @@ const App: React.FC = () => {
       
       if (!querySnapshot.empty) {
         const foundUserDoc = querySnapshot.docs[0];
-        const foundUserData = { id: foundUserDoc.id, ...foundUserDoc.data() } as ClientData;
+        const foundUserData = { id: foundUserDoc.id, ...foundUserDoc.data() } as FirestoreUser;
         
         if (foundUserData.password === pass && foundUserData.role === role) {
           if (role === 'admin') {
@@ -151,7 +155,7 @@ const App: React.FC = () => {
   const handleAddEmployee = (newEmployee: Employee) => setEmployees(prev => [...prev, newEmployee]);
   const handleAddClient = async (newClient: ClientData) => {
     try {
-      await setDoc(doc(db, 'clients', newClient.id), newClient);
+      await setDoc(doc(db, 'clients', newClient.id), { ...newClient, notifications: [] });
     } catch (error) {
       console.error("Error adding client:", error);
     }
@@ -354,7 +358,12 @@ const App: React.FC = () => {
     }
   };
 
-  const getCurrentClientData = () => clients.find(c => c.email === user?.email);
+  const getCurrentClientData = (): ClientData | undefined => {
+    if (!user?.email) return undefined;
+    const client = clients.find(c => c.email === user.email);
+    if (!client) return undefined;
+    return client;
+  };
   const currentUserNotifications = user?.role === 'admin' ? adminNotifications : getCurrentClientData()?.notifications || [];
 
   const renderContent = () => {
@@ -374,7 +383,7 @@ const App: React.FC = () => {
       return <AdminDashboard clients={clients} onUpdateClient={updateClient} user={user} onNavigate={setCurrentView} />;
     } else {
       const clientData = getCurrentClientData();
-      if (!clientData) return <div>Error loading client data</div>;
+      if (!clientData) return <div>Error: Client data not found. Please log in again.</div>;
       if (currentView === 'documents') return <ClientDocumentsView client={clientData} onUpload={handleDocumentUpload} />;
       if (currentView === 'settings') return <ClientSettingsView client={clientData} onUpdateProfile={(u) => updateClient(clientData.id, u)} />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
