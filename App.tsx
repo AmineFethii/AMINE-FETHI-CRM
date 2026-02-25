@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, updateDoc, setDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, setDoc, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { db } from './src/firebase';
 import { Layout } from './components/Layout';
 import { WhatsAppFab } from './components/WhatsAppFab';
@@ -153,9 +153,19 @@ const App: React.FC = () => {
   };
 
   const handleAddEmployee = (newEmployee: Employee) => setEmployees(prev => [...prev, newEmployee]);
-  const handleAddClient = async (newClient: ClientData) => {
+  const handleAddClient = async (newClient: Omit<ClientData, 'id'>) => {
     try {
-      await setDoc(doc(db, 'clients', newClient.id), { ...newClient, notifications: [] });
+      await addDoc(collection(db, 'clients'), {
+        ...newClient,
+        status: "Active",
+        progress: 0,
+        role: "client",
+        notifications: [],
+        documents: [],
+        clientTasks: [],
+        timeline: [],
+        createdAt: new Date().toISOString(),
+      });
     } catch (error) {
       console.error("Error adding client:", error);
     }
