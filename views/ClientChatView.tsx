@@ -151,7 +151,7 @@ export const ClientChatView: React.FC<ClientChatViewProps> = ({ lang }) => {
             >
               <div className="relative">
                 <div className="w-12 h-12 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold overflow-hidden border border-slate-300">
-                  {contact.avatarUrl ? <img src={contact.avatarUrl} className="w-full h-full object-cover" /> : contact.name.charAt(0)}
+                  {contact.avatarUrl ? <img src={contact.avatarUrl} className="w-full h-full object-cover" /> : (contact.name || '').charAt(0)}
                 </div>
                 <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${
                   contact.status === 'online' ? 'bg-green-500' : 'bg-amber-500'
@@ -181,7 +181,7 @@ export const ClientChatView: React.FC<ClientChatViewProps> = ({ lang }) => {
           <div className="flex items-center gap-3">
              <div className="relative">
                 <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-500 font-bold border border-slate-300">
-                  {activeContact.name.charAt(0)}
+                  {(activeContact.name || '').charAt(0)}
                 </div>
                 <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${
                   activeContact.status === 'online' ? 'bg-green-500' : 'bg-amber-500'

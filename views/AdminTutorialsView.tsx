@@ -79,7 +79,8 @@ export const AdminTutorialsView: React.FC<AdminTutorialsViewProps> = ({ lang }) 
   ];
 
   const filteredVideos = videos.filter(v => {
-    const matchesSearch = v.title.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = (searchTerm || '').toLowerCase();
+    const matchesSearch = (v.title || '').toLowerCase().includes(searchLower);
     const matchesCategory = activeCategory === 'All' || v.category === activeCategory;
     return matchesSearch && matchesCategory;
   });

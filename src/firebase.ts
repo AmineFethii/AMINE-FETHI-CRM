@@ -1,15 +1,19 @@
 /// <reference types="vite/client" />
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
+import { getAnalytics } from 'firebase/analytics';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "dummy-key",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "dummy-domain",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "dummy-project",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "dummy-bucket",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "dummy-sender",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "dummy-app"
+  apiKey: "AIzaSyCKseEPMgt5Ds5cZyxZmAFwWWnyDLqwm3Y",
+  authDomain: "amine-fethi-business-crm.firebaseapp.com",
+  projectId: "amine-fethi-business-crm",
+  storageBucket: "amine-fethi-business-crm.firebasestorage.app",
+  messagingSenderId: "165254151660",
+  appId: "1:165254151660:web:92bce16b3893db0d0cd4c9",
+  measurementId: "G-QH604EHNWD"
 };
 
 const app = initializeApp(firebaseConfig);
+export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 export const db = getFirestore(app);
+

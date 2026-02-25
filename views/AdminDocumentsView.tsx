@@ -47,7 +47,7 @@ export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients,
   const commonT = translations.en.common;
 
   const allDocuments = clients.flatMap(client => 
-    client.documents.map(doc => ({
+    (client.documents || []).map(doc => ({
       ...doc,
       clientId: client.id,
       clientName: client.name,
@@ -58,6 +58,7 @@ export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients,
   );
 
   const filteredDocs = allDocuments.filter(doc => {
+    const searchLower = (searchTerm || '').toLowerCase();
     const matchesStatus = statusFilter === 'all' 
       ? true 
       : statusFilter === 'pending' 
@@ -65,16 +66,16 @@ export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients,
         : doc.status === statusFilter;
     const matchesType = typeFilter === 'all' || doc.type === typeFilter;
     const matchesSearch = 
-      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      doc.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.companyName.toLowerCase().includes(searchTerm.toLowerCase());
+      (doc.name || '').toLowerCase().includes(searchLower) || 
+      (doc.clientName || '').toLowerCase().includes(searchLower) ||
+      (doc.companyName || '').toLowerCase().includes(searchLower);
     return matchesStatus && matchesType && matchesSearch;
   });
 
   const handleApprove = (clientId: string, docId: string) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
-    const updatedDocs = client.documents.map(d => 
+    const updatedDocs = (client.documents || []).map(d => 
       d.id === docId ? { ...d, status: 'approved' as const, rejectionReason: undefined } : d
     );
     onUpdateClient(clientId, { documents: updatedDocs });
@@ -87,7 +88,7 @@ export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients,
     if (!rejectionReason.trim()) return;
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
-    const updatedDocs = client.documents.map(d => 
+    const updatedDocs = (client.documents || []).map(d => 
       d.id === docId ? { ...d, status: 'rejected' as const, rejectionReason } : d
     );
     onUpdateClient(clientId, { documents: updatedDocs });
@@ -110,7 +111,7 @@ export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients,
       status: 'approved',
       uploadDate: new Date().toISOString()
     };
-    onUpdateClient(uploadClientId, { documents: [...client.documents, newDoc] });
+    onUpdateClient(uploadClientId, { documents: [...(client.documents || []), newDoc] });
     setIsUploadModalOpen(false);
     setUploadClientId('');
     setUploadFile(null);
@@ -119,8 +120,9 @@ export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients,
 
   const getFileIcon = (fileName: string, type: string) => {
     if (type === 'Identity') return <Shield size={18} />;
-    if (fileName.toLowerCase().endsWith('.pdf')) return <FileText size={18} />;
-    if (fileName.match(/\.(jpg|jpeg|png)$/i)) return <ImageIcon size={18} />;
+    const nameLower = (fileName || '').toLowerCase();
+    if (nameLower.endsWith('.pdf')) return <FileText size={18} />;
+    if (nameLower.match(/\.(jpg|jpeg|png)$/i)) return <ImageIcon size={18} />;
     return <File size={18} />;
   };
 
@@ -167,7 +169,7 @@ export const AdminDocumentsView: React.FC<AdminDocumentsViewProps> = ({ clients,
               {filteredDocs.length > 0 ? (
                 filteredDocs.map((doc) => (
                   <tr key={`${doc.clientId}-${doc.id}`} className="hover:bg-slate-50/80 transition-colors group cursor-pointer" onClick={() => setPreviewDoc({ doc, client: doc.clientData })}>
-                    <td className="px-6 py-4"><div className="flex items-center gap-3"><div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm text-slate-500 font-bold text-xs">{doc.avatarUrl ? <img src={doc.avatarUrl} className="w-full h-full object-cover" /> : doc.clientName.charAt(0)}</div><div><p className="text-sm font-bold text-slate-900 truncate max-w-[150px]">{doc.companyName}</p><p className="text-xs text-slate-500 truncate max-w-[150px]">{doc.clientName}</p></div></div></td>
+                    <td className="px-6 py-4"><div className="flex items-center gap-3"><div className="w-9 h-9 rounded-lg bg-white border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm text-slate-500 font-bold text-xs">{doc.avatarUrl ? <img src={doc.avatarUrl} className="w-full h-full object-cover" /> : (doc.clientName || '').charAt(0)}</div><div><p className="text-sm font-bold text-slate-900 truncate max-w-[150px]">{doc.companyName}</p><p className="text-xs text-slate-500 truncate max-w-[150px]">{doc.clientName}</p></div></div></td>
                     <td className="px-6 py-4"><div className="flex items-center gap-3"><div className={`p-2 rounded-lg flex-shrink-0 ${doc.name.endsWith('.pdf') ? 'bg-red-50 text-red-600' : 'bg-blue-50 text-blue-600'}`}>{getFileIcon(doc.name, doc.type)}</div><div><p className="text-sm font-medium text-slate-900 max-w-[180px] truncate" title={doc.name}>{doc.name}</p>{rejectingId === doc.id && (<div className="mt-2 animate-fade-in" onClick={e => e.stopPropagation()}><input type="text" placeholder={translations.en.adminDashboard.reason} value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} className="w-full text-xs p-2 border border-red-300 rounded bg-white text-slate-900 mb-2 focus:outline-none focus:ring-1 focus:ring-red-500 shadow-sm" autoFocus /><div className="flex gap-2"><button onClick={() => handleReject(doc.clientId, doc.id)} className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700 shadow-sm">{t.confirmReject}</button><button onClick={() => { setRejectingId(null); setRejectionReason(''); }} className="text-xs bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded hover:bg-slate-50">{t.cancelReject}</button></div></div>)}</div></div></td>
                     <td className="px-6 py-4"><span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200">{doc.type}</span></td>
                     <td className="px-6 py-4 text-sm text-slate-500 font-medium">{doc.uploadDate ? new Date(doc.uploadDate).toLocaleDateString() : '-'}</td>

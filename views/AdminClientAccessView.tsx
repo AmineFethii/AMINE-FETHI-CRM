@@ -95,10 +95,11 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
   };
 
   const filteredClients = clients.filter(client => {
+    const searchLower = (searchTerm || '').toLowerCase();
     const matchesSearch = 
-      client.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (client.companyName || '').toLowerCase().includes(searchLower) ||
+      (client.name || '').toLowerCase().includes(searchLower) ||
+      (client.email || '').toLowerCase().includes(searchLower);
     
     const status = isRecentLogin(client.lastLogin) ? 'active' : 'inactive';
     const matchesFilter = filterStatus === 'all' || status === filterStatus;
@@ -275,7 +276,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
                       <div className="flex items-center gap-3">
                         <div className="relative">
                           <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 overflow-hidden shadow-sm">
-                             {client.avatarUrl ? <img src={client.avatarUrl} className="w-full h-full object-cover" /> : client.companyName.charAt(0)}
+                             {client.avatarUrl ? <img src={client.avatarUrl} className="w-full h-full object-cover" /> : (client.companyName || '').charAt(0)}
                           </div>
                           {online && <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white animate-pulse"></span>}
                         </div>

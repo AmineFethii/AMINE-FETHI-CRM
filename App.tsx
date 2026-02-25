@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, updateDoc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, setDoc, query, where, getDocs } from 'firebase/firestore';
 import { db } from './src/firebase';
 import { Layout } from './components/Layout';
 import { WhatsAppFab } from './components/WhatsAppFab';
@@ -95,39 +95,45 @@ const App: React.FC = () => {
   }, [calendarEvents]);
 
   const handleLogin = async (email: string, pass: string, role: Role): Promise<boolean> => {
+    if (!email) return false;
     try {
-      // Search only the clients state for the user
-      const foundUser = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
+      const q = query(collection(db, 'clients'), where('email', '==', email.toLowerCase()));
+      const querySnapshot = await getDocs(q);
       
-      if (foundUser && foundUser.password === pass && foundUser.role === role) {
-        if (role === 'admin') {
-          setUser({
-            id: foundUser.id,
-            name: foundUser.name,
-            email: foundUser.email,
-            role: 'admin',
-            avatarUrl: foundUser.avatarUrl
-          });
-          setCurrentView('dashboard');
-          return true;
-        } else if (role === 'client') {
-          const isFirstTime = !foundUser.lastLogin;
-          
-          updateClient(foundUser.id, { lastLogin: new Date().toISOString() });
-          setUser({
-            id: foundUser.id,
-            name: foundUser.name,
-            email: foundUser.email,
-            role: 'client',
-            avatarUrl: foundUser.avatarUrl
-          });
-          
-          if (isFirstTime || !foundUser.hasFilledProfile) {
-            setShowWelcomeModal(true);
+      if (!querySnapshot.empty) {
+        const foundUserDoc = querySnapshot.docs[0];
+        const foundUserData = { id: foundUserDoc.id, ...foundUserDoc.data() } as ClientData;
+        
+        if (foundUserData.password === pass && foundUserData.role === role) {
+          if (role === 'admin') {
+            setUser({
+              id: foundUserData.id,
+              name: foundUserData.name,
+              email: foundUserData.email,
+              role: 'admin',
+              avatarUrl: foundUserData.avatarUrl
+            });
+            setCurrentView('dashboard');
+            return true;
+          } else if (role === 'client') {
+            const isFirstTime = !foundUserData.lastLogin;
+            
+            updateClient(foundUserData.id, { lastLogin: new Date().toISOString() });
+            setUser({
+              id: foundUserData.id,
+              name: foundUserData.name,
+              email: foundUserData.email,
+              role: 'client',
+              avatarUrl: foundUserData.avatarUrl
+            });
+            
+            if (isFirstTime || !foundUserData.hasFilledProfile) {
+              setShowWelcomeModal(true);
+            }
+            
+            setCurrentView('dashboard');
+            return true;
           }
-          
-          setCurrentView('dashboard');
-          return true;
         }
       }
     } catch (error) {
@@ -151,7 +157,8 @@ const App: React.FC = () => {
     }
   };
   const handleUpdateCredentials = async (email: string, pass: string) => {
-    const client = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
+    if (!email) return;
+    const client = clients.find(c => c.email && c.email.toLowerCase() === email.toLowerCase());
     if (client) {
       try {
         await updateDoc(doc(db, 'clients', client.id), { password: pass });
@@ -176,7 +183,7 @@ const App: React.FC = () => {
 
     if (updates.documents) {
       updates.documents.forEach(newDoc => {
-        const oldDoc = c.documents.find(d => d.id === newDoc.id);
+        const oldDoc = (c.documents || []).find(d => d.id === newDoc.id);
         if (oldDoc && oldDoc.status !== 'approved' && newDoc.status === 'approved') {
           newNotifications.unshift({ id: `n-${Date.now()}-${newDoc.id}`, title: 'Document Approved', message: `Your document "${newDoc.name}" has been reviewed and approved.`, date: now, read: false, type: 'success' });
         }
@@ -194,7 +201,7 @@ const App: React.FC = () => {
 
     if (updates.clientTasks) {
        updates.clientTasks.forEach(task => {
-          const oldTask = c.clientTasks?.find(ot => ot.id === task.id);
+          const oldTask = (c.clientTasks || []).find(ot => ot.id === task.id);
           if (oldTask && oldTask.status !== 'completed' && task.status === 'completed') {
              const adminNotif: Notification = {
                id: `admin-task-${Date.now()}`,
@@ -229,7 +236,7 @@ const App: React.FC = () => {
   const handleUpdateClientTask = (clientId: string, taskId: string, status: ClientTask['status']) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
-    const updatedTasks = client.clientTasks.map(t => t.id === taskId ? { ...t, status } : t);
+    const updatedTasks = (client.clientTasks || []).map(t => t.id === taskId ? { ...t, status } : t);
     updateClient(clientId, { clientTasks: updatedTasks });
   };
 
@@ -241,13 +248,13 @@ const App: React.FC = () => {
       id: `client-task-${Date.now()}`,
       createdAt: new Date().toISOString()
     };
-    updateClient(clientId, { clientTasks: [...client.clientTasks, newTask] });
+    updateClient(clientId, { clientTasks: [...(client.clientTasks || []), newTask] });
   };
 
   const handleDeleteClientTask = (clientId: string, taskId: string) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
-    updateClient(clientId, { clientTasks: client.clientTasks.filter(t => t.id !== taskId) });
+    updateClient(clientId, { clientTasks: (client.clientTasks || []).filter(t => t.id !== taskId) });
   };
 
   const handlePushClientUpdate = (clientId: string) => {
@@ -274,7 +281,7 @@ const App: React.FC = () => {
       status: 'uploaded',
       uploadDate: new Date().toISOString()
     };
-    updateClient(clientId, { documents: [...client.documents, newDoc] });
+    updateClient(clientId, { documents: [...(client.documents || []), newDoc] });
     const adminNotif: Notification = {
       id: `admin-n-${Date.now()}`,
       title: 'New Document Uploaded',
@@ -301,7 +308,7 @@ const App: React.FC = () => {
       const client = clients.find(c => c.id === recipientId);
       if (client) {
         try {
-          await updateDoc(doc(db, 'clients', recipientId), { notifications: [notification, ...client.notifications] });
+          await updateDoc(doc(db, 'clients', recipientId), { notifications: [notification, ...(client.notifications || [])] });
         } catch (error) {
           console.error("Error updating notifications:", error);
         }
@@ -314,13 +321,13 @@ const App: React.FC = () => {
   };
 
   const handleMarkNotificationAsRead = async (notificationId: string) => {
-    if (!user) return;
+    if (!user || !user.email) return;
     if (user.role === 'admin') {
       setAdminNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
     } else {
-      const client = clients.find(c => c.email === user.email);
+      const client = clients.find(c => c.email && c.email.toLowerCase() === user.email?.toLowerCase());
       if (client) {
-        const updatedNotifications = client.notifications.map(n => n.id === notificationId ? { ...n, read: true } : n);
+        const updatedNotifications = (client.notifications || []).map(n => n.id === notificationId ? { ...n, read: true } : n);
         try {
           await updateDoc(doc(db, 'clients', client.id), { notifications: updatedNotifications });
         } catch (error) {
@@ -331,13 +338,13 @@ const App: React.FC = () => {
   };
 
   const handleMarkAllNotificationsAsRead = async () => {
-    if (!user) return;
+    if (!user || !user.email) return;
     if (user.role === 'admin') {
       setAdminNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } else {
-      const client = clients.find(c => c.email === user.email);
+      const client = clients.find(c => c.email && c.email.toLowerCase() === user.email?.toLowerCase());
       if (client) {
-        const updatedNotifications = client.notifications.map(n => ({ ...n, read: true }));
+        const updatedNotifications = (client.notifications || []).map(n => ({ ...n, read: true }));
         try {
           await updateDoc(doc(db, 'clients', client.id), { notifications: updatedNotifications });
         } catch (error) {
