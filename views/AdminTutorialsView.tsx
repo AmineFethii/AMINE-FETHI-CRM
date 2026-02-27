@@ -63,7 +63,7 @@ export const AdminTutorialsView: React.FC<AdminTutorialsViewProps> = ({ lang }) 
       title: 'Fiscal Declarations Made Easy',
       category: 'Finance',
       duration: '8:45',
-      thumbnail: 'https://images.unsplash.com/photo-1554224154-260327c00c40?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80',
+      thumbnail: 'https://picsum.photos/seed/fiscal/800/600',
       level: 'Advanced',
       views: 2100
     },
@@ -79,8 +79,7 @@ export const AdminTutorialsView: React.FC<AdminTutorialsViewProps> = ({ lang }) 
   ];
 
   const filteredVideos = videos.filter(v => {
-    const searchLower = (searchTerm || '').toLowerCase();
-    const matchesSearch = (v.title || '').toLowerCase().includes(searchLower);
+    const matchesSearch = v.title.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = activeCategory === 'All' || v.category === activeCategory;
     return matchesSearch && matchesCategory;
   });
@@ -99,6 +98,7 @@ export const AdminTutorialsView: React.FC<AdminTutorialsViewProps> = ({ lang }) 
         <img 
           src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?ixlib=rb-1.2.1&auto=format&fit=crop&w=1600&q=80" 
           alt="Featured" 
+          referrerPolicy="no-referrer"
           className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-40 transition-opacity duration-500"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent"></div>
@@ -155,7 +155,7 @@ export const AdminTutorialsView: React.FC<AdminTutorialsViewProps> = ({ lang }) 
         {filteredVideos.map(video => (
           <div key={video.id} className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden group hover:shadow-lg transition-all duration-300">
             <div className="relative h-40 overflow-hidden cursor-pointer" onClick={() => setPlayingVideo(video)}>
-              <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" referrerPolicy="no-referrer" />
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors"></div>
               
               <span className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
