@@ -42,10 +42,9 @@ export const ClientDocumentsView: React.FC<ClientDocumentsViewProps> = ({ client
   const isUploadDisabled = activeFolder === 'All';
 
   const filteredDocs = useMemo(() => {
-    const searchLower = (searchTerm || '').toLowerCase();
-    let docs = (client.documents || []).filter(doc => {
-      const matchesFolder = activeFolder === 'All' || (doc.type || '').toUpperCase() === activeFolder.replace(' DOC', '');
-      const matchesSearch = (doc.name || '').toLowerCase().includes(searchLower);
+    let docs = client.documents.filter(doc => {
+      const matchesFolder = activeFolder === 'All' || doc.type.toUpperCase() === activeFolder.replace(' DOC', '');
+      const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase());
       return matchesFolder && matchesSearch;
     });
 
@@ -79,7 +78,7 @@ export const ClientDocumentsView: React.FC<ClientDocumentsViewProps> = ({ client
   };
 
   const getFileIcon = (type: string) => {
-    switch ((type || '').toLowerCase()) {
+    switch (type.toLowerCase()) {
       case 'identity': return <Shield size={20} />;
       case 'image': return <ImageIcon size={20} />;
       default: return <FileText size={20} />;
@@ -117,9 +116,9 @@ export const ClientDocumentsView: React.FC<ClientDocumentsViewProps> = ({ client
 
   // Stats for the view
   const stats = {
-    total: (client.documents || []).length,
-    pending: (client.documents || []).filter(d => d.status === 'uploaded').length,
-    approved: (client.documents || []).filter(d => d.status === 'approved').length,
+    total: client.documents.length,
+    pending: client.documents.filter(d => d.status === 'uploaded').length,
+    approved: client.documents.filter(d => d.status === 'approved').length,
   };
 
   return (

@@ -37,12 +37,11 @@ export const AdminEmployeesView: React.FC<AdminEmployeesViewProps> = ({ employee
     status: 'active'
   });
 
-  const filteredEmployees = employees.filter(emp => {
-    const searchLower = (searchTerm || '').toLowerCase();
-    return (emp.name || '').toLowerCase().includes(searchLower) ||
-           (emp.role || '').toLowerCase().includes(searchLower) ||
-           (emp.department || '').toLowerCase().includes(searchLower);
-  });
+  const filteredEmployees = employees.filter(emp => 
+    emp.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    emp.department.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -232,7 +231,7 @@ export const AdminEmployeesView: React.FC<AdminEmployeesViewProps> = ({ employee
                       {employee.avatarUrl ? (
                         <img src={employee.avatarUrl} alt={employee.name} className="w-full h-full object-cover" />
                       ) : (
-                        <span className="text-2xl font-bold text-slate-400">{(employee.name || '').charAt(0)}</span>
+                        <span className="text-2xl font-bold text-slate-400">{employee.name.charAt(0)}</span>
                       )}
                     </div>
                  </div>

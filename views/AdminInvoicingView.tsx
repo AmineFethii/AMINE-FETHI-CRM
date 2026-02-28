@@ -111,9 +111,8 @@ export const AdminInvoicingView: React.FC<AdminInvoicingViewProps> = ({ clients,
   }, [clients]);
 
   const filteredInvoices = invoices.filter(inv => {
-    const searchLower = (searchTerm || '').toLowerCase();
-    const matchesSearch = (inv.companyName || '').toLowerCase().includes(searchLower) || 
-                          (inv.number || '').toLowerCase().includes(searchLower);
+    const matchesSearch = inv.companyName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          inv.number.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || inv.status === statusFilter;
     return matchesSearch && matchesStatus;
   });

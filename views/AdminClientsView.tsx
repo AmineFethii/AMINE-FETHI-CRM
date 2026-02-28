@@ -63,10 +63,9 @@ export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onM
 
   // Filter clients based on search
   const filteredClients = useMemo(() => {
-    const searchLower = (searchTerm || '').toLowerCase();
     return clients.filter(c => 
-      (c.companyName || '').toLowerCase().includes(searchLower) ||
-      (c.name || '').toLowerCase().includes(searchLower)
+      c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [clients, searchTerm]);
 

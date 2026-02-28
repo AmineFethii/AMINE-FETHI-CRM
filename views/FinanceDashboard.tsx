@@ -66,10 +66,9 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ clients, onU
 
     // Filter by Search
     if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
       result = result.filter(c => 
-        (c.companyName || '').toLowerCase().includes(searchLower) || 
-        (c.name || '').toLowerCase().includes(searchLower)
+        c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        c.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -343,7 +342,7 @@ export const FinanceDashboard: React.FC<FinanceDashboardProps> = ({ clients, onU
                               {client.avatarUrl ? (
                                 <img src={client.avatarUrl} alt="" className="w-full h-full object-cover" />
                               ) : (
-                                (client.companyName || '').charAt(0)
+                                client.companyName.charAt(0)
                               )}
                             </div>
                             <div>
