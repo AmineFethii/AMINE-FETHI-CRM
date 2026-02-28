@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { collection, onSnapshot, doc, updateDoc, setDoc, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { db } from './src/firebase';
 import { Layout } from './components/Layout';
 import { WhatsAppFab } from './components/WhatsAppFab';
 import { Login } from './views/Login';
@@ -20,7 +22,7 @@ import { AdminTutorialsView } from './views/AdminTutorialsView';
 import { AdminClientAccessView } from './views/AdminClientAccessView';
 import { AdminFollowUpView } from './views/AdminFollowUpView';
 import { AdminCalendarView } from './views/AdminCalendarView';
-import { User, ClientData, Role, Notification, Employee, ClientDocument, ClientTask } from './types';
+import { User, ClientData, Role, Notification, Employee, ClientDocument, ClientTask, TimelineStep, FirestoreUser } from './src/types';
 import { ShieldCheck, Info, X, ChevronRight, User as UserIcon, Building2 } from 'lucide-react';
 
 // MOCK EVENTS FOR INITIAL STATE
@@ -31,98 +33,6 @@ const INITIAL_EVENTS = [
 ];
 
 // COMPREHENSIVE RESTORED DATABASE
-const INITIAL_CLIENTS: ClientData[] = [
-  {
-    id: 'c-demo',
-    email: 'demo@newclient.com',
-    name: 'New Entrepreneur',
-    companyName: 'FUTURE VENTURES SARL',
-    companyCategory: 'Consulting',
-    serviceType: 'Company Creation',
-    progress: 5,
-    statusMessage: 'Awaiting Personal Info',
-    timeline: [
-      { id: 't1', label: 'Negative Certificate', status: 'in-progress' },
-      { id: 't2', label: 'Legal Statutes', status: 'pending' },
-      { id: 't3', label: 'RC Registration', status: 'pending' }
-    ],
-    clientTasks: [
-      { id: 'task-new-1', title: 'Complete Business Profile', description: 'Essential for legal drafting', status: 'pending', priority: 'high', createdAt: new Date().toISOString() }
-    ],
-    documents: [],
-    notifications: [],
-    contractValue: 8000,
-    amountPaid: 0,
-    currency: 'MAD',
-    paymentStatus: 'pending',
-    missionStartDate: new Date().toISOString(),
-    lastLogin: undefined,
-    hasFilledProfile: false
-  },
-  {
-    id: 'c1',
-    email: 'contact@mpldigital.com',
-    name: 'Amine El Amrani',
-    companyName: 'MPL DIGITAL WORKS SARL',
-    companyCategory: 'Digital Services',
-    serviceType: 'Company Creation',
-    progress: 100,
-    statusMessage: 'Service Completed',
-    timeline: [
-      { id: 't1', label: 'Negative Certificate', status: 'completed' },
-      { id: 't2', label: 'Legal Statutes', status: 'completed' },
-      { id: 't3', label: 'RC Registration', status: 'completed' }
-    ],
-    clientTasks: [
-      { id: 'task1', title: 'Upload Passport Copy', description: 'Mandatory for RC registration', status: 'completed', priority: 'high', createdAt: '2024-01-10' },
-      { id: 'task2', title: 'Sign Lease Agreement', description: 'Required for domicile address verification', status: 'completed', priority: 'medium', createdAt: '2024-01-12' }
-    ],
-    documents: [
-      { id: 'doc1', name: 'RC_Extraction.pdf', type: 'Legal', status: 'approved', uploadDate: '2024-01-15' },
-      { id: 'doc2', name: 'Statutes_Final.pdf', type: 'Legal', status: 'approved', uploadDate: '2024-01-16' }
-    ],
-    notifications: [],
-    contractValue: 12000,
-    amountPaid: 12000,
-    currency: 'MAD',
-    paymentStatus: 'paid',
-    missionStartDate: '2024-01-10',
-    lastLogin: '2024-11-20T10:30:00Z',
-    hasFilledProfile: true,
-    phone: '+212 600-000001'
-  },
-  {
-    id: 'c2',
-    email: 'contact@thebrain.ma',
-    name: 'Sarah Bennani',
-    companyName: 'THE BRAIN SARL AU',
-    companyCategory: 'IT Services',
-    serviceType: 'Fiscal Advisory',
-    progress: 40,
-    statusMessage: 'Monthly VAT Declaration',
-    timeline: [
-      { id: 't1', label: 'Onboarding', status: 'completed' },
-      { id: 't2', label: 'Monthly Declaration', status: 'in-progress' },
-      { id: 't3', label: 'Year-End Audit', status: 'pending' }
-    ],
-    clientTasks: [
-      { id: 'task-b1', title: 'Provide Purchase Invoices for Oct', description: 'Needed for VAT calculation', status: 'in-progress', priority: 'high', createdAt: '2024-11-01' }
-    ],
-    documents: [
-      { id: 'd1', name: 'Purchase_Invoices_Oct.pdf', type: 'Financial', status: 'uploaded', uploadDate: '2024-11-05' }
-    ],
-    notifications: [],
-    contractValue: 24000,
-    amountPaid: 8000,
-    currency: 'MAD',
-    paymentStatus: 'partial',
-    missionStartDate: '2024-03-15',
-    lastLogin: '2024-11-21T15:45:00Z',
-    hasFilledProfile: true,
-    phone: '+212 600-000002'
-  }
-];
-
 const INITIAL_EMPLOYEES: Employee[] = [
   {
     id: 'e1',
@@ -137,39 +47,17 @@ const INITIAL_EMPLOYEES: Employee[] = [
   }
 ];
 
-const INITIAL_AUTH_DB: Record<string, string> = {
-  'demo@newclient.com': 'welcome2025',
-  'contact@mpldigital.com': 'mpl2024',
-  'contact@thebrain.ma': 'brain2024',
-  'amine@admin.com': 'admin2024'
-};
-
-const ADMIN_USER: User = {
-  id: 'admin1',
-  name: 'Amine El Fethi',
-  email: 'amine@admin.com',
-  role: 'admin'
-};
-
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [currentView, setCurrentView] = useState<string>('dashboard');
   const [selectedClientIdForFollowUp, setSelectedClientIdForFollowUp] = useState<string | null>(null);
   
-  const [clients, setClients] = useState<ClientData[]>(() => {
-    const saved = localStorage.getItem('crm_clients_v2');
-    return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
-  });
+  const [clients, setClients] = useState<ClientData[]>([]);
   
   const [employees, setEmployees] = useState<Employee[]>(() => {
     const saved = localStorage.getItem('crm_employees_v2');
     return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
-  });
-
-  const [authCredentials, setAuthCredentials] = useState<Record<string, string>>(() => {
-    const saved = localStorage.getItem('crm_auth_v2');
-    return saved ? JSON.parse(saved) : INITIAL_AUTH_DB;
   });
 
   const [adminNotifications, setAdminNotifications] = useState<Notification[]>(() => {
@@ -183,16 +71,24 @@ const App: React.FC = () => {
   });
   
   useEffect(() => {
-    localStorage.setItem('crm_clients_v2', JSON.stringify(clients));
-  }, [clients]);
+    const q = collection(db, 'clients');
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const clientsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+        notifications: doc.data().notifications || [],
+        documents: doc.data().documents || [],
+        clientTasks: doc.data().clientTasks || [],
+        timeline: doc.data().timeline || []
+      })) as ClientData[];
+      setClients(clientsData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('crm_employees_v2', JSON.stringify(employees));
   }, [employees]);
-
-  useEffect(() => {
-    localStorage.setItem('crm_auth_v2', JSON.stringify(authCredentials));
-  }, [authCredentials]);
 
   useEffect(() => {
     localStorage.setItem('crm_admin_notifications_v2', JSON.stringify(adminNotifications));
@@ -203,37 +99,49 @@ const App: React.FC = () => {
   }, [calendarEvents]);
 
   const handleLogin = async (email: string, pass: string, role: Role): Promise<boolean> => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    const storedPass = authCredentials[email.toLowerCase()];
-    if (!storedPass || storedPass !== pass) return false;
-
-    if (role === 'admin' && email === 'amine@admin.com') {
-      setUser(ADMIN_USER);
-      setCurrentView('dashboard');
-      return true;
-    } 
-    
-    if (role === 'client') {
-      const clientData = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
-      if (clientData) {
-        const isFirstTime = !clientData.lastLogin;
+    if (!email) return false;
+    try {
+      const q = query(collection(db, 'clients'), where('email', '==', email.toLowerCase()));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const foundUserDoc = querySnapshot.docs[0];
+        const foundUserData = { id: foundUserDoc.id, ...foundUserDoc.data() } as FirestoreUser;
         
-        updateClient(clientData.id, { lastLogin: new Date().toISOString() });
-        setUser({
-          id: clientData.id,
-          name: clientData.name,
-          email: clientData.email,
-          role: 'client',
-          avatarUrl: clientData.avatarUrl
-        });
-        
-        if (isFirstTime || !clientData.hasFilledProfile) {
-          setShowWelcomeModal(true);
+        if (foundUserData.password === pass && foundUserData.role === role) {
+          if (role === 'admin') {
+            setUser({
+              id: foundUserData.id,
+              name: foundUserData.name,
+              email: foundUserData.email,
+              role: 'admin',
+              avatarUrl: foundUserData.avatarUrl
+            });
+            setCurrentView('dashboard');
+            return true;
+          } else if (role === 'client') {
+            const isFirstTime = !foundUserData.lastLogin;
+            
+            updateClient(foundUserData.id, { lastLogin: new Date().toISOString() });
+            setUser({
+              id: foundUserData.id,
+              name: foundUserData.name,
+              email: foundUserData.email,
+              role: 'client',
+              avatarUrl: foundUserData.avatarUrl
+            });
+            
+            if (isFirstTime || !foundUserData.hasFilledProfile) {
+              setShowWelcomeModal(true);
+            }
+            
+            setCurrentView('dashboard');
+            return true;
+          }
         }
-        
-        setCurrentView('dashboard');
-        return true;
       }
+    } catch (error) {
+      console.error("Login error:", error);
     }
     return false;
   };
@@ -245,58 +153,90 @@ const App: React.FC = () => {
   };
 
   const handleAddEmployee = (newEmployee: Employee) => setEmployees(prev => [...prev, newEmployee]);
-  const handleAddClient = (newClient: ClientData) => setClients(prev => [newClient, ...prev]);
-  const handleUpdateCredentials = (email: string, pass: string) => setAuthCredentials(prev => ({ ...prev, [email.toLowerCase()]: pass }));
-
-  const updateClient = (clientId: string, updates: Partial<ClientData>) => {
-    setClients(prev => prev.map(c => {
-      if (c.id !== clientId) return c;
-      const newNotifications: Notification[] = [...c.notifications];
-      const now = new Date().toISOString();
-      
-      if (updates.statusMessage && updates.statusMessage !== c.statusMessage) {
-        newNotifications.unshift({ id: `n-${Date.now()}-status`, title: 'Status Update', message: `New status: ${updates.statusMessage}`, date: now, read: false, type: 'info' });
-      } else if (updates.progress !== undefined && updates.progress !== c.progress) {
-        newNotifications.unshift({ id: `n-${Date.now()}-progress`, title: 'Progress Update', message: `Your service progress is now at ${updates.progress}%.`, date: now, read: false, type: 'info' });
+  const handleAddClient = async (newClient: Omit<ClientData, 'id'>) => {
+    try {
+      await addDoc(collection(db, 'clients'), {
+        ...newClient,
+        status: "Active",
+        progress: 0,
+        role: "client",
+        notifications: [],
+        documents: [],
+        clientTasks: [],
+        timeline: [],
+        createdAt: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error adding client:", error);
+    }
+  };
+  const handleUpdateCredentials = async (email: string, pass: string) => {
+    if (!email) return;
+    const client = clients.find(c => c.email && c.email.toLowerCase() === email.toLowerCase());
+    if (client) {
+      try {
+        await updateDoc(doc(db, 'clients', client.id), { password: pass });
+      } catch (error) {
+        console.error("Error updating credentials:", error);
       }
+    }
+  };
 
-      if (updates.documents) {
-        updates.documents.forEach(newDoc => {
-          const oldDoc = c.documents.find(d => d.id === newDoc.id);
-          if (oldDoc && oldDoc.status !== 'approved' && newDoc.status === 'approved') {
-            newNotifications.unshift({ id: `n-${Date.now()}-${newDoc.id}`, title: 'Document Approved', message: `Your document "${newDoc.name}" has been reviewed and approved.`, date: now, read: false, type: 'success' });
+  const updateClient = async (clientId: string, updates: Partial<ClientData>) => {
+    const c = clients.find(c => c.id === clientId);
+    if (!c) return;
+
+    const newNotifications: Notification[] = [...c.notifications];
+    const now = new Date().toISOString();
+    
+    if (updates.statusMessage && updates.statusMessage !== c.statusMessage) {
+      newNotifications.unshift({ id: `n-${Date.now()}-status`, title: 'Status Update', message: `New status: ${updates.statusMessage}`, date: now, read: false, type: 'info' });
+    } else if (updates.progress !== undefined && updates.progress !== c.progress) {
+      newNotifications.unshift({ id: `n-${Date.now()}-progress`, title: 'Progress Update', message: `Your service progress is now at ${updates.progress}%.`, date: now, read: false, type: 'info' });
+    }
+
+    if (updates.documents) {
+      updates.documents.forEach(newDoc => {
+        const oldDoc = (c.documents || []).find(d => d.id === newDoc.id);
+        if (oldDoc && oldDoc.status !== 'approved' && newDoc.status === 'approved') {
+          newNotifications.unshift({ id: `n-${Date.now()}-${newDoc.id}`, title: 'Document Approved', message: `Your document "${newDoc.name}" has been reviewed and approved.`, date: now, read: false, type: 'success' });
+        }
+        if (oldDoc && oldDoc.status !== 'rejected' && newDoc.status === 'rejected') {
+           const reasonText = newDoc.rejectionReason ? ` Reason: ${newDoc.rejectionReason}` : '';
+           newNotifications.unshift({ id: `n-${Date.now()}-${newDoc.id}-rej`, title: 'Document Rejected', message: `Issue with "${newDoc.name}".${reasonText} Please check and re-upload.`, date: now, read: false, type: 'alert' });
+        }
+      });
+    }
+
+    if (updates.amountPaid !== undefined && updates.amountPaid > c.amountPaid) {
+      const diff = updates.amountPaid - c.amountPaid;
+      newNotifications.unshift({ id: `n-${Date.now()}-payment`, title: 'Payment Received', message: `A payment of ${diff.toLocaleString()} ${c.currency} has been recorded.`, date: now, read: false, type: 'success' });
+    }
+
+    if (updates.clientTasks) {
+       updates.clientTasks.forEach(task => {
+          const oldTask = (c.clientTasks || []).find(ot => ot.id === task.id);
+          if (oldTask && oldTask.status !== 'completed' && task.status === 'completed') {
+             const adminNotif: Notification = {
+               id: `admin-task-${Date.now()}`,
+               title: 'Client Action Completed',
+               message: `${c.companyName} completed task: "${task.title}"`,
+               date: now,
+               read: false,
+               type: 'success'
+             };
+             setAdminNotifications(prev => [adminNotif, ...prev]);
           }
-          if (oldDoc && oldDoc.status !== 'rejected' && newDoc.status === 'rejected') {
-             const reasonText = newDoc.rejectionReason ? ` Reason: ${newDoc.rejectionReason}` : '';
-             newNotifications.unshift({ id: `n-${Date.now()}-${newDoc.id}-rej`, title: 'Document Rejected', message: `Issue with "${newDoc.name}".${reasonText} Please check and re-upload.`, date: now, read: false, type: 'alert' });
-          }
-        });
-      }
+       });
+    }
 
-      if (updates.amountPaid !== undefined && updates.amountPaid > c.amountPaid) {
-        const diff = updates.amountPaid - c.amountPaid;
-        newNotifications.unshift({ id: `n-${Date.now()}-payment`, title: 'Payment Received', message: `A payment of ${diff.toLocaleString()} ${c.currency} has been recorded.`, date: now, read: false, type: 'success' });
-      }
+    const finalUpdates = { ...updates, notifications: newNotifications };
 
-      if (updates.clientTasks) {
-         updates.clientTasks.forEach(task => {
-            const oldTask = c.clientTasks?.find(ot => ot.id === task.id);
-            if (oldTask && oldTask.status !== 'completed' && task.status === 'completed') {
-               const adminNotif: Notification = {
-                 id: `admin-task-${Date.now()}`,
-                 title: 'Client Action Completed',
-                 message: `${c.companyName} completed task: "${task.title}"`,
-                 date: now,
-                 read: false,
-                 type: 'success'
-               };
-               setAdminNotifications(prev => [adminNotif, ...prev]);
-            }
-         });
-      }
-
-      return { ...c, ...updates, notifications: newNotifications };
-    }));
+    try {
+      await updateDoc(doc(db, 'clients', clientId), finalUpdates);
+    } catch (error) {
+      console.error("Error updating client:", error);
+    }
 
     if (user && user.id === clientId && user.role === 'client') {
       setUser(prev => prev ? ({
@@ -310,7 +250,7 @@ const App: React.FC = () => {
   const handleUpdateClientTask = (clientId: string, taskId: string, status: ClientTask['status']) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
-    const updatedTasks = client.clientTasks.map(t => t.id === taskId ? { ...t, status } : t);
+    const updatedTasks = (client.clientTasks || []).map(t => t.id === taskId ? { ...t, status } : t);
     updateClient(clientId, { clientTasks: updatedTasks });
   };
 
@@ -322,13 +262,13 @@ const App: React.FC = () => {
       id: `client-task-${Date.now()}`,
       createdAt: new Date().toISOString()
     };
-    updateClient(clientId, { clientTasks: [...client.clientTasks, newTask] });
+    updateClient(clientId, { clientTasks: [...(client.clientTasks || []), newTask] });
   };
 
   const handleDeleteClientTask = (clientId: string, taskId: string) => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
-    updateClient(clientId, { clientTasks: client.clientTasks.filter(t => t.id !== taskId) });
+    updateClient(clientId, { clientTasks: (client.clientTasks || []).filter(t => t.id !== taskId) });
   };
 
   const handlePushClientUpdate = (clientId: string) => {
@@ -355,7 +295,7 @@ const App: React.FC = () => {
       status: 'uploaded',
       uploadDate: new Date().toISOString()
     };
-    updateClient(clientId, { documents: [...client.documents, newDoc] });
+    updateClient(clientId, { documents: [...(client.documents || []), newDoc] });
     const adminNotif: Notification = {
       id: `admin-n-${Date.now()}`,
       title: 'New Document Uploaded',
@@ -367,7 +307,7 @@ const App: React.FC = () => {
     setAdminNotifications(prev => [adminNotif, ...prev]);
   };
 
-  const handleNewChatMessage = (senderId: string, recipientId: string, text: string) => {
+  const handleNewChatMessage = async (senderId: string, recipientId: string, text: string) => {
     const now = new Date().toISOString();
     const notification: Notification = {
       id: `chat-notif-${Date.now()}`,
@@ -379,12 +319,14 @@ const App: React.FC = () => {
     };
 
     if (user?.role === 'admin') {
-      setClients(prev => prev.map(c => {
-        if (c.id === recipientId) {
-          return { ...c, notifications: [notification, ...c.notifications] };
+      const client = clients.find(c => c.id === recipientId);
+      if (client) {
+        try {
+          await updateDoc(doc(db, 'clients', recipientId), { notifications: [notification, ...(client.notifications || [])] });
+        } catch (error) {
+          console.error("Error updating notifications:", error);
         }
-        return c;
-      }));
+      }
     } else {
       const clientName = clients.find(c => c.id === senderId)?.companyName || 'A client';
       const adminNotif = { ...notification, title: `Message from ${clientName}` };
@@ -392,25 +334,46 @@ const App: React.FC = () => {
     }
   };
 
-  const handleMarkNotificationAsRead = (notificationId: string) => {
-    if (!user) return;
+  const handleMarkNotificationAsRead = async (notificationId: string) => {
+    if (!user || !user.email) return;
     if (user.role === 'admin') {
       setAdminNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
     } else {
-      setClients(prev => prev.map(c => c.email === user.email ? { ...c, notifications: c.notifications.map(n => n.id === notificationId ? { ...n, read: true } : n) } : c));
+      const client = clients.find(c => c.email && c.email.toLowerCase() === user.email?.toLowerCase());
+      if (client) {
+        const updatedNotifications = (client.notifications || []).map(n => n.id === notificationId ? { ...n, read: true } : n);
+        try {
+          await updateDoc(doc(db, 'clients', client.id), { notifications: updatedNotifications });
+        } catch (error) {
+          console.error("Error marking notification as read:", error);
+        }
+      }
     }
   };
 
-  const handleMarkAllNotificationsAsRead = () => {
-    if (!user) return;
+  const handleMarkAllNotificationsAsRead = async () => {
+    if (!user || !user.email) return;
     if (user.role === 'admin') {
       setAdminNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } else {
-      setClients(prev => prev.map(c => c.email === user.email ? { ...c, notifications: c.notifications.map(n => ({ ...n, read: true })) } : c));
+      const client = clients.find(c => c.email && c.email.toLowerCase() === user.email?.toLowerCase());
+      if (client) {
+        const updatedNotifications = (client.notifications || []).map(n => ({ ...n, read: true }));
+        try {
+          await updateDoc(doc(db, 'clients', client.id), { notifications: updatedNotifications });
+        } catch (error) {
+          console.error("Error marking all notifications as read:", error);
+        }
+      }
     }
   };
 
-  const getCurrentClientData = () => clients.find(c => c.email === user?.email);
+  const getCurrentClientData = (): ClientData | undefined => {
+    if (!user?.email) return undefined;
+    const client = clients.find(c => c.email === user.email);
+    if (!client) return undefined;
+    return client;
+  };
   const currentUserNotifications = user?.role === 'admin' ? adminNotifications : getCurrentClientData()?.notifications || [];
 
   const renderContent = () => {
@@ -426,11 +389,11 @@ const App: React.FC = () => {
       if (currentView === 'invoicing-generator') return <AdminInvoiceGeneratorView clients={clients} lang="en" />;
       if (currentView === 'tutorials') return <AdminTutorialsView lang="en" />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
-      if (currentView === 'client-access') return <AdminClientAccessView clients={clients} lang="en" onAddClient={handleAddClient} onUpdateCredentials={handleUpdateCredentials} authCredentials={authCredentials} />;
+      if (currentView === 'client-access') return <AdminClientAccessView clients={clients} lang="en" onAddClient={handleAddClient} onUpdateCredentials={handleUpdateCredentials} />;
       return <AdminDashboard clients={clients} onUpdateClient={updateClient} user={user} onNavigate={setCurrentView} />;
     } else {
       const clientData = getCurrentClientData();
-      if (!clientData) return <div>Error loading client data</div>;
+      if (!clientData) return <div>Error: Client data not found. Please log in again.</div>;
       if (currentView === 'documents') return <ClientDocumentsView client={clientData} onUpload={handleDocumentUpload} />;
       if (currentView === 'settings') return <ClientSettingsView client={clientData} onUpdateProfile={(u) => updateClient(clientData.id, u)} />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;

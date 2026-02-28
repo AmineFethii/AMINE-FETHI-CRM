@@ -327,6 +327,128 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
         </div>
       </div>
 
+      {/* Add Client Modal */}
+      {isAddClientModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsAddClientModalOpen(false)}></div>
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-up">
+            <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                  <Plus size={24} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">{t.addNewClient}</h3>
+                  <p className="text-sm text-slate-500">Create a new client profile and access credentials.</p>
+                </div>
+              </div>
+              <button onClick={() => setIsAddClientModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <XCircle size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddNewClient} className="p-6 space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t.companyName}</label>
+                  <div className="relative">
+                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input 
+                      type="text" 
+                      required
+                      value={newClientData.companyName}
+                      onChange={e => setNewClientData({...newClientData, companyName: e.target.value})}
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g. Acme Corp SARL"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Contact Name</label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                    <input 
+                      type="text" 
+                      required
+                      value={newClientData.name}
+                      onChange={e => setNewClientData({...newClientData, name: e.target.value})}
+                      className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="John Doe"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Category</label>
+                  <select 
+                    value={newClientData.companyCategory}
+                    onChange={e => setNewClientData({...newClientData, companyCategory: e.target.value})}
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Services">Services</option>
+                    <option value="Consulting">Consulting</option>
+                    <option value="IT Services">IT Services</option>
+                    <option value="Digital Services">Digital Services</option>
+                    <option value="E-commerce">E-commerce</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t.email}</label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <input 
+                    type="email" 
+                    required
+                    value={newClientData.email}
+                    onChange={e => setNewClientData({...newClientData, email: e.target.value})}
+                    className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="client@example.com"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest">{translations[lang].login.password}</label>
+                  <button 
+                    type="button"
+                    onClick={() => setNewClientData(prev => ({...prev, password: generatePassword()}))}
+                    className="text-[10px] flex items-center gap-1 text-blue-600 font-bold hover:text-blue-700 transition-colors uppercase tracking-wider"
+                  >
+                    <RefreshCw size={12} /> {t.generateRandom}
+                  </button>
+                </div>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                  <input 
+                    type={showNewPassword ? "text" : "password"}
+                    required
+                    value={newClientData.password}
+                    onChange={(e) => setNewClientData(prev => ({...prev, password: e.target.value}))}
+                    className="w-full pl-10 pr-12 py-3 bg-white border border-slate-200 rounded-xl font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setIsAddClientModalOpen(false)} className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-100 transition-colors">{commonT.cancel}</button>
+                <button type="submit" className="flex-1 py-3 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 shadow-lg shadow-slate-900/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+                  <UserCheck size={18} /> {commonT.save}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {modal.isOpen && modal.client && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setModal({ ...modal, isOpen: false })}></div>
