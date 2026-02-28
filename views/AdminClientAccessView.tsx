@@ -140,7 +140,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
     e.preventDefault();
     if (newClientData.name && newClientData.email && newClientData.companyName && newClientData.password) {
       const newClient: ClientData = {
-        id: `c-${Date.now()}`,
+        id: `c-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         email: newClientData.email,
         name: newClientData.name,
         companyName: newClientData.companyName,

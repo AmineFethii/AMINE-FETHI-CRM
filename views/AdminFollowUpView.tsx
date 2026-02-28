@@ -101,7 +101,7 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
   const handleAddTaskToClient = () => {
     if (!localClient || !newTaskTitle.trim()) return;
     const newTask: ClientTask = {
-      id: `task-${Date.now()}`,
+      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title: newTaskTitle,
       description: 'Requirement from Legal Advisor',
       status: 'pending',
