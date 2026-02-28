@@ -96,10 +96,11 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
   };
 
   const filteredClients = clients.filter(client => {
+    const searchLower = (searchTerm || '').toLowerCase();
     const matchesSearch = 
-      client.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      client.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (client.companyName || '').toLowerCase().includes(searchLower) ||
+      (client.name || '').toLowerCase().includes(searchLower) ||
+      (client.email || '').toLowerCase().includes(searchLower);
     
     const status = isRecentLogin(client.lastLogin) ? 'active' : 'inactive';
     const matchesFilter = filterStatus === 'all' || status === filterStatus;
@@ -118,7 +119,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
 
   const handleOpenModal = (client: ClientData) => {
     // Show current real password if it exists, otherwise generate one
-    const currentPass = authCredentials[client.email.toLowerCase()] || generatePassword();
+    const currentPass = authCredentials[(client.email || '').toLowerCase()] || generatePassword();
     setModal({
       isOpen: true,
       client,
@@ -238,7 +239,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
                     : 'bg-white border border-slate-200 text-slate-500 hover:bg-slate-50'
                 }`}
               >
-                {t[status] || status}
+                {(t as any)[status] || status}
               </button>
             ))}
           </div>

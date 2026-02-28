@@ -53,8 +53,9 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
   }, [initialClientId]);
 
   const filteredClients = clients.filter(c => {
-    const matchesSearch = c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          c.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchLower = (searchTerm || '').toLowerCase();
+    const matchesSearch = (c.companyName || '').toLowerCase().includes(searchLower) || 
+                          (c.name || '').toLowerCase().includes(searchLower);
     const matchesFilter = filterType === 'all' || 
                           (filterType === 'completed' && c.progress === 100) ||
                           (filterType === 'in-progress' && c.progress < 100);

@@ -1,153 +1,530 @@
-function App() {
+import React, { useState, useEffect } from 'react';
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import { db } from './firebase';
+import { Layout } from './components/Layout';
+import { WhatsAppFab } from './components/WhatsAppFab';
+import { Login } from './views/Login';
+import { ClientPortal } from './views/ClientPortal';
+import { ClientDocumentsView } from './views/ClientDocumentsView';
+import { ClientSettingsView } from './views/ClientSettingsView';
+import { ClientGuideView } from './views/ClientGuideView';
+import { ClientTasksView } from './views/ClientTasksView';
+import { ChatView } from './views/ChatView';
+import { AdminDashboard } from './views/AdminDashboard';
+import { FinanceDashboard } from './views/FinanceDashboard';
+import { AdminDocumentsView } from './views/AdminDocumentsView';
+import { AdminSettingsView } from './views/AdminSettingsView';
+import { AdminEmployeesView } from './views/AdminEmployeesView';
+import { AdminClientsView } from './views/AdminClientsView';
+import { AdminInvoicingView } from './views/AdminInvoicingView';
+import { AdminInvoiceGeneratorView } from './views/AdminInvoiceGeneratorView';
+import { AdminTutorialsView } from './views/AdminTutorialsView';
+import { AdminClientAccessView } from './views/AdminClientAccessView';
+import { AdminFollowUpView } from './views/AdminFollowUpView';
+import { AdminCalendarView } from './views/AdminCalendarView';
+import { User, ClientData, Role, Notification, Employee, ClientDocument, ClientTask } from './types';
+import { ShieldCheck, X, ChevronRight } from 'lucide-react';
+
+// MOCK EVENTS FOR INITIAL STATE
+const INITIAL_EVENTS = [
+  { id: 'e1', title: 'Consultation - SARL Setup', type: 'meeting', time: '10:00', duration: '1h', client: 'MPL DIGITAL', date: 15 },
+  { id: 'e2', title: 'Tax Filing Deadline', type: 'deadline', time: 'All Day', date: 20 },
+  { id: 'e3', title: 'Follow-up Call', type: 'followup', time: '14:30', client: 'The Brain', date: 10 },
+];
+
+// COMPREHENSIVE RESTORED DATABASE
+const INITIAL_CLIENTS: ClientData[] = [
+  {
+    id: 'c-demo',
+    email: 'demo@newclient.com',
+    name: 'New Entrepreneur',
+    companyName: 'FUTURE VENTURES SARL',
+    companyCategory: 'Consulting',
+    serviceType: 'Company Creation',
+    progress: 5,
+    statusMessage: 'Awaiting Personal Info',
+    timeline: [
+      { id: 't1', label: 'Negative Certificate', status: 'in-progress' },
+      { id: 't2', label: 'Legal Statutes', status: 'pending' },
+      { id: 't3', label: 'RC Registration', status: 'pending' }
+    ],
+    clientTasks: [
+      { id: 'task-new-1', title: 'Complete Business Profile', description: 'Essential for legal drafting', status: 'pending', priority: 'high', createdAt: new Date().toISOString() }
+    ],
+    documents: [],
+    notifications: [],
+    contractValue: 8000,
+    amountPaid: 0,
+    currency: 'MAD',
+    paymentStatus: 'pending',
+    missionStartDate: new Date().toISOString(),
+    lastLogin: undefined,
+    hasFilledProfile: false
+  },
+  {
+    id: 'c1',
+    email: 'contact@mpldigital.com',
+    name: 'Amine El Amrani',
+    companyName: 'MPL DIGITAL WORKS SARL',
+    companyCategory: 'Digital Services',
+    serviceType: 'Company Creation',
+    progress: 100,
+    statusMessage: 'Service Completed',
+    timeline: [
+      { id: 't1', label: 'Negative Certificate', status: 'completed' },
+      { id: 't2', label: 'Legal Statutes', status: 'completed' },
+      { id: 't3', label: 'RC Registration', status: 'completed' }
+    ],
+    clientTasks: [
+      { id: 'task1', title: 'Upload Passport Copy', description: 'Mandatory for RC registration', status: 'completed', priority: 'high', createdAt: '2024-01-10' },
+      { id: 'task2', title: 'Sign Lease Agreement', description: 'Required for domicile address verification', status: 'completed', priority: 'medium', createdAt: '2024-01-12' }
+    ],
+    documents: [
+      { id: 'doc1', name: 'RC_Extraction.pdf', type: 'Legal', status: 'approved', uploadDate: '2024-01-15' },
+      { id: 'doc2', name: 'Statutes_Final.pdf', type: 'Legal', status: 'approved', uploadDate: '2024-01-16' }
+    ],
+    notifications: [],
+    contractValue: 12000,
+    amountPaid: 12000,
+    currency: 'MAD',
+    paymentStatus: 'paid',
+    missionStartDate: '2024-01-10',
+    lastLogin: '2024-11-20T10:30:00Z',
+    hasFilledProfile: true,
+    phone: '+212 600-000001'
+  },
+  {
+    id: 'c2',
+    email: 'contact@thebrain.ma',
+    name: 'Sarah Bennani',
+    companyName: 'THE BRAIN SARL AU',
+    companyCategory: 'IT Services',
+    serviceType: 'Fiscal Advisory',
+    progress: 40,
+    statusMessage: 'Monthly VAT Declaration',
+    timeline: [
+      { id: 't1', label: 'Onboarding', status: 'completed' },
+      { id: 't2', label: 'Monthly Declaration', status: 'in-progress' },
+      { id: 't3', label: 'Year-End Audit', status: 'pending' }
+    ],
+    clientTasks: [
+      { id: 'task-b1', title: 'Provide Purchase Invoices for Oct', description: 'Needed for VAT calculation', status: 'in-progress', priority: 'high', createdAt: '2024-11-01' }
+    ],
+    documents: [
+      { id: 'd1', name: 'Purchase_Invoices_Oct.pdf', type: 'Financial', status: 'uploaded', uploadDate: '2024-11-05' }
+    ],
+    notifications: [],
+    contractValue: 24000,
+    amountPaid: 8000,
+    currency: 'MAD',
+    paymentStatus: 'partial',
+    missionStartDate: '2024-03-15',
+    lastLogin: '2024-11-21T15:45:00Z',
+    hasFilledProfile: true,
+    phone: '+212 600-000002'
+  }
+];
+
+const INITIAL_EMPLOYEES: Employee[] = [
+  {
+    id: 'e1',
+    name: 'Yahya',
+    role: 'Head of Sales',
+    department: 'Sales',
+    email: 'yahya@amineelfethi.com',
+    phone: '+212 600-111222',
+    status: 'active',
+    joinDate: '2023-01-15',
+    avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
+  }
+];
+
+const INITIAL_AUTH_DB: Record<string, string> = {
+  'demo@newclient.com': 'welcome2025',
+  'contact@mpldigital.com': 'mpl2024',
+  'contact@thebrain.ma': 'brain2024',
+  'amine@admin.com': 'admin2024'
+};
+
+const ADMIN_USER: User = {
+  id: 'admin1',
+  name: 'Amine El Fethi',
+  email: 'amine@admin.com',
+  role: 'admin'
+};
+
+const App: React.FC = () => {
+  const [user, setUser] = useState<User | null>(null);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
+  const [currentView, setCurrentView] = useState<string>('dashboard');
+  const [selectedClientIdForFollowUp, setSelectedClientIdForFollowUp] = useState<string | null>(null);
+  
+  const [clients, setClients] = useState<ClientData[]>(() => {
+    const saved = localStorage.getItem('crm_clients_v2');
+    return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
+  });
+  
+  const [employees, setEmployees] = useState<Employee[]>(() => {
+    const saved = localStorage.getItem('crm_employees_v2');
+    return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
+  });
+
+  const [authCredentials, setAuthCredentials] = useState<Record<string, string>>(() => {
+    const saved = localStorage.getItem('crm_auth_v2');
+    return saved ? JSON.parse(saved) : INITIAL_AUTH_DB;
+  });
+
+  const [adminNotifications, setAdminNotifications] = useState<Notification[]>(() => {
+    const saved = localStorage.getItem('crm_admin_notifications_v2');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const [calendarEvents, setCalendarEvents] = useState<any[]>(() => {
+    const saved = localStorage.getItem('crm_calendar_events');
+    return saved ? JSON.parse(saved) : INITIAL_EVENTS;
+  });
+  
+  useEffect(() => {
+    localStorage.setItem('crm_clients_v2', JSON.stringify(clients));
+  }, [clients]);
+
+  useEffect(() => {
+    localStorage.setItem('crm_employees_v2', JSON.stringify(employees));
+  }, [employees]);
+
+  useEffect(() => {
+    localStorage.setItem('crm_auth_v2', JSON.stringify(authCredentials));
+  }, [authCredentials]);
+
+  useEffect(() => {
+    localStorage.setItem('crm_admin_notifications_v2', JSON.stringify(adminNotifications));
+  }, [adminNotifications]);
+
+  useEffect(() => {
+    localStorage.setItem('crm_calendar_events', JSON.stringify(calendarEvents));
+  }, [calendarEvents]);
+
+  useEffect(() => {
+    const q = query(collection(db, 'clients'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const clientsData: ClientData[] = [];
+      querySnapshot.forEach((doc) => {
+        clientsData.push({ id: doc.id, ...doc.data() } as ClientData);
+      });
+      if (clientsData.length > 0) {
+        setClients(clientsData);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = async (email: string, pass: string, role: Role): Promise<boolean> => {
+    await new Promise(resolve => setTimeout(resolve, 800));
+    const emailLower = (email || '').toLowerCase();
+    const storedPass = authCredentials[emailLower];
+    if (!storedPass || storedPass !== pass) return false;
+
+    if (role === 'admin' && emailLower === 'amine@admin.com') {
+      setUser(ADMIN_USER);
+      setCurrentView('dashboard');
+      return true;
+    } 
+    
+    if (role === 'client') {
+      const clientData = clients.find(c => (c.email || '').toLowerCase() === emailLower);
+      if (clientData) {
+        const isFirstTime = !clientData.lastLogin;
+        
+        updateClient(clientData.id, { lastLogin: new Date().toISOString() });
+        setUser({
+          id: clientData.id,
+          name: clientData.name,
+          email: clientData.email,
+          role: 'client',
+          avatarUrl: clientData.avatarUrl
+        });
+        
+        if (isFirstTime || !clientData.hasFilledProfile) {
+          setShowWelcomeModal(true);
+        }
+        
+        setCurrentView('dashboard');
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setCurrentView('dashboard');
+    setShowWelcomeModal(false);
+  };
+
+  const handleAddEmployee = (newEmployee: Employee) => setEmployees(prev => [...prev, newEmployee]);
+  const handleAddClient = (newClient: ClientData) => setClients(prev => [newClient, ...prev]);
+  const handleUpdateCredentials = (email: string, pass: string) => setAuthCredentials(prev => ({ ...prev, [(email || '').toLowerCase()]: pass }));
+
+  const updateClient = (clientId: string, updates: Partial<ClientData>) => {
+    setClients(prev => prev.map(c => {
+      if (c.id !== clientId) return c;
+      const newNotifications: Notification[] = [...c.notifications];
+      const now = new Date().toISOString();
+      
+      if (updates.statusMessage && updates.statusMessage !== c.statusMessage) {
+        newNotifications.unshift({ id: `n-status-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, title: 'Status Update', message: `New status: ${updates.statusMessage}`, date: now, read: false, type: 'info' });
+      } else if (updates.progress !== undefined && updates.progress !== c.progress) {
+        newNotifications.unshift({ id: `n-progress-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, title: 'Progress Update', message: `Your service progress is now at ${updates.progress}%.`, date: now, read: false, type: 'info' });
+      }
+
+      if (updates.documents) {
+        updates.documents.forEach(newDoc => {
+          const oldDoc = c.documents.find(d => d.id === newDoc.id);
+          if (oldDoc && oldDoc.status !== 'approved' && newDoc.status === 'approved') {
+            newNotifications.unshift({ id: `n-appr-${newDoc.id}-${Date.now()}`, title: 'Document Approved', message: `Your document "${newDoc.name}" has been reviewed and approved.`, date: now, read: false, type: 'success' });
+          }
+          if (oldDoc && oldDoc.status !== 'rejected' && newDoc.status === 'rejected') {
+             const reasonText = newDoc.rejectionReason ? ` Reason: ${newDoc.rejectionReason}` : '';
+             newNotifications.unshift({ id: `n-rej-${newDoc.id}-${Date.now()}`, title: 'Document Rejected', message: `Issue with "${newDoc.name}".${reasonText} Please check and re-upload.`, date: now, read: false, type: 'alert' });
+          }
+        });
+      }
+
+      if (updates.amountPaid !== undefined && updates.amountPaid > c.amountPaid) {
+        const diff = updates.amountPaid - c.amountPaid;
+        newNotifications.unshift({ id: `n-pay-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, title: 'Payment Received', message: `A payment of ${diff.toLocaleString()} ${c.currency} has been recorded.`, date: now, read: false, type: 'success' });
+      }
+
+      if (updates.clientTasks) {
+         const newAdminNotifs: Notification[] = [];
+         updates.clientTasks.forEach(task => {
+            const oldTask = c.clientTasks?.find(ot => ot.id === task.id);
+            if (oldTask && oldTask.status !== 'completed' && task.status === 'completed') {
+               newAdminNotifs.push({
+                 id: `admin-task-${task.id}-${Date.now()}`,
+                 title: 'Client Action Completed',
+                 message: `${c.companyName} completed task: "${task.title}"`,
+                 date: now,
+                 read: false,
+                 type: 'success'
+               });
+            }
+         });
+         if (newAdminNotifs.length > 0) {
+           setAdminNotifications(prev => [...newAdminNotifs, ...prev]);
+         }
+      }
+
+      return { ...c, ...updates, notifications: newNotifications };
+    }));
+
+    if (user && user.id === clientId && user.role === 'client') {
+      setUser(prev => prev ? ({
+        ...prev,
+        name: updates.name || prev.name,
+        avatarUrl: updates.avatarUrl || prev.avatarUrl
+      }) : null);
+    }
+  };
+
+  const handleUpdateClientTask = (clientId: string, taskId: string, status: ClientTask['status']) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    const updatedTasks = client.clientTasks.map(t => t.id === taskId ? { ...t, status } : t);
+    updateClient(clientId, { clientTasks: updatedTasks });
+  };
+
+  const handleAddClientTask = (clientId: string, task: Omit<ClientTask, 'id' | 'createdAt'>) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    const newTask: ClientTask = {
+      ...task,
+      id: `client-task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      createdAt: new Date().toISOString()
+    };
+    updateClient(clientId, { clientTasks: [...client.clientTasks, newTask] });
+  };
+
+  const handleDeleteClientTask = (clientId: string, taskId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    updateClient(clientId, { clientTasks: client.clientTasks.filter(t => t.id !== taskId) });
+  };
+
+  const handlePushClientUpdate = (clientId: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    const adminNotif: Notification = {
+      id: `push-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: 'Manual Checklist Update',
+      message: `${client.companyName} has just synced their action items and requested a review.`,
+      date: new Date().toISOString(),
+      read: false,
+      type: 'success'
+    };
+    setAdminNotifications(prev => [adminNotif, ...prev]);
+  };
+
+  const handleDocumentUpload = (clientId: string, fileName: string, category: string, base64?: string) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    const newDoc: ClientDocument = {
+      id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: fileName,
+      type: category,
+      status: 'uploaded',
+      uploadDate: new Date().toISOString()
+    };
+    updateClient(clientId, { documents: [...client.documents, newDoc] });
+    const adminNotif: Notification = {
+      id: `admin-n-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: 'New Document Uploaded',
+      message: `${client.companyName} uploaded "${fileName}" to ${category} section.`,
+      date: new Date().toISOString(),
+      read: false,
+      type: 'info'
+    };
+    setAdminNotifications(prev => [adminNotif, ...prev]);
+  };
+
+  const handleNewChatMessage = (senderId: string, recipientId: string, text: string) => {
+    const now = new Date().toISOString();
+    const notification: Notification = {
+      id: `chat-notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      title: 'New Chat Message',
+      message: text.length > 50 ? `${text.substring(0, 50)}...` : text,
+      date: now,
+      read: false,
+      type: 'info'
+    };
+
+    if (user?.role === 'admin') {
+      setClients(prev => prev.map(c => {
+        if (c.id === recipientId) {
+          return { ...c, notifications: [notification, ...c.notifications] };
+        }
+        return c;
+      }));
+    } else {
+      const clientName = clients.find(c => c.id === senderId)?.companyName || 'A client';
+      const adminNotif = { ...notification, title: `Message from ${clientName}` };
+      setAdminNotifications(prev => [adminNotif, ...prev]);
+    }
+  };
+
+  const handleMarkNotificationAsRead = (notificationId: string) => {
+    if (!user) return;
+    if (user.role === 'admin') {
+      setAdminNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
+    } else {
+      setClients(prev => prev.map(c => c.email === user.email ? { ...c, notifications: c.notifications.map(n => n.id === notificationId ? { ...n, read: true } : n) } : c));
+    }
+  };
+
+  const handleMarkAllNotificationsAsRead = () => {
+    if (!user) return;
+    if (user.role === 'admin') {
+      setAdminNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } else {
+      setClients(prev => prev.map(c => c.email === user.email ? { ...c, notifications: c.notifications.map(n => ({ ...n, read: true })) } : c));
+    }
+  };
+
+  const getCurrentClientData = () => clients.find(c => c.email === user?.email);
+  const currentUserNotifications = user?.role === 'admin' ? adminNotifications : getCurrentClientData()?.notifications || [];
+
+  const renderContent = () => {
+    if (user?.role === 'admin') {
+      if (currentView === 'follow-up') return <AdminFollowUpView clients={clients} onUpdateClient={updateClient} lang="en" initialClientId={selectedClientIdForFollowUp} />;
+      if (currentView === 'calendar') return <AdminCalendarView clients={clients} events={calendarEvents} onUpdateEvents={setCalendarEvents} />;
+      if (currentView === 'finance') return <FinanceDashboard clients={clients} onUpdateClient={updateClient} />;
+      if (currentView === 'documents') return <AdminDocumentsView clients={clients} onUpdateClient={updateClient} />;
+      if (currentView === 'clients') return <AdminClientsView clients={clients} onManageClient={(clientId) => { setSelectedClientIdForFollowUp(clientId); setCurrentView('follow-up'); }} onUpdateClient={updateClient} />;
+      if (currentView === 'team') return <AdminEmployeesView employees={employees} onAddEmployee={handleAddEmployee} />;
+      if (currentView === 'settings') return <AdminSettingsView user={user} />;
+      if (currentView === 'invoicing-hub') return <AdminInvoicingView clients={clients} lang="en" />;
+      if (currentView === 'invoicing-generator') return <AdminInvoiceGeneratorView clients={clients} lang="en" />;
+      if (currentView === 'tutorials') return <AdminTutorialsView lang="en" />;
+      if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
+      if (currentView === 'client-access') return <AdminClientAccessView clients={clients} lang="en" onAddClient={handleAddClient} onUpdateCredentials={handleUpdateCredentials} authCredentials={authCredentials} />;
+      return <AdminDashboard clients={clients} onUpdateClient={updateClient} user={user} onNavigate={setCurrentView} />;
+    } else {
+      const clientData = getCurrentClientData();
+      if (!clientData) return <div>Error loading client data</div>;
+      if (currentView === 'documents') return <ClientDocumentsView client={clientData} onUpload={(fname, cat) => handleDocumentUpload(clientData.id, fname, cat)} />;
+      if (currentView === 'settings') return <ClientSettingsView client={clientData} onUpdateProfile={(u) => updateClient(clientData.id, u)} />;
+      if (currentView === 'chat') return <ChatView lang="en" user={user!} clients={clients} onNotify={handleNewChatMessage} />;
+      if (currentView === 'guide') return <ClientGuideView onNavigate={(view) => setCurrentView(view)} />;
+      if (currentView === 'tutorials') return <AdminTutorialsView lang="en" />;
+      if (currentView === 'tasks') return (
+        <ClientTasksView 
+          client={clientData} 
+          onUpdateTask={(tid, stat) => handleUpdateClientTask(clientData.id, tid, stat)} 
+          onAddTask={(task) => handleAddClientTask(clientData.id, task)}
+          onDeleteTask={(tid) => handleDeleteClientTask(clientData.id, tid)}
+          onPushUpdate={(cid) => handlePushClientUpdate(cid)}
+          onNavigate={setCurrentView} 
+        />
+      );
+      return <ClientPortal client={clientData} onNavigateToDocs={() => setCurrentView('documents')} />;
+    }
+  };
+
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-gray-800 text-white flex flex-col">
-        <div className="p-4 border-b border-gray-700">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-blue-500 rounded-full"></div>
-            <span className="font-semibold">AMINE EL FETHI</span>
-          </div>
-          <p className="text-xs text-gray-400">LEGAL ADVISOR</p>
-        </div>
-        <nav className="flex-1 p-4 space-y-2">
-          <a href="#" className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-700">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
-            <span>Overview</span>
-          </a>
-          <a href="#" className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-700">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2H7a2 2 0 00-2 2v2m7-7h.01M7 13h.01"></path></svg>
-            <span>My Action Items</span>
-          </a>
-          <a href="#" className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-700">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.913 9.913 0 01-3.002-.598V21L4 17.002A9.913 9.913 0 013 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
-            <span>Chat & Support</span>
-          </a>
-          <a href="#" className="flex items-center space-x-2 p-2 rounded-md bg-blue-600">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 10l4-4m0 0l-4-4m4 4H7a4 4 0 00-4 4v7a4 4 0 004 4h10a4 4 0 004-4v-7a4 4 0 00-4-4h-3z"></path></svg>
-            <span>Tutorials</span>
-          </a>
-          <a href="#" className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-700">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-1-3m-6.75-7L12 3l6.75 7H2.25z"></path></svg>
-            <span>Platform Guide</span>
-          </a>
-          <a href="#" className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-700">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-            <span>Documents</span>
-          </a>
-          <a href="#" className="flex items-center space-x-2 p-2 rounded-md hover:bg-gray-700">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-            <span>Settings</span>
-          </a>
-        </nav>
-        <div className="p-4 border-t border-gray-700 text-xs text-gray-400">
-          <p>ANNUAL MISSION <span className="font-bold">363d left</span></p>
-        </div>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 p-8 overflow-y-auto">
-        {/* Header */}
-        <header className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">Tutorials</h1>
-          <div className="flex items-center space-x-4">
-            <button className="p-2 rounded-full bg-gray-200 hover:bg-gray-300">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17l-3 3m0 0l-3-3m3 3V3"></path></svg>
-            </button>
-            <button className="p-2 rounded-full bg-gray-200 hover:bg-gray-300">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17l-3 3m0 0l-3-3m3 3V3"></path></svg>
-            </button>
-          </div>
-        </header>
-
-        {/* Featured Tutorial */}
-        <section className="mb-8 relative rounded-lg overflow-hidden">
-          <img src="https://picsum.photos/seed/featured/1200/400" alt="Featured Tutorial" className="w-full h-64 object-cover" referrerPolicy="no-referrer" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-75"></div>
-          <div className="absolute bottom-0 left-0 p-8 text-white">
-            <span className="bg-blue-600 text-xs font-semibold px-3 py-1 rounded-full mb-2 inline-block">FEATURED</span>
-            <h2 className="text-4xl font-bold mb-2">Mastering the Admin Portal: Full Course</h2>
-            <p className="text-gray-300 text-sm">12:45 • Updated yesterday</p>
-          </div>
-          <button className="absolute inset-0 flex items-center justify-center">
-            <svg className="w-16 h-16 text-white opacity-80 hover:opacity-100" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"></path></svg>
-          </button>
-        </section>
-
-        {/* Categories and Search */}
-        <div className="flex justify-between items-center mb-8">
-          <div className="flex space-x-2">
-            <button className="bg-gray-800 text-white text-sm px-4 py-2 rounded-full">ALL CATEGORIES</button>
-            <button className="bg-gray-200 text-gray-800 text-sm px-4 py-2 rounded-full">ONBOARDING</button>
-            <button className="bg-gray-200 text-gray-800 text-sm px-4 py-2 rounded-full">FINANCE</button>
-            <button className="bg-gray-200 text-gray-800 text-sm px-4 py-2 rounded-full">LEGAL</button>
-            <button className="bg-gray-200 text-gray-800 text-sm px-4 py-2 rounded-full">PLATFORM</button>
-          </div>
-          <input type="text" placeholder="Search tutorials" className="border border-gray-300 rounded-full px-4 py-2 w-64" />
-        </div>
-
-        {/* Tutorial Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* Tutorial Card 1 */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <img src="https://picsum.photos/seed/tutorial1/400/200" alt="Tutorial 1" className="w-full h-40 object-cover" referrerPolicy="no-referrer" />
-            <div className="p-4">
-              <span className="bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full mb-2 inline-block">NEW</span>
-              <span className="bg-gray-200 text-gray-800 text-xs font-semibold px-2 py-1 rounded-full mb-2 ml-2 inline-block">BEGINNER</span>
-              <h3 className="text-lg font-semibold mb-1">Platform Overview: Getting Started</h3>
-              <p className="text-gray-600 text-sm mb-2">1204 watched</p>
-              <div className="flex justify-between items-center text-gray-500 text-xs">
-                <span>Onboarding</span>
-                <span>4:30</span>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
+      {user ? (
+        <Layout 
+          user={user} 
+          onLogout={handleLogout}
+          notifications={currentUserNotifications}
+          onMarkAsRead={handleMarkNotificationAsRead}
+          onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+          onOpenProfile={() => setCurrentView('settings')}
+          activeView={currentView}
+          onNavigate={(view) => setCurrentView(view)}
+          clients={clients}
+        >
+          {renderContent()}
+        </Layout>
+      ) : (
+        <Login onLogin={handleLogin} />
+      )}
+      
+      {showWelcomeModal && user?.role === 'client' && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+           <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-md" onClick={() => setShowWelcomeModal(false)}></div>
+           <div className="relative bg-white rounded-[32px] shadow-2xl w-full max-w-xl overflow-hidden animate-scale-up">
+              <div className="absolute top-0 right-0 p-6">
+                <button onClick={() => setShowWelcomeModal(false)} className="text-slate-300 hover:text-slate-900 transition-colors p-2 hover:bg-slate-100 rounded-full">
+                   <X size={20} />
+                </button>
               </div>
-            </div>
-          </div>
-
-          {/* Tutorial Card 2 */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <img src="https://picsum.photos/seed/tutorial2/400/200" alt="Tutorial 2" className="w-full h-40 object-cover" referrerPolicy="no-referrer" />
-            <div className="p-4">
-              <span className="bg-purple-600 text-white text-xs font-semibold px-2 py-1 rounded-full mb-2 inline-block">ADVANCED</span>
-              <h3 className="text-lg font-semibold mb-1">Managing Client Documents</h3>
-              <p className="text-gray-600 text-sm mb-2">850 watched</p>
-              <div className="flex justify-between items-center text-gray-500 text-xs">
-                <span>Platform</span>
-                <span>6:15</span>
+              <div className="p-10 pt-14 text-center">
+                 <div className="relative inline-block mb-8">
+                    <div className="absolute inset-0 bg-blue-100 rounded-3xl rotate-6 scale-110"></div>
+                    <div className="relative bg-blue-600 p-6 rounded-3xl shadow-xl shadow-blue-600/20">
+                       <ShieldCheck size={48} className="text-white" />
+                    </div>
+                 </div>
+                 <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Action Required</h2>
+                 <p className="text-slate-500 text-lg leading-relaxed mb-10">
+                   To ensure optimal follow-up and legal accuracy for your mission, please complete your <span className="font-bold text-slate-900">Personal & Business Info</span> in the settings level.
+                 </p>
+                 <button 
+                   onClick={() => { setShowWelcomeModal(false); setCurrentView('settings'); }}
+                   className="w-full py-4 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-slate-800 transition-all flex items-center justify-center gap-3 shadow-2xl shadow-slate-900/20 group active:scale-95"
+                 >
+                    Start Filling Profile
+                    <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                 </button>
+                 <button onClick={() => setShowWelcomeModal(false)} className="mt-6 text-sm font-bold text-slate-400 hover:text-slate-600 transition-colors">Remind me later</button>
               </div>
-            </div>
-          </div>
-
-          {/* Tutorial Card 3 */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <img src="https://picsum.photos/seed/tutorial3/400/200" alt="Tutorial 3" className="w-full h-40 object-cover" referrerPolicy="no-referrer" />
-            <div className="p-4">
-              <span className="bg-purple-600 text-white text-xs font-semibold px-2 py-1 rounded-full mb-2 inline-block">ADVANCED</span>
-              <h3 className="text-lg font-semibold mb-1">Fiscal Declarations Made Easy</h3>
-              <p className="text-gray-600 text-sm mb-2">FIX THIS IMAGE</p>
-              <div className="flex justify-between items-center text-gray-500 text-xs">
-                <span>Finance</span>
-                <span>8:45</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Tutorial Card 4 */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            <img src="https://picsum.photos/seed/tutorial4/400/200" alt="Tutorial 4" className="w-full h-40 object-cover" referrerPolicy="no-referrer" />
-            <div className="p-4">
-              <span className="bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded-full mb-2 inline-block">BEGINNER</span>
-              <h3 className="text-lg font-semibold mb-1">Legal Compliance 101</h3>
-              <p className="text-gray-600 text-sm mb-2">940 watched</p>
-              <div className="flex justify-between items-center text-gray-500 text-xs">
-                <span>Legal</span>
-                <span>5:20</span>
-              </div>
-            </div>
-          </div>
+           </div>
         </div>
-      </main>
+      )}
+      {user?.role === 'client' && <WhatsAppFab />}
     </div>
   );
-}
+};
 
 export default App;
