@@ -24,8 +24,8 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ user }) =>
   const commonT = translations.en.common;
   
   // Mock form state
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
+  const [name, setName] = useState(user.name || '');
+  const [email, setEmail] = useState(user.email || '');
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -87,7 +87,7 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ user }) =>
               
               <div className="flex items-center gap-6 mb-8">
                 <div className="w-24 h-24 rounded-full bg-slate-100 border-4 border-white shadow-lg flex items-center justify-center text-2xl font-bold text-slate-400 overflow-hidden">
-                  {user.avatarUrl ? <img src={user.avatarUrl} className="w-full h-full object-cover" alt={user.name} /> : (user.name || '').charAt(0)}
+                  {user.avatarUrl ? <img src={user.avatarUrl} className="w-full h-full object-cover" alt={user.name} /> : user.name.charAt(0)}
                 </div>
                 <div>
                    <h4 className="font-bold text-slate-900">{user.name}</h4>

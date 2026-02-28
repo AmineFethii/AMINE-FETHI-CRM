@@ -53,9 +53,8 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
   }, [initialClientId]);
 
   const filteredClients = clients.filter(c => {
-    const searchLower = (searchTerm || '').toLowerCase();
-    const matchesSearch = (c.companyName || '').toLowerCase().includes(searchLower) || 
-                          (c.name || '').toLowerCase().includes(searchLower);
+    const matchesSearch = c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          c.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === 'all' || 
                           (filterType === 'completed' && c.progress === 100) ||
                           (filterType === 'in-progress' && c.progress < 100);
@@ -70,22 +69,14 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
         setIsDirty(false);
         setEditingStepId(null);
       }
-    } else if (initialClientId && clients.length > 0) {
-      const found = clients.find(c => c.id === initialClientId);
-      if (found) {
-        setSelectedClientId(initialClientId);
-        setLocalClient(JSON.parse(JSON.stringify(found)));
-        setIsDirty(false);
-        setEditingStepId(null);
-      }
     } else {
       setLocalClient(null);
     }
-  }, [selectedClientId, clients, initialClientId]);
+  }, [selectedClientId, clients]);
 
   const handleTimelineStatusChange = (stepId: string, newStatus: 'pending' | 'in-progress' | 'completed') => {
     if (!localClient) return;
-    const updatedTimeline = (localClient.timeline || []).map(step => 
+    const updatedTimeline = localClient.timeline.map(step => 
       step.id === stepId ? { ...step, status: newStatus } : step
     );
     setLocalClient({ ...localClient, timeline: updatedTimeline });
@@ -100,7 +91,7 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
       label: newStepLabel,
       status: 'pending'
     };
-    const updatedTimeline = [...(localClient.timeline || []), newStep];
+    const updatedTimeline = [...localClient.timeline, newStep];
     setLocalClient({ ...localClient, timeline: updatedTimeline });
     setNewStepLabel('');
     setIsDirty(true);
@@ -126,7 +117,7 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
 
   const handleDeleteTask = (taskId: string) => {
     if (!localClient) return;
-    const updatedTasks = (localClient.clientTasks || []).filter(t => t.id !== taskId);
+    const updatedTasks = localClient.clientTasks.filter(t => t.id !== taskId);
     setLocalClient({ ...localClient, clientTasks: updatedTasks });
     setIsDirty(true);
   };
@@ -152,8 +143,8 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
   };
 
   const clientCompletionRate = localClient ? (
-    (localClient.clientTasks || []).length > 0 
-      ? Math.round(((localClient.clientTasks || []).filter(t => t.status === 'completed').length / (localClient.clientTasks || []).length) * 100)
+    localClient.clientTasks?.length > 0 
+      ? Math.round((localClient.clientTasks.filter(t => t.status === 'completed').length / localClient.clientTasks.length) * 100)
       : 0
   ) : 0;
 
@@ -185,8 +176,8 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
           {filteredClients.map(client => (
             <div key={client.id} onClick={() => setSelectedClientId(client.id)} className={`p-3 rounded-xl cursor-pointer transition-all border ${selectedClientId === client.id ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-white border-transparent hover:bg-slate-50 hover:border-slate-100'}`}>
               <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 overflow-hidden shadow-sm">{(client.companyName || '').charAt(0)}</div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-500 overflow-hidden shadow-sm">{client.companyName.charAt(0)}</div>
                   <div>
                     <h4 className="font-bold text-sm text-slate-900">{client.companyName}</h4>
                     <p className="text-[10px] text-slate-500 uppercase font-bold tracking-wider">{client.serviceType}</p>
@@ -206,7 +197,7 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
           <>
              <div className="bg-white p-6 border-b border-slate-200 flex justify-between items-center shadow-sm z-10">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-blue-600 border border-blue-500 flex items-center justify-center text-white font-bold text-xl shadow-md">{(localClient.companyName || '').charAt(0)}</div>
+                  <div className="w-12 h-12 rounded-xl bg-blue-600 border border-blue-500 flex items-center justify-center text-white font-bold text-xl shadow-md">{localClient.companyName.charAt(0)}</div>
                   <div>
                     <h2 className="text-xl font-bold text-slate-900">{localClient.companyName}</h2>
                     <p className="text-xs text-slate-500 font-medium">{localClient.serviceType}</p>
@@ -224,11 +215,11 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
                          <h3 className="font-bold text-slate-900 text-sm uppercase tracking-widest flex items-center gap-2"><Clock className="text-blue-600" size={16} />{t.projectTimeline}</h3>
                       </div>
                       <div className="bg-white rounded-2xl border border-slate-200 p-5 space-y-4 shadow-sm">
-                         {(localClient.timeline || []).map((step) => (
+                         {localClient.timeline.map((step) => (
                            <div key={step.id} className="flex items-center gap-3 group">
                               <button onClick={() => handleTimelineStatusChange(step.id, step.status === 'completed' ? 'pending' : step.status === 'in-progress' ? 'completed' : 'in-progress')} className={`w-8 h-8 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-all ${step.status === 'completed' ? 'bg-green-500 border-green-500 text-white' : step.status === 'in-progress' ? 'border-blue-500 text-blue-500' : 'border-slate-200 text-slate-200'}`}>{step.status === 'completed' ? <Check size={14} /> : <div className={`w-1.5 h-1.5 rounded-full ${step.status === 'in-progress' ? 'bg-blue-500 animate-pulse' : 'bg-slate-200'}`} />}</button>
                               <div className="flex-1"><p className={`text-sm font-bold ${step.status === 'completed' ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{step.label}</p></div>
-                              <button onClick={() => setLocalClient({...localClient, timeline: (localClient.timeline || []).filter(s => s.id !== step.id), progress: 0})} className="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity"><Trash2 size={14} /></button>
+                              <button onClick={() => setLocalClient({...localClient, timeline: localClient.timeline.filter(s => s.id !== step.id), progress: 0})} className="opacity-0 group-hover:opacity-100 p-1 text-slate-300 hover:text-red-500 transition-opacity"><Trash2 size={14} /></button>
                            </div>
                          ))}
                          <div className="pt-4 flex gap-2">
@@ -288,7 +279,7 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
                       <div className="bg-blue-900 rounded-2xl p-6 text-white shadow-xl shadow-blue-900/20 relative overflow-hidden group">
                          <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform"></div>
                          <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Public Status Display</p>
-                         <textarea value={localClient.statusMessage} onChange={(e) => setLocalClient({...localClient, statusMessage: e.target.value})} className="w-full bg-transparent border-none p-0 text-sm font-semibold text-slate-200 focus:ring-0 resize-none min-h-[60px]" />
+                         <textarea value={localClient.statusMessage || ''} onChange={(e) => setLocalClient({...localClient, statusMessage: e.target.value})} className="w-full bg-transparent border-none p-0 text-sm font-semibold text-slate-200 focus:ring-0 resize-none min-h-[60px]" />
                          <div className="mt-4 flex justify-between items-center text-[10px] font-black uppercase text-blue-400"><span>Mission Progress</span><span>{localClient.progress}%</span></div>
                          <div className="mt-2 w-full bg-white/10 h-1.5 rounded-full overflow-hidden"><div className="h-full bg-blue-500 transition-all duration-700" style={{ width: `${localClient.progress}%` }}></div></div>
                       </div>
