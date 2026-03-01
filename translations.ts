@@ -88,18 +88,7 @@ export const translations = {
       projectMoving: "Your project is moving forward. Check back soon for updates.",
       clientTasks: "Action Items for You",
       completeTask: "Mark as Done",
-      inProgressTask: "Starting Now",
-      taskForm: {
-        title: "New Action Item",
-        taskName: "Task Name",
-        taskNamePlaceholder: "What needs to be done?",
-        priority: "Priority",
-        description: "Context / Description",
-        descriptionPlaceholder: "Brief notes about this task...",
-        dueDate: "Due Date",
-        save: "Save Action Item",
-        cancel: "Cancel"
-      }
+      inProgressTask: "Starting Now"
     },
     clientGuide: {
       title: "User Guide",

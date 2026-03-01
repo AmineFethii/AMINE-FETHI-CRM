@@ -30,38 +30,7 @@ interface ClientSettingsViewProps {
 export const ClientSettingsView: React.FC<ClientSettingsViewProps> = ({ client, onUpdateProfile }) => {
   const t = translations.en.settings;
   
-  const [formData, setFormData] = useState<Partial<ClientData>>({
-    firstName: '',
-    lastName: '',
-    nationality: '',
-    cin: '',
-    email: '',
-    phone: '',
-    birthDate: '',
-    fullAddress: '',
-    province: '',
-    companyName: '',
-    companyNameProposals: ['', '', ''],
-    businessActivity: '',
-    annualTurnover: '',
-    desiredMonthlySalary: '5000',
-    moneyTransferMethod: '',
-    monthlyTransfer: 'Non',
-    paymentPlatforms: '',
-    existingEntityLLCLTD: 'Non',
-    hasEmployees: 'Non',
-    employeeCount: '',
-    ownerCount: '',
-    plannedStartDate: '',
-    monthlyBusinessExpenses: '',
-    avatarUrl: '',
-    whatsapp: '',
-    hasSecondOwner: 'Non',
-    secondOwnerFirstName: '',
-    secondOwnerLastName: '',
-    secondOwnerNationality: '',
-    secondOwnerCin: ''
-  });
+  const [formData, setFormData] = useState<Partial<ClientData>>({});
   const [isDirty, setIsDirty] = useState(false);
 
   useEffect(() => {
@@ -177,19 +146,19 @@ export const ClientSettingsView: React.FC<ClientSettingsViewProps> = ({ client, 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">First Name</label>
-                    <input type="text" value={formData.firstName || ''} onChange={e => handleChange('firstName', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
+                    <input type="text" value={formData.firstName} onChange={e => handleChange('firstName', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Last Name</label>
-                    <input type="text" value={formData.lastName || ''} onChange={e => handleChange('lastName', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
+                    <input type="text" value={formData.lastName} onChange={e => handleChange('lastName', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Nationality</label>
-                    <input type="text" value={formData.nationality || ''} onChange={e => handleChange('nationality', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
+                    <input type="text" value={formData.nationality} onChange={e => handleChange('nationality', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">CIN / Passport ID</label>
-                    <input type="text" value={formData.cin || ''} onChange={e => handleChange('cin', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
+                    <input type="text" value={formData.cin} onChange={e => handleChange('cin', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
                   </div>
                 </div>
 
@@ -222,19 +191,19 @@ export const ClientSettingsView: React.FC<ClientSettingsViewProps> = ({ client, 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                       <div>
                         <label className="block text-sm font-bold text-slate-700 mb-2">First Name (Partner)</label>
-                        <input type="text" value={formData.secondOwnerFirstName || ''} onChange={e => handleChange('secondOwnerFirstName', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
+                        <input type="text" value={formData.secondOwnerFirstName} onChange={e => handleChange('secondOwnerFirstName', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
                       </div>
                       <div>
                         <label className="block text-sm font-bold text-slate-700 mb-2">Last Name (Partner)</label>
-                        <input type="text" value={formData.secondOwnerLastName || ''} onChange={e => handleChange('secondOwnerLastName', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
+                        <input type="text" value={formData.secondOwnerLastName} onChange={e => handleChange('secondOwnerLastName', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
                       </div>
                       <div>
                         <label className="block text-sm font-bold text-slate-700 mb-2">Nationality (Partner)</label>
-                        <input type="text" value={formData.secondOwnerNationality || ''} onChange={e => handleChange('secondOwnerNationality', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
+                        <input type="text" value={formData.secondOwnerNationality} onChange={e => handleChange('secondOwnerNationality', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none transition-all text-sm font-medium" />
                       </div>
                       <div>
                         <label className="block text-sm font-bold text-slate-700 mb-2">CIN / Passport ID (Partner)</label>
-                        <input type="text" value={formData.secondOwnerCin || ''} onChange={e => handleChange('secondOwnerCin', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
+                        <input type="text" value={formData.secondOwnerCin} onChange={e => handleChange('secondOwnerCin', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
                       </div>
                     </div>
                   </div>
@@ -244,15 +213,15 @@ export const ClientSettingsView: React.FC<ClientSettingsViewProps> = ({ client, 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Date of Birth</label>
-                    <input type="date" value={formData.birthDate || ''} onChange={e => handleChange('birthDate', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
+                    <input type="date" value={formData.birthDate} onChange={e => handleChange('birthDate', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Province</label>
-                    <input type="text" value={formData.province || ''} onChange={e => handleChange('province', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
+                    <input type="text" value={formData.province} onChange={e => handleChange('province', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-bold text-slate-700 mb-2">Full Address</label>
-                    <textarea rows={2} value={formData.fullAddress || ''} onChange={e => handleChange('fullAddress', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium resize-none" />
+                    <textarea rows={2} value={formData.fullAddress} onChange={e => handleChange('fullAddress', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium resize-none" />
                   </div>
                 </div>
 
@@ -277,27 +246,27 @@ export const ClientSettingsView: React.FC<ClientSettingsViewProps> = ({ client, 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="md:col-span-1">
                       <label className="block text-sm font-bold text-slate-700 mb-2">Business Activity</label>
-                      <input type="text" placeholder="Précisez l’activité que vous exercez" value={formData.businessActivity || ''} onChange={e => handleChange('businessActivity', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
+                      <input type="text" placeholder="Précisez l’activité que vous exercez" value={formData.businessActivity} onChange={e => handleChange('businessActivity', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 focus:bg-white outline-none text-sm font-medium" />
                     </div>
                     <div className="md:col-span-1">
                       <label className="block text-sm font-bold text-slate-700 mb-2">Owners count</label>
                       <div className="relative">
                         <Users className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                        <input type="text" value={formData.ownerCount || ''} onChange={e => handleChange('ownerCount', e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm font-bold" placeholder="Number of owners" />
+                        <input type="text" value={formData.ownerCount} onChange={e => handleChange('ownerCount', e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm font-bold" placeholder="Number of owners" />
                       </div>
                     </div>
                     <div className="md:col-span-1">
                       <label className="block text-sm font-bold text-slate-700 mb-2">Target Launch Date</label>
                       <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                        <input type="date" value={formData.plannedStartDate || ''} onChange={e => handleChange('plannedStartDate', e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm font-bold" />
+                        <input type="date" value={formData.plannedStartDate} onChange={e => handleChange('plannedStartDate', e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm font-bold" />
                       </div>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-bold text-slate-700 mb-2">Annual Turnover</label>
-                      <input type="text" value={formData.annualTurnover || ''} onChange={e => handleChange('annualTurnover', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm font-bold" placeholder="MAD" />
+                      <input type="text" value={formData.annualTurnover} onChange={e => handleChange('annualTurnover', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm font-bold" placeholder="MAD" />
                     </div>
                     <div>
                       <label className="block text-sm font-bold text-slate-700 mb-2">Desired Salary</label>
@@ -326,14 +295,14 @@ export const ClientSettingsView: React.FC<ClientSettingsViewProps> = ({ client, 
                     <label className="block text-sm font-bold text-slate-700 mb-2">Phone Number</label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                      <input type="tel" value={formData.phone || ''} onChange={e => handleChange('phone', e.target.value)} className="w-full pl-9 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm font-medium" placeholder="+212 ..." />
+                      <input type="tel" value={formData.phone} onChange={e => handleChange('phone', e.target.value)} className="w-full pl-9 pr-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm font-medium" placeholder="+212 ..." />
                     </div>
                   </div>
                   <div className="md:col-span-2">
                      <label className="block text-sm font-bold text-slate-700 mb-2">WhatsApp</label>
                      <div className="relative">
                        <MessageCircleIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
-                       <input type="text" value={formData.whatsapp || ''} onChange={e => handleChange('whatsapp', e.target.value)} className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm font-medium" />
+                       <input type="text" value={formData.whatsapp} onChange={e => handleChange('whatsapp', e.target.value)} className="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-1 focus:ring-blue-500 text-sm font-medium" />
                      </div>
                   </div>
                 </div>
@@ -363,7 +332,7 @@ export const ClientSettingsView: React.FC<ClientSettingsViewProps> = ({ client, 
                   </div>
                   <div className="md:col-span-2">
                      <label className="block text-sm font-bold text-slate-700 mb-2">Payment Platforms</label>
-                     <input type="text" placeholder="PayPal, Payoneer, etc..." value={formData.paymentPlatforms || ''} onChange={e => handleChange('paymentPlatforms', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-1 focus:ring-blue-500" />
+                     <input type="text" placeholder="PayPal, Payoneer, etc..." value={formData.paymentPlatforms} onChange={e => handleChange('paymentPlatforms', e.target.value)} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:ring-1 focus:ring-blue-500" />
                   </div>
                 </div>
               </div>

@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, query } from 'firebase/firestore';
-import { db } from './firebase';
 import { Layout } from './components/Layout';
 import { WhatsAppFab } from './components/WhatsAppFab';
 import { Login } from './views/Login';
@@ -23,7 +21,7 @@ import { AdminClientAccessView } from './views/AdminClientAccessView';
 import { AdminFollowUpView } from './views/AdminFollowUpView';
 import { AdminCalendarView } from './views/AdminCalendarView';
 import { User, ClientData, Role, Notification, Employee, ClientDocument, ClientTask } from './types';
-import { ShieldCheck, X, ChevronRight } from 'lucide-react';
+import { ShieldCheck, Info, X, ChevronRight, User as UserIcon, Building2 } from 'lucide-react';
 
 // MOCK EVENTS FOR INITIAL STATE
 const INITIAL_EVENTS = [
@@ -204,34 +202,19 @@ const App: React.FC = () => {
     localStorage.setItem('crm_calendar_events', JSON.stringify(calendarEvents));
   }, [calendarEvents]);
 
-  useEffect(() => {
-    const q = query(collection(db, 'clients'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const clientsData: ClientData[] = [];
-      querySnapshot.forEach((doc) => {
-        clientsData.push({ id: doc.id, ...doc.data() } as ClientData);
-      });
-      if (clientsData.length > 0) {
-        setClients(clientsData);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
   const handleLogin = async (email: string, pass: string, role: Role): Promise<boolean> => {
     await new Promise(resolve => setTimeout(resolve, 800));
-    const emailLower = (email || '').toLowerCase();
-    const storedPass = authCredentials[emailLower];
+    const storedPass = authCredentials[email.toLowerCase()];
     if (!storedPass || storedPass !== pass) return false;
 
-    if (role === 'admin' && emailLower === 'amine@admin.com') {
+    if (role === 'admin' && email === 'amine@admin.com') {
       setUser(ADMIN_USER);
       setCurrentView('dashboard');
       return true;
     } 
     
     if (role === 'client') {
-      const clientData = clients.find(c => (c.email || '').toLowerCase() === emailLower);
+      const clientData = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
       if (clientData) {
         const isFirstTime = !clientData.lastLogin;
         
@@ -263,7 +246,7 @@ const App: React.FC = () => {
 
   const handleAddEmployee = (newEmployee: Employee) => setEmployees(prev => [...prev, newEmployee]);
   const handleAddClient = (newClient: ClientData) => setClients(prev => [newClient, ...prev]);
-  const handleUpdateCredentials = (email: string, pass: string) => setAuthCredentials(prev => ({ ...prev, [(email || '').toLowerCase()]: pass }));
+  const handleUpdateCredentials = (email: string, pass: string) => setAuthCredentials(prev => ({ ...prev, [email.toLowerCase()]: pass }));
 
   const updateClient = (clientId: string, updates: Partial<ClientData>) => {
     setClients(prev => prev.map(c => {
@@ -272,47 +255,44 @@ const App: React.FC = () => {
       const now = new Date().toISOString();
       
       if (updates.statusMessage && updates.statusMessage !== c.statusMessage) {
-        newNotifications.unshift({ id: `n-status-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, title: 'Status Update', message: `New status: ${updates.statusMessage}`, date: now, read: false, type: 'info' });
+        newNotifications.unshift({ id: `n-${Date.now()}-status`, title: 'Status Update', message: `New status: ${updates.statusMessage}`, date: now, read: false, type: 'info' });
       } else if (updates.progress !== undefined && updates.progress !== c.progress) {
-        newNotifications.unshift({ id: `n-progress-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, title: 'Progress Update', message: `Your service progress is now at ${updates.progress}%.`, date: now, read: false, type: 'info' });
+        newNotifications.unshift({ id: `n-${Date.now()}-progress`, title: 'Progress Update', message: `Your service progress is now at ${updates.progress}%.`, date: now, read: false, type: 'info' });
       }
 
       if (updates.documents) {
         updates.documents.forEach(newDoc => {
           const oldDoc = c.documents.find(d => d.id === newDoc.id);
           if (oldDoc && oldDoc.status !== 'approved' && newDoc.status === 'approved') {
-            newNotifications.unshift({ id: `n-appr-${newDoc.id}-${Date.now()}`, title: 'Document Approved', message: `Your document "${newDoc.name}" has been reviewed and approved.`, date: now, read: false, type: 'success' });
+            newNotifications.unshift({ id: `n-${Date.now()}-${newDoc.id}`, title: 'Document Approved', message: `Your document "${newDoc.name}" has been reviewed and approved.`, date: now, read: false, type: 'success' });
           }
           if (oldDoc && oldDoc.status !== 'rejected' && newDoc.status === 'rejected') {
              const reasonText = newDoc.rejectionReason ? ` Reason: ${newDoc.rejectionReason}` : '';
-             newNotifications.unshift({ id: `n-rej-${newDoc.id}-${Date.now()}`, title: 'Document Rejected', message: `Issue with "${newDoc.name}".${reasonText} Please check and re-upload.`, date: now, read: false, type: 'alert' });
+             newNotifications.unshift({ id: `n-${Date.now()}-${newDoc.id}-rej`, title: 'Document Rejected', message: `Issue with "${newDoc.name}".${reasonText} Please check and re-upload.`, date: now, read: false, type: 'alert' });
           }
         });
       }
 
       if (updates.amountPaid !== undefined && updates.amountPaid > c.amountPaid) {
         const diff = updates.amountPaid - c.amountPaid;
-        newNotifications.unshift({ id: `n-pay-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, title: 'Payment Received', message: `A payment of ${diff.toLocaleString()} ${c.currency} has been recorded.`, date: now, read: false, type: 'success' });
+        newNotifications.unshift({ id: `n-${Date.now()}-payment`, title: 'Payment Received', message: `A payment of ${diff.toLocaleString()} ${c.currency} has been recorded.`, date: now, read: false, type: 'success' });
       }
 
       if (updates.clientTasks) {
-         const newAdminNotifs: Notification[] = [];
          updates.clientTasks.forEach(task => {
             const oldTask = c.clientTasks?.find(ot => ot.id === task.id);
             if (oldTask && oldTask.status !== 'completed' && task.status === 'completed') {
-               newAdminNotifs.push({
-                 id: `admin-task-${task.id}-${Date.now()}`,
+               const adminNotif: Notification = {
+                 id: `admin-task-${Date.now()}`,
                  title: 'Client Action Completed',
                  message: `${c.companyName} completed task: "${task.title}"`,
                  date: now,
                  read: false,
                  type: 'success'
-               });
+               };
+               setAdminNotifications(prev => [adminNotif, ...prev]);
             }
          });
-         if (newAdminNotifs.length > 0) {
-           setAdminNotifications(prev => [...newAdminNotifs, ...prev]);
-         }
       }
 
       return { ...c, ...updates, notifications: newNotifications };
@@ -339,7 +319,7 @@ const App: React.FC = () => {
     if (!client) return;
     const newTask: ClientTask = {
       ...task,
-      id: `client-task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `client-task-${Date.now()}`,
       createdAt: new Date().toISOString()
     };
     updateClient(clientId, { clientTasks: [...client.clientTasks, newTask] });
@@ -355,7 +335,7 @@ const App: React.FC = () => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
     const adminNotif: Notification = {
-      id: `push-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `push-${Date.now()}`,
       title: 'Manual Checklist Update',
       message: `${client.companyName} has just synced their action items and requested a review.`,
       date: new Date().toISOString(),
@@ -369,7 +349,7 @@ const App: React.FC = () => {
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
     const newDoc: ClientDocument = {
-      id: `doc-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `doc-${Date.now()}`,
       name: fileName,
       type: category,
       status: 'uploaded',
@@ -377,7 +357,7 @@ const App: React.FC = () => {
     };
     updateClient(clientId, { documents: [...client.documents, newDoc] });
     const adminNotif: Notification = {
-      id: `admin-n-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `admin-n-${Date.now()}`,
       title: 'New Document Uploaded',
       message: `${client.companyName} uploaded "${fileName}" to ${category} section.`,
       date: new Date().toISOString(),
@@ -390,7 +370,7 @@ const App: React.FC = () => {
   const handleNewChatMessage = (senderId: string, recipientId: string, text: string) => {
     const now = new Date().toISOString();
     const notification: Notification = {
-      id: `chat-notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `chat-notif-${Date.now()}`,
       title: 'New Chat Message',
       message: text.length > 50 ? `${text.substring(0, 50)}...` : text,
       date: now,
@@ -451,9 +431,9 @@ const App: React.FC = () => {
     } else {
       const clientData = getCurrentClientData();
       if (!clientData) return <div>Error loading client data</div>;
-      if (currentView === 'documents') return <ClientDocumentsView client={clientData} onUpload={(fname, cat) => handleDocumentUpload(clientData.id, fname, cat)} />;
+      if (currentView === 'documents') return <ClientDocumentsView client={clientData} onUpload={handleDocumentUpload} />;
       if (currentView === 'settings') return <ClientSettingsView client={clientData} onUpdateProfile={(u) => updateClient(clientData.id, u)} />;
-      if (currentView === 'chat') return <ChatView lang="en" user={user!} clients={clients} onNotify={handleNewChatMessage} />;
+      if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
       if (currentView === 'guide') return <ClientGuideView onNavigate={(view) => setCurrentView(view)} />;
       if (currentView === 'tutorials') return <AdminTutorialsView lang="en" />;
       if (currentView === 'tasks') return (

@@ -9,9 +9,11 @@ import {
   ArrowUpRight, 
   Users,
   Layers,
+  MoreHorizontal,
   FolderOpen,
   MapPin,
   Clock,
+  TrendingUp,
   CheckCircle2,
   Calendar,
   X,
@@ -41,15 +43,29 @@ export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onM
   const [editingClient, setEditingClient] = useState<ClientData | null>(null);
   const [newStartDate, setNewStartDate] = useState('');
 
+  // Dropdown menu state
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
   const t = translations.en.clients;
   const commonT = translations.en.common;
 
+  // Handle menu clicks outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setActiveMenuId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   // Filter clients based on search
   const filteredClients = useMemo(() => {
-    const searchLower = (searchTerm || '').toLowerCase();
     return clients.filter(c => 
-      (c.companyName || '').toLowerCase().includes(searchLower) ||
-      (c.name || '').toLowerCase().includes(searchLower)
+      c.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      c.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [clients, searchTerm]);
 
@@ -82,6 +98,7 @@ export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onM
     setEditingClient(client);
     setNewStartDate(client.missionStartDate || new Date().toISOString().split('T')[0]);
     setIsConfigModalOpen(true);
+    setActiveMenuId(null);
   };
 
   const handleSaveConfig = () => {
@@ -222,6 +239,27 @@ export const AdminClientsView: React.FC<AdminClientsViewProps> = ({ clients, onM
                 {/* Card Header Pattern */}
                 <div className="h-20 bg-slate-900 relative overflow-hidden">
                    <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(#ffffff 1px, transparent 1px)', backgroundSize: '12px 12px' }}></div>
+                   <div className="absolute top-2 right-2" ref={activeMenuId === client.id ? menuRef : null}>
+                      <button 
+                        onClick={() => setActiveMenuId(activeMenuId === client.id ? null : client.id)}
+                        className="p-1.5 bg-black/20 text-white rounded-lg hover:bg-black/40 transition-colors"
+                      >
+                         <MoreHorizontal size={16} />
+                      </button>
+                      
+                      {activeMenuId === client.id && (
+                        <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-slate-100 py-1 z-50 animate-scale-up origin-top-right">
+                           <button onClick={() => handleOpenConfig(client)} className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">
+                              <Calendar size={14} className="text-blue-600" />
+                              Configure Mission
+                           </button>
+                           <button onClick={() => onManageClient(client.id)} className="w-full flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">
+                              <TrendingUp size={14} className="text-green-600" />
+                              Manage Timeline
+                           </button>
+                        </div>
+                      )}
+                   </div>
                 </div>
 
                 <div className="px-5 pb-5 flex-1 flex flex-col">
