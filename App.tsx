@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { collection, onSnapshot, doc, updateDoc, setDoc } from 'firebase/firestore';
+import { db } from './src/firebase';
 import { Layout } from './components/Layout';
 import { WhatsAppFab } from './components/WhatsAppFab';
 import { Login } from './views/Login';
@@ -157,10 +159,7 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<string>('dashboard');
   const [selectedClientIdForFollowUp, setSelectedClientIdForFollowUp] = useState<string | null>(null);
   
-  const [clients, setClients] = useState<ClientData[]>(() => {
-    const saved = localStorage.getItem('crm_clients_v2');
-    return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
-  });
+  const [clients, setClients] = useState<ClientData[]>([]);
   
   const [employees, setEmployees] = useState<Employee[]>(() => {
     const saved = localStorage.getItem('crm_employees_v2');
@@ -183,8 +182,16 @@ const App: React.FC = () => {
   });
   
   useEffect(() => {
-    localStorage.setItem('crm_clients_v2', JSON.stringify(clients));
-  }, [clients]);
+    const q = collection(db, 'clients');
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const clientsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as ClientData[];
+      setClients(clientsData);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('crm_employees_v2', JSON.stringify(employees));
@@ -245,58 +252,70 @@ const App: React.FC = () => {
   };
 
   const handleAddEmployee = (newEmployee: Employee) => setEmployees(prev => [...prev, newEmployee]);
-  const handleAddClient = (newClient: ClientData) => setClients(prev => [newClient, ...prev]);
+  const handleAddClient = async (newClient: ClientData) => {
+    try {
+      await setDoc(doc(db, 'clients', newClient.id), newClient);
+    } catch (error) {
+      console.error("Error adding client:", error);
+    }
+  };
   const handleUpdateCredentials = (email: string, pass: string) => setAuthCredentials(prev => ({ ...prev, [email.toLowerCase()]: pass }));
 
-  const updateClient = (clientId: string, updates: Partial<ClientData>) => {
-    setClients(prev => prev.map(c => {
-      if (c.id !== clientId) return c;
-      const newNotifications: Notification[] = [...c.notifications];
-      const now = new Date().toISOString();
-      
-      if (updates.statusMessage && updates.statusMessage !== c.statusMessage) {
-        newNotifications.unshift({ id: `n-${Date.now()}-status`, title: 'Status Update', message: `New status: ${updates.statusMessage}`, date: now, read: false, type: 'info' });
-      } else if (updates.progress !== undefined && updates.progress !== c.progress) {
-        newNotifications.unshift({ id: `n-${Date.now()}-progress`, title: 'Progress Update', message: `Your service progress is now at ${updates.progress}%.`, date: now, read: false, type: 'info' });
-      }
+  const updateClient = async (clientId: string, updates: Partial<ClientData>) => {
+    const c = clients.find(c => c.id === clientId);
+    if (!c) return;
 
-      if (updates.documents) {
-        updates.documents.forEach(newDoc => {
-          const oldDoc = c.documents.find(d => d.id === newDoc.id);
-          if (oldDoc && oldDoc.status !== 'approved' && newDoc.status === 'approved') {
-            newNotifications.unshift({ id: `n-${Date.now()}-${newDoc.id}`, title: 'Document Approved', message: `Your document "${newDoc.name}" has been reviewed and approved.`, date: now, read: false, type: 'success' });
+    const newNotifications: Notification[] = [...c.notifications];
+    const now = new Date().toISOString();
+    
+    if (updates.statusMessage && updates.statusMessage !== c.statusMessage) {
+      newNotifications.unshift({ id: `n-${Date.now()}-status`, title: 'Status Update', message: `New status: ${updates.statusMessage}`, date: now, read: false, type: 'info' });
+    } else if (updates.progress !== undefined && updates.progress !== c.progress) {
+      newNotifications.unshift({ id: `n-${Date.now()}-progress`, title: 'Progress Update', message: `Your service progress is now at ${updates.progress}%.`, date: now, read: false, type: 'info' });
+    }
+
+    if (updates.documents) {
+      updates.documents.forEach(newDoc => {
+        const oldDoc = c.documents.find(d => d.id === newDoc.id);
+        if (oldDoc && oldDoc.status !== 'approved' && newDoc.status === 'approved') {
+          newNotifications.unshift({ id: `n-${Date.now()}-${newDoc.id}`, title: 'Document Approved', message: `Your document "${newDoc.name}" has been reviewed and approved.`, date: now, read: false, type: 'success' });
+        }
+        if (oldDoc && oldDoc.status !== 'rejected' && newDoc.status === 'rejected') {
+           const reasonText = newDoc.rejectionReason ? ` Reason: ${newDoc.rejectionReason}` : '';
+           newNotifications.unshift({ id: `n-${Date.now()}-${newDoc.id}-rej`, title: 'Document Rejected', message: `Issue with "${newDoc.name}".${reasonText} Please check and re-upload.`, date: now, read: false, type: 'alert' });
+        }
+      });
+    }
+
+    if (updates.amountPaid !== undefined && updates.amountPaid > c.amountPaid) {
+      const diff = updates.amountPaid - c.amountPaid;
+      newNotifications.unshift({ id: `n-${Date.now()}-payment`, title: 'Payment Received', message: `A payment of ${diff.toLocaleString()} ${c.currency} has been recorded.`, date: now, read: false, type: 'success' });
+    }
+
+    if (updates.clientTasks) {
+       updates.clientTasks.forEach(task => {
+          const oldTask = c.clientTasks?.find(ot => ot.id === task.id);
+          if (oldTask && oldTask.status !== 'completed' && task.status === 'completed') {
+             const adminNotif: Notification = {
+               id: `admin-task-${Date.now()}`,
+               title: 'Client Action Completed',
+               message: `${c.companyName} completed task: "${task.title}"`,
+               date: now,
+               read: false,
+               type: 'success'
+             };
+             setAdminNotifications(prev => [adminNotif, ...prev]);
           }
-          if (oldDoc && oldDoc.status !== 'rejected' && newDoc.status === 'rejected') {
-             const reasonText = newDoc.rejectionReason ? ` Reason: ${newDoc.rejectionReason}` : '';
-             newNotifications.unshift({ id: `n-${Date.now()}-${newDoc.id}-rej`, title: 'Document Rejected', message: `Issue with "${newDoc.name}".${reasonText} Please check and re-upload.`, date: now, read: false, type: 'alert' });
-          }
-        });
-      }
+       });
+    }
 
-      if (updates.amountPaid !== undefined && updates.amountPaid > c.amountPaid) {
-        const diff = updates.amountPaid - c.amountPaid;
-        newNotifications.unshift({ id: `n-${Date.now()}-payment`, title: 'Payment Received', message: `A payment of ${diff.toLocaleString()} ${c.currency} has been recorded.`, date: now, read: false, type: 'success' });
-      }
+    const finalUpdates = { ...updates, notifications: newNotifications };
 
-      if (updates.clientTasks) {
-         updates.clientTasks.forEach(task => {
-            const oldTask = c.clientTasks?.find(ot => ot.id === task.id);
-            if (oldTask && oldTask.status !== 'completed' && task.status === 'completed') {
-               const adminNotif: Notification = {
-                 id: `admin-task-${Date.now()}`,
-                 title: 'Client Action Completed',
-                 message: `${c.companyName} completed task: "${task.title}"`,
-                 date: now,
-                 read: false,
-                 type: 'success'
-               };
-               setAdminNotifications(prev => [adminNotif, ...prev]);
-            }
-         });
-      }
-
-      return { ...c, ...updates, notifications: newNotifications };
-    }));
+    try {
+      await updateDoc(doc(db, 'clients', clientId), finalUpdates);
+    } catch (error) {
+      console.error("Error updating client:", error);
+    }
 
     if (user && user.id === clientId && user.role === 'client') {
       setUser(prev => prev ? ({
@@ -367,7 +386,7 @@ const App: React.FC = () => {
     setAdminNotifications(prev => [adminNotif, ...prev]);
   };
 
-  const handleNewChatMessage = (senderId: string, recipientId: string, text: string) => {
+  const handleNewChatMessage = async (senderId: string, recipientId: string, text: string) => {
     const now = new Date().toISOString();
     const notification: Notification = {
       id: `chat-notif-${Date.now()}`,
@@ -379,12 +398,14 @@ const App: React.FC = () => {
     };
 
     if (user?.role === 'admin') {
-      setClients(prev => prev.map(c => {
-        if (c.id === recipientId) {
-          return { ...c, notifications: [notification, ...c.notifications] };
+      const client = clients.find(c => c.id === recipientId);
+      if (client) {
+        try {
+          await updateDoc(doc(db, 'clients', recipientId), { notifications: [notification, ...client.notifications] });
+        } catch (error) {
+          console.error("Error updating notifications:", error);
         }
-        return c;
-      }));
+      }
     } else {
       const clientName = clients.find(c => c.id === senderId)?.companyName || 'A client';
       const adminNotif = { ...notification, title: `Message from ${clientName}` };
@@ -392,21 +413,37 @@ const App: React.FC = () => {
     }
   };
 
-  const handleMarkNotificationAsRead = (notificationId: string) => {
+  const handleMarkNotificationAsRead = async (notificationId: string) => {
     if (!user) return;
     if (user.role === 'admin') {
       setAdminNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
     } else {
-      setClients(prev => prev.map(c => c.email === user.email ? { ...c, notifications: c.notifications.map(n => n.id === notificationId ? { ...n, read: true } : n) } : c));
+      const client = clients.find(c => c.email === user.email);
+      if (client) {
+        const updatedNotifications = client.notifications.map(n => n.id === notificationId ? { ...n, read: true } : n);
+        try {
+          await updateDoc(doc(db, 'clients', client.id), { notifications: updatedNotifications });
+        } catch (error) {
+          console.error("Error marking notification as read:", error);
+        }
+      }
     }
   };
 
-  const handleMarkAllNotificationsAsRead = () => {
+  const handleMarkAllNotificationsAsRead = async () => {
     if (!user) return;
     if (user.role === 'admin') {
       setAdminNotifications(prev => prev.map(n => ({ ...n, read: true })));
     } else {
-      setClients(prev => prev.map(c => c.email === user.email ? { ...c, notifications: c.notifications.map(n => ({ ...n, read: true })) } : c));
+      const client = clients.find(c => c.email === user.email);
+      if (client) {
+        const updatedNotifications = client.notifications.map(n => ({ ...n, read: true }));
+        try {
+          await updateDoc(doc(db, 'clients', client.id), { notifications: updatedNotifications });
+        } catch (error) {
+          console.error("Error marking all notifications as read:", error);
+        }
+      }
     }
   };
 
