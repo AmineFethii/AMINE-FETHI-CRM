@@ -161,6 +161,20 @@ const App: React.FC = () => {
   
   const [clients, setClients] = useState<ClientData[]>([]);
   
+  const handleNavigate = (view: string) => {
+    setCurrentView(view);
+    window.history.pushState({}, '', '/' + view);
+  };
+
+  useEffect(() => {
+    const path = window.location.pathname.substring(1);
+    if (path) {
+      setCurrentView(path);
+    } else {
+      setCurrentView('dashboard');
+    }
+  }, []);
+  
   const [employees, setEmployees] = useState<Employee[]>(() => {
     const saved = localStorage.getItem('crm_employees_v2');
     return saved ? JSON.parse(saved) : INITIAL_EMPLOYEES;
@@ -216,7 +230,7 @@ const App: React.FC = () => {
 
     if (role === 'admin' && email === 'amine@admin.com') {
       setUser(ADMIN_USER);
-      setCurrentView('dashboard');
+      handleNavigate('dashboard');
       return true;
     } 
     
@@ -238,7 +252,7 @@ const App: React.FC = () => {
           setShowWelcomeModal(true);
         }
         
-        setCurrentView('dashboard');
+        handleNavigate('dashboard');
         return true;
       }
     }
@@ -247,7 +261,7 @@ const App: React.FC = () => {
 
   const handleLogout = () => {
     setUser(null);
-    setCurrentView('dashboard');
+    handleNavigate('dashboard');
     setShowWelcomeModal(false);
   };
 
@@ -456,7 +470,7 @@ const App: React.FC = () => {
       if (currentView === 'calendar') return <AdminCalendarView clients={clients} events={calendarEvents} onUpdateEvents={setCalendarEvents} />;
       if (currentView === 'finance') return <FinanceDashboard clients={clients} onUpdateClient={updateClient} />;
       if (currentView === 'documents') return <AdminDocumentsView clients={clients} onUpdateClient={updateClient} />;
-      if (currentView === 'clients') return <AdminClientsView clients={clients} onManageClient={(clientId) => { setSelectedClientIdForFollowUp(clientId); setCurrentView('follow-up'); }} onUpdateClient={updateClient} />;
+      if (currentView === 'clients') return <AdminClientsView clients={clients} onManageClient={(clientId) => { setSelectedClientIdForFollowUp(clientId); handleNavigate('follow-up'); }} onUpdateClient={updateClient} />;
       if (currentView === 'team') return <AdminEmployeesView employees={employees} onAddEmployee={handleAddEmployee} />;
       if (currentView === 'settings') return <AdminSettingsView user={user} />;
       if (currentView === 'invoicing-hub') return <AdminInvoicingView clients={clients} lang="en" />;
@@ -464,14 +478,14 @@ const App: React.FC = () => {
       if (currentView === 'tutorials') return <AdminTutorialsView lang="en" />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
       if (currentView === 'client-access') return <AdminClientAccessView clients={clients} lang="en" onAddClient={handleAddClient} onUpdateCredentials={handleUpdateCredentials} authCredentials={authCredentials} />;
-      return <AdminDashboard clients={clients} onUpdateClient={updateClient} user={user} onNavigate={setCurrentView} />;
+      return <AdminDashboard clients={clients} onUpdateClient={updateClient} user={user} onNavigate={handleNavigate} />;
     } else {
       const clientData = getCurrentClientData();
       if (!clientData) return <div>Error loading client data</div>;
       if (currentView === 'documents') return <ClientDocumentsView client={clientData} onUpload={handleDocumentUpload} />;
       if (currentView === 'settings') return <ClientSettingsView client={clientData} onUpdateProfile={(u) => updateClient(clientData.id, u)} />;
       if (currentView === 'chat') return <ChatView lang="en" user={user} clients={clients} onNotify={handleNewChatMessage} />;
-      if (currentView === 'guide') return <ClientGuideView onNavigate={(view) => setCurrentView(view)} />;
+      if (currentView === 'guide') return <ClientGuideView onNavigate={(view) => handleNavigate(view)} />;
       if (currentView === 'tutorials') return <AdminTutorialsView lang="en" />;
       if (currentView === 'tasks') return (
         <ClientTasksView 
@@ -480,10 +494,10 @@ const App: React.FC = () => {
           onAddTask={(task) => handleAddClientTask(clientData.id, task)}
           onDeleteTask={(tid) => handleDeleteClientTask(clientData.id, tid)}
           onPushUpdate={(cid) => handlePushClientUpdate(cid)}
-          onNavigate={setCurrentView} 
+          onNavigate={handleNavigate} 
         />
       );
-      return <ClientPortal client={clientData} onNavigateToDocs={() => setCurrentView('documents')} />;
+      return <ClientPortal client={clientData} onNavigateToDocs={() => handleNavigate('documents')} />;
     }
   };
 
@@ -496,9 +510,9 @@ const App: React.FC = () => {
           notifications={currentUserNotifications}
           onMarkAsRead={handleMarkNotificationAsRead}
           onMarkAllAsRead={handleMarkAllNotificationsAsRead}
-          onOpenProfile={() => setCurrentView('settings')}
+          onOpenProfile={() => handleNavigate('settings')}
           activeView={currentView}
-          onNavigate={(view) => setCurrentView(view)}
+          onNavigate={(view) => handleNavigate(view)}
           clients={clients}
         >
           {renderContent()}
