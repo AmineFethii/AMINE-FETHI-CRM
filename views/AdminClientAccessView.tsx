@@ -327,6 +327,79 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
         </div>
       </div>
 
+      {isAddClientModalOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setIsAddClientModalOpen(false)}></div>
+          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-scale-up">
+            <div className="p-6 border-b border-slate-100 bg-slate-50 flex items-center gap-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+                <Plus size={24} />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">{t.addNewClient}</h3>
+                <p className="text-sm text-slate-500">Create a new client profile and portal access</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleAddNewClient} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t.clientName}</label>
+                <input 
+                  type="text" 
+                  required
+                  value={newClientData.name || ''}
+                  onChange={(e) => setNewClientData(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{t.email}</label>
+                <input 
+                  type="email" 
+                  required
+                  value={newClientData.email || ''}
+                  onChange={(e) => setNewClientData(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Company Name</label>
+                <input 
+                  type="text" 
+                  required
+                  value={newClientData.companyName || ''}
+                  onChange={(e) => setNewClientData(prev => ({ ...prev, companyName: e.target.value }))}
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Password</label>
+                <div className="relative">
+                  <input 
+                    type={showNewPassword ? "text" : "password"}
+                    required
+                    value={newClientData.password || ''}
+                    onChange={(e) => setNewClientData(prev => ({ ...prev, password: e.target.value }))}
+                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <button 
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  >
+                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
+              </div>
+              <div className="pt-4 flex gap-3">
+                <button type="button" onClick={() => setIsAddClientModalOpen(false)} className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-100 transition-colors">{commonT.cancel}</button>
+                <button type="submit" className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all active:scale-[0.98]">{t.addNewClient}</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {modal.isOpen && modal.client && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setModal({ ...modal, isOpen: false })}></div>
@@ -350,7 +423,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
                       <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                       <input 
                         type="email" 
-                        value={modal.client.email}
+                        value={modal.client.email || ''}
                         readOnly
                         className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-600 font-medium cursor-not-allowed"
                       />
@@ -371,7 +444,7 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                        <input 
                           type={showNewPassword ? "text" : "password"}
-                          value={modal.generatedPass}
+                          value={modal.generatedPass || ''}
                           onChange={(e) => setModal(prev => ({...prev, generatedPass: e.target.value}))}
                           className="w-full pl-10 pr-12 py-3 bg-white border border-slate-200 rounded-xl font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                        />
@@ -389,7 +462,6 @@ export const AdminClientAccessView: React.FC<AdminClientAccessViewProps> = ({ cl
                 <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex gap-3">
                   <button onClick={() => setModal({ ...modal, isOpen: false })} className="flex-1 py-3 bg-white border border-slate-200 text-slate-700 font-bold rounded-xl hover:bg-slate-100 transition-colors">{commonT.cancel}</button>
                   <button onClick={handleUpdateAccess} className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 shadow-lg shadow-blue-600/20 flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
-                    {/* Fixed missing Save icon import by adding it to lucide-react imports above */}
                     <Save size={18} /> {commonT.save}
                   </button>
                 </div>
