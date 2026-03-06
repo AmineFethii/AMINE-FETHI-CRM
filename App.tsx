@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, updateDoc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, setDoc, query, where } from 'firebase/firestore';
 import { db } from './src/firebase';
 import { Layout } from './components/Layout';
 import { WhatsAppFab } from './components/WhatsAppFab';
@@ -196,16 +196,27 @@ const App: React.FC = () => {
   });
   
   useEffect(() => {
-    const q = collection(db, 'clients');
+    if (!user) return;
+    
+    let q;
+    if (user.role === 'admin') {
+      q = collection(db, 'clients');
+    } else {
+      q = query(collection(db, 'clients'), where('email', '==', user.email));
+    }
+    
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const clientsData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as ClientData[];
+      
       setClients(clientsData);
+    }, (error) => {
+      console.error("Firestore Error: ", error);
     });
     return () => unsubscribe();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     localStorage.setItem('crm_employees_v2', JSON.stringify(employees));

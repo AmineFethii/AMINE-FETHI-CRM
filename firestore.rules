@@ -1,0 +1,55 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: clients
+    // Document ID: {clientId}
+    // Fields:
+    //   - id: string (required)
+    //   - email: string (required, email)
+    //   - name: string (required)
+    //   - companyName: string (required)
+    //   - serviceType: string (required)
+    //   - progress: number (required)
+    //   - statusMessage: string (required)
+    //   - contractValue: number (required)
+    //   - amountPaid: number (required)
+    //   - paymentStatus: string (required, enum: paid, partial, pending, overdue)
+    //   - missionStartDate: string (required, date-time)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+       return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "aminep26@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isOwner(clientId) {
+       return isAuthenticated() && request.auth.token.email == get(/databases/$(database)/documents/clients/$(clientId)).data.email;
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /clients/{clientId} {
+      allow read: if isAuthenticated() && (isAdmin() || isOwner(clientId));
+      allow write: if isAdmin();
+    }
+    
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isAdmin() || request.auth.uid == userId);
+      allow write: if isAdmin() || request.auth.uid == userId;
+    }
+  }
+}
