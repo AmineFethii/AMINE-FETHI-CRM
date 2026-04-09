@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { collection, onSnapshot, doc, updateDoc, setDoc, query, where, getDoc } from 'firebase/firestore';
-import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
-import { db, auth } from './src/firebase';
+import { collection, onSnapshot, doc, updateDoc, setDoc } from 'firebase/firestore';
+import { db } from './src/firebase';
 import { Layout } from './components/Layout';
 import { WhatsAppFab } from './components/WhatsAppFab';
 import { Login } from './views/Login';
@@ -25,8 +24,6 @@ import { AdminFollowUpView } from './views/AdminFollowUpView';
 import { AdminCalendarView } from './views/AdminCalendarView';
 import { User, ClientData, Role, Notification, Employee, ClientDocument, ClientTask } from './types';
 import { ShieldCheck, Info, X, ChevronRight, User as UserIcon, Building2 } from 'lucide-react';
-
-// ... (rest of the file)
 
 // MOCK EVENTS FOR INITIAL STATE
 const INITIAL_EVENTS = [
@@ -156,57 +153,6 @@ const ADMIN_USER: User = {
   role: 'admin'
 };
 
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId: string | undefined;
-    email: string | null | undefined;
-    emailVerified: boolean | undefined;
-    isAnonymous: boolean | undefined;
-    tenantId: string | null | undefined;
-    providerInfo: {
-      providerId: string;
-      displayName: string | null;
-      email: string | null;
-      photoUrl: string | null;
-    }[];
-  }
-}
-
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
-        providerId: provider.providerId,
-        displayName: provider.displayName,
-        email: provider.email,
-        photoUrl: provider.photoURL
-      })) || []
-    },
-    operationType,
-    path
-  }
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
-
 const App: React.FC = () => {
   const [user, setUser] = useState<User | null>(null);
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -250,27 +196,16 @@ const App: React.FC = () => {
   });
   
   useEffect(() => {
-    if (!user) return;
-    
-    let q;
-    if (user.role === 'admin') {
-      q = collection(db, 'clients');
-    } else {
-      q = query(collection(db, 'clients'), where('email', '==', user.email));
-    }
-    
+    const q = collection(db, 'clients');
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const clientsData = snapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       })) as ClientData[];
-      
       setClients(clientsData);
-    }, (error) => {
-      console.error("Firestore Error: ", error);
     });
     return () => unsubscribe();
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem('crm_employees_v2', JSON.stringify(employees));
@@ -288,41 +223,40 @@ const App: React.FC = () => {
     localStorage.setItem('crm_calendar_events', JSON.stringify(calendarEvents));
   }, [calendarEvents]);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log("Auth state changed:", firebaseUser);
-      if (firebaseUser) {
-        // Fetch user role from Firestore
-        // For now, let's assume we can fetch it from a 'users' collection
-        // This is a simplification and might need adjustment based on your actual data model
-        const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
-        if (userDoc.exists()) {
-          const userData = userDoc.data() as User;
-          setUser(userData);
-        } else {
-          // Fallback if user document doesn't exist
-          setUser({
-            id: firebaseUser.uid,
-            name: firebaseUser.displayName || 'User',
-            email: firebaseUser.email || '',
-            role: 'client' // Default role
-          });
-        }
-      } else {
-        setUser(null);
-      }
-    });
-    return () => unsubscribe();
-  }, []);
-
   const handleLogin = async (email: string, pass: string, role: Role): Promise<boolean> => {
-    try {
-      await signInWithEmailAndPassword(auth, email, pass);
+    await new Promise(resolve => setTimeout(resolve, 800));
+    const storedPass = authCredentials[email.toLowerCase()];
+    if (!storedPass || storedPass !== pass) return false;
+
+    if (role === 'admin' && email === 'amine@admin.com') {
+      setUser(ADMIN_USER);
+      handleNavigate('dashboard');
       return true;
-    } catch (error) {
-      console.error("Login error:", error);
-      return false;
+    } 
+    
+    if (role === 'client') {
+      const clientData = clients.find(c => c.email.toLowerCase() === email.toLowerCase());
+      if (clientData) {
+        const isFirstTime = !clientData.lastLogin;
+        
+        updateClient(clientData.id, { lastLogin: new Date().toISOString() });
+        setUser({
+          id: clientData.id,
+          name: clientData.name,
+          email: clientData.email,
+          role: 'client',
+          avatarUrl: clientData.avatarUrl
+        });
+        
+        if (isFirstTime || !clientData.hasFilledProfile) {
+          setShowWelcomeModal(true);
+        }
+        
+        handleNavigate('dashboard');
+        return true;
+      }
     }
+    return false;
   };
 
   const handleLogout = () => {
@@ -336,7 +270,7 @@ const App: React.FC = () => {
     try {
       await setDoc(doc(db, 'clients', newClient.id), newClient);
     } catch (error) {
-      handleFirestoreError(error, OperationType.CREATE, 'clients');
+      console.error("Error adding client:", error);
     }
   };
   const handleUpdateCredentials = (email: string, pass: string) => setAuthCredentials(prev => ({ ...prev, [email.toLowerCase()]: pass }));
@@ -394,7 +328,7 @@ const App: React.FC = () => {
     try {
       await updateDoc(doc(db, 'clients', clientId), finalUpdates);
     } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `clients/${clientId}`);
+      console.error("Error updating client:", error);
     }
 
     if (user && user.id === clientId && user.role === 'client') {
@@ -483,7 +417,7 @@ const App: React.FC = () => {
         try {
           await updateDoc(doc(db, 'clients', recipientId), { notifications: [notification, ...client.notifications] });
         } catch (error) {
-          handleFirestoreError(error, OperationType.UPDATE, `clients/${recipientId}`);
+          console.error("Error updating notifications:", error);
         }
       }
     } else {
@@ -504,7 +438,7 @@ const App: React.FC = () => {
         try {
           await updateDoc(doc(db, 'clients', client.id), { notifications: updatedNotifications });
         } catch (error) {
-          handleFirestoreError(error, OperationType.UPDATE, `clients/${client.id}`);
+          console.error("Error marking notification as read:", error);
         }
       }
     }
@@ -521,7 +455,7 @@ const App: React.FC = () => {
         try {
           await updateDoc(doc(db, 'clients', client.id), { notifications: updatedNotifications });
         } catch (error) {
-          handleFirestoreError(error, OperationType.UPDATE, `clients/${client.id}`);
+          console.error("Error marking all notifications as read:", error);
         }
       }
     }
