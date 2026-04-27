@@ -4,9 +4,11 @@ import tseslint from "@typescript-eslint/eslint-plugin";
 import pluginReact from "eslint-plugin-react";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginReactRefresh from "eslint-plugin-react-refresh";
+import firebaseRulesPlugin from "@firebase/eslint-plugin-security-rules";
 
 export default [
   { ignores: ["dist/**"] },
+  firebaseRulesPlugin.configs['flat/recommended'],
   {
     files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"],
     languageOptions: {

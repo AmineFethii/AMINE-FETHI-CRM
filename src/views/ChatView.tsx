@@ -17,6 +17,8 @@ import {
 } from 'lucide-react';
 import { translations, Language } from '../translations';
 import { User, ClientData } from '../types';
+import { db } from '../firebase';
+import { collection, doc, setDoc, onSnapshot } from 'firebase/firestore';
 
 interface Message {
   id: string;
@@ -63,19 +65,21 @@ export const ChatView: React.FC<ChatViewProps> = ({ lang, user, clients, onNotif
   const isRTL = (lang as string) === 'ar';
 
   useEffect(() => {
-    const saved = localStorage.getItem('crm_chat_threads_v2');
-    if (saved) {
-      try {
-        setThreads(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse chat threads", e);
-      }
-    }
+    const unsub = onSnapshot(collection(db, 'chatThreads'), (snapshot) => {
+       const newThreads: Record<string, Thread> = {};
+       snapshot.forEach(d => {
+          newThreads[d.id] = d.data() as Thread;
+       });
+       setThreads(newThreads);
+    });
+    return unsub;
   }, []);
 
   const saveThreads = (newThreads: Record<string, Thread>) => {
     setThreads(newThreads);
-    localStorage.setItem('crm_chat_threads_v2', JSON.stringify(newThreads));
+    // Let's iterate all modified threads? No, saveThreads was used everywhere.
+    // Instead of using saveThreads blindly, let me just allow the state update
+    // But actually, we don't need `saveThreads` because our specific operations use setDoc.
   };
 
   useEffect(() => {
@@ -128,15 +132,13 @@ export const ChatView: React.FC<ChatViewProps> = ({ lang, user, clients, onNotif
       messages: []
     };
     
-    const updatedThreads = {
-      ...threads,
-      [targetId]: {
-        ...thread,
-        messages: [...(thread.messages || []), newMessage]
-      }
+    // We update via Firebase
+    const updatedThread = {
+      ...thread,
+      messages: [...(thread.messages || []), newMessage]
     };
     
-    saveThreads(updatedThreads);
+    try { setDoc(doc(db, 'chatThreads', targetId), updatedThread); } catch(err) {}
     
     if (onNotify) {
       const recipientId = isAdmin ? targetId : 'admin-portal';
@@ -182,13 +184,15 @@ export const ChatView: React.FC<ChatViewProps> = ({ lang, user, clients, onNotif
 
   const handleTogglePriority = () => {
     const thread = threads[activeThreadId] || { clientId: activeThreadId, clientName: 'Unknown', messages: [] };
-    saveThreads({ ...threads, [activeThreadId]: { ...thread, isPriority: !thread.isPriority } });
+    const updatedThread = { ...thread, isPriority: !thread.isPriority };
+    try { setDoc(doc(db, 'chatThreads', activeThreadId), updatedThread); } catch(err) {}
     setIsMenuOpen(false);
   };
 
   const handleArchiveThread = () => {
     const thread = threads[activeThreadId] || { clientId: activeThreadId, clientName: 'Unknown', messages: [] };
-    saveThreads({ ...threads, [activeThreadId]: { ...thread, isArchived: !thread.isArchived } });
+    const updatedThread = { ...thread, isArchived: !thread.isArchived };
+    try { setDoc(doc(db, 'chatThreads', activeThreadId), updatedThread); } catch(err) {}
     setIsMenuOpen(false);
   };
 

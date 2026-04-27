@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() { return request.auth != null; }
+    function isAdmin() { 
+      return isSignedIn() && (request.auth.token.email == 'aminep26@gmail.com' || request.auth.token.email == 'amine@admin.com'); 
+    }
+    function existing() { return resource.data; }
+    function incoming() { return request.resource.data; }
+    function isValidId(id) { return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$'); }
+
+    // Client Rules
+    match /clients/{clientId} {
+      function isOwner() {
+        return isSignedIn() && request.auth.token.email == existing().email;
+      }
+      function isValidClient(data) {
+        return data.keys().hasAll(['id', 'email', 'name'])
+          && data.id is string && data.id.size() <= 128
+          && data.email is string && data.email.size() <= 128
+          && data.name is string && data.name.size() <= 128;
+      }
+      
+      allow read: if isAdmin() || (isOwner() && isValidId(clientId));
+      allow list: if isAdmin() || (isSignedIn() && resource.data.email == request.auth.token.email);
+      allow create: if isAdmin() && isValidClient(incoming());
+      allow update: if (
+        isAdmin() || 
+        (isOwner() && isValidId(clientId) && isValidClient(incoming()))
+      );
+      allow delete: if isAdmin() && isValidId(clientId);
+    }
+
+    // Employees
+    match /employees/{employeeId} {
+      allow read: if isSignedIn(); // All authenticated users can read employees (team)
+      allow list: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read: if isAdmin(); // Replace with actual owner logic if needed
+      allow list: if isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // Calendar Events
+    match /calendarEvents/{eventId} {
+      allow read: if isSignedIn(); // both admins and clients can see events
+      allow list: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Chat Threads
+    match /chatThreads/{threadId} {
+      allow read: if isAdmin() || (isSignedIn() && threadId == request.auth.uid);
+      allow list: if isAdmin();
+      allow write: if isAdmin() || (isSignedIn() && threadId == request.auth.uid);
+    }
+  }
+}
+

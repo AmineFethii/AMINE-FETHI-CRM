@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "client": {
+      "title": "Client",
+      "description": "A client in the CRM.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "email": { "type": "string" },
+        "name": { "type": "string" },
+        "companyName": { "type": "string" },
+        "companyCategory": { "type": "string" },
+        "serviceType": { "type": "string" },
+        "progress": { "type": "number" },
+        "statusMessage": { "type": "string" },
+        "contractValue": { "type": "number" },
+        "amountPaid": { "type": "number" },
+        "amountPending": { "type": "number" },
+        "lastLogin": { "type": "string" },
+        "joinDate": { "type": "string" },
+        "hasFilledProfile": { "type": "boolean" }
+      },
+      "required": ["id", "email", "name"]
+    },
+    "employee": {
+      "title": "Employee",
+      "description": "An employee in the CRM.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "status": { "type": "string" },
+        "department": { "type": "string" },
+        "joinDate": { "type": "string" }
+      },
+      "required": ["id", "name", "role", "email"]
+    },
+    "notification": {
+      "title": "Notification",
+      "description": "A notification in the CRM.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "date": { "type": "string" },
+        "read": { "type": "boolean" },
+        "type": { "type": "string" }
+      },
+      "required": ["id", "title", "message", "date", "read", "type"]
+    },
+    "calendarEvent": {
+      "title": "CalendarEvent",
+      "description": "A calendar event.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "client": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "type": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "title", "date", "type"]
+    }
+  },
+  "firestore": {
+    "/clients/{clientId}": {
+      "schema": { "$ref": "#/entities/client" },
+      "description": "Contains client profiles and related CRM data."
+    },
+    "/employees/{employeeId}": {
+      "schema": { "$ref": "#/entities/employee" },
+      "description": "Contains employee information."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/notification" },
+      "description": "Contains admin notifications."
+    },
+    "/calendarEvents/{eventId}": {
+      "schema": { "$ref": "#/entities/calendarEvent" },
+      "description": "Contains calendar events."
+    }
+  }
+}

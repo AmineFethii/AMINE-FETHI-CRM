@@ -28,10 +28,10 @@ interface CalendarEvent {
 interface AdminCalendarViewProps {
   clients: ClientData[];
   events: CalendarEvent[];
-  onUpdateEvents: (events: CalendarEvent[]) => void;
+  onAddEvent: (event: CalendarEvent) => void;
 }
 
-export const AdminCalendarView: React.FC<AdminCalendarViewProps> = ({ clients, events, onUpdateEvents }) => {
+export const AdminCalendarView: React.FC<AdminCalendarViewProps> = ({ clients, events, onAddEvent }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<number | null>(new Date().getDate());
@@ -79,7 +79,7 @@ export const AdminCalendarView: React.FC<AdminCalendarViewProps> = ({ clients, e
       date: selectedDay
     };
 
-    onUpdateEvents([...events, event]);
+    onAddEvent(event);
     
     setNewTitle('');
     setNewTime('09:00');

@@ -4,8 +4,8 @@ import { Shield, ArrowRight, UserCheck, Briefcase, Lock, ShieldCheck, Server, Al
 import { Role } from '../types';
 import { translations } from '../translations';
 
-interface LoginProps {
-  onLogin: (email: string, password: string, role: Role) => Promise<boolean>;
+  interface LoginProps {
+  onLogin: (email: string, password: string, role: Role, mode: 'login' | 'register') => Promise<boolean>;
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -14,6 +14,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mode, setMode] = useState<'login' | 'register'>('login');
   
   const t = translations.en.login;
   const commonT = translations.en.common;
@@ -24,7 +25,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setIsLoading(true);
     
     try {
-      const success = await onLogin(email, password, role);
+      const success = await onLogin(email, password, role, mode);
       if (!success) {
         setError('Invalid credentials');
       }
@@ -192,12 +193,18 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               ) : (
                 <>
-                  <span>{t.accessPortal}</span>
+                  <span>{mode === 'login' ? t.accessPortal : 'Register Test Account'}</span>
                   <ArrowRight size={18} />
                 </>
               )}
             </button>
           </form>
+
+          <div className="mt-4 text-center">
+             <button type="button" onClick={() => setMode(mode === 'login' ? 'register' : 'login')} className="text-sm text-blue-600 hover:underline">
+               {mode === 'login' ? 'Need to register a test account?' : 'Already have an account? Login'}
+             </button>
+          </div>
 
           {/* Trust Footer */}
           <div className="mt-8 pt-6 border-t border-slate-100">
