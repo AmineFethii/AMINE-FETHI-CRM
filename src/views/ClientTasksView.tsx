@@ -49,7 +49,8 @@ export const ClientTasksView: React.FC<ClientTasksViewProps> = ({
   const [newTask, setNewTask] = useState({
     title: '',
     description: '',
-    priority: 'medium' as ClientTask['priority']
+    priority: 'medium' as ClientTask['priority'],
+    dueDate: ''
   });
 
   const tasks = client.clientTasks || [];
@@ -73,9 +74,10 @@ export const ClientTasksView: React.FC<ClientTasksViewProps> = ({
       title: newTask.title,
       description: newTask.description || 'Personal task for mission follow-up',
       status: 'pending',
-      priority: newTask.priority
+      priority: newTask.priority,
+      dueDate: newTask.dueDate || undefined
     });
-    setNewTask({ title: '', description: '', priority: 'medium' });
+    setNewTask({ title: '', description: '', priority: 'medium', dueDate: '' });
     setIsAdding(false);
   };
 
@@ -123,7 +125,7 @@ export const ClientTasksView: React.FC<ClientTasksViewProps> = ({
                 : 'bg-blue-600 text-white shadow-blue-600/20 hover:bg-blue-700'
             }`}
           >
-            {isAdding ? 'Cancel' : <><Plus size={18} /> New Action Item</>}
+            {isAdding ? t.taskForm.cancel : <><Plus size={18} /> {t.taskForm.title}</>}
           </button>
         </div>
       </div>
@@ -143,21 +145,21 @@ export const ClientTasksView: React.FC<ClientTasksViewProps> = ({
       {isAdding && (
         <div className="bg-white rounded-3xl border border-blue-200 p-6 shadow-xl shadow-blue-600/5 animate-slide-in-down">
           <form onSubmit={handleCreateTask} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Task Name</label>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="md:col-span-1 space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t.taskForm.taskName}</label>
                 <input 
                   type="text" 
                   autoFocus
                   required
                   value={newTask.title}
                   onChange={e => setNewTask({...newTask, title: e.target.value})}
-                  placeholder="What needs to be done?"
+                  placeholder={t.taskForm.taskNamePlaceholder}
                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-semibold"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Priority</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t.taskForm.priority}</label>
                 <div className="flex gap-2 p-1 bg-slate-100 rounded-xl border border-slate-200 h-[50px]">
                   {(['low', 'medium', 'high'] as const).map(p => (
                     <button
@@ -175,13 +177,22 @@ export const ClientTasksView: React.FC<ClientTasksViewProps> = ({
                   ))}
                 </div>
               </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t.taskForm.dueDate}</label>
+                <input 
+                  type="date" 
+                  value={newTask.dueDate}
+                  onChange={e => setNewTask({...newTask, dueDate: e.target.value})}
+                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all font-semibold"
+                />
+              </div>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">Context / Description</label>
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-1">{t.taskForm.description}</label>
               <textarea 
                 value={newTask.description}
                 onChange={e => setNewTask({...newTask, description: e.target.value})}
-                placeholder="Brief notes about this task..."
+                placeholder={t.taskForm.descriptionPlaceholder}
                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all resize-none min-h-[80px] text-sm"
               />
             </div>
@@ -190,7 +201,7 @@ export const ClientTasksView: React.FC<ClientTasksViewProps> = ({
                 type="submit"
                 className="bg-slate-900 text-white px-8 py-3 rounded-xl font-bold text-sm hover:bg-slate-800 transition-all flex items-center gap-2"
               >
-                <Send size={16} /> Save Action Item
+                <Send size={16} /> {t.taskForm.save}
               </button>
             </div>
           </form>
@@ -277,8 +288,13 @@ export const ClientTasksView: React.FC<ClientTasksViewProps> = ({
                              task.priority === 'medium' ? 'bg-blue-50 text-blue-600 border-blue-100' :
                              'bg-slate-50 text-slate-500 border-slate-100'
                            }`}>
-                             {task.priority} Priority
+                           {task.priority} Priority
                            </span>
+                           {task.dueDate && (
+                             <span className="text-[10px] text-amber-600 font-bold uppercase flex items-center gap-1">
+                               <Clock size={10} /> Due {new Date(task.dueDate).toLocaleDateString()}
+                             </span>
+                           )}
                            <span className="text-[10px] text-slate-400 font-bold uppercase flex items-center gap-1">
                               <Calendar size={10} /> Created {new Date(task.createdAt).toLocaleDateString()}
                            </span>

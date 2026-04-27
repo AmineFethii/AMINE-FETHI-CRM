@@ -33,7 +33,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
   const isComplete = client.progress === 100;
 
   // Get recent notifications for the summary card
-  const recentNotifications = client.notifications.slice(0, 3);
+  const recentNotifications = (client.notifications || []).slice(0, 3);
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
@@ -251,7 +251,7 @@ export const ClientPortal: React.FC<ClientPortalProps> = ({ client, onNavigateTo
               <div className="absolute left-[39px] top-8 bottom-8 w-0.5 bg-slate-100"></div>
 
               <div className="space-y-6">
-                {client.timeline.map((step, idx) => {
+                {(client.timeline || []).map((step, idx) => {
                   const isActive = step.status === 'in-progress';
                   const isDone = step.status === 'completed';
 

@@ -110,6 +110,17 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
         {/* Right Side: Login Form */}
         <div className="md:w-1/2 p-12 flex flex-col justify-center bg-white relative">
+          <div className="absolute top-6 right-6 z-20">
+            <button
+              onClick={() => {
+                localStorage.clear();
+                window.location.reload();
+              }}
+              className="text-xs font-bold px-3 py-1.5 rounded-full bg-slate-100 text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+            >
+              Reset Data
+            </button>
+          </div>
           <div className="mb-8">
             <h3 className="text-2xl font-bold text-slate-900 mb-2">{t.welcome}</h3>
             <p className="text-slate-500">{t.selectType}</p>

@@ -1,4 +1,3 @@
-
 export type Role = 'admin' | 'client';
 
 export interface User {
@@ -59,6 +58,8 @@ export interface ClientDocument {
 export interface ClientData {
   id: string;
   email: string;
+  password?: string;
+  role?: Role;
   name: string;
   firstName?: string;
   lastName?: string;
@@ -77,19 +78,19 @@ export interface ClientData {
   companyNameProposals?: string[]; // Three propositions
   businessActivity?: string;
   annualTurnover?: string;
-  desiredMonthlySalary?: '5000' | '7000' | '8500';
+  desiredMonthlySalary?: string;
   moneyTransferMethod?: string;
-  monthlyTransfer?: 'Oui' | 'Non';
+  monthlyTransfer?: string;
   paymentPlatforms?: string; // PayPal, Payoneer, etc.
-  existingEntityLLCLTD?: 'Oui' | 'Non';
-  hasEmployees?: 'Oui' | 'Non';
+  existingEntityLLCLTD?: string;
+  hasEmployees?: string;
   employeeCount?: string;
   ownerCount?: string;
   plannedStartDate?: string;
   monthlyBusinessExpenses?: string;
 
   // Multi-owner fields
-  hasSecondOwner?: 'Oui' | 'Non';
+  hasSecondOwner?: string;
   secondOwnerFirstName?: string;
   secondOwnerLastName?: string;
   secondOwnerNationality?: string;

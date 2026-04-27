@@ -24,8 +24,8 @@ export const AdminSettingsView: React.FC<AdminSettingsViewProps> = ({ user }) =>
   const commonT = translations.en.common;
   
   // Mock form state
-  const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(user.email);
+  const [name, setName] = useState(user.name || '');
+  const [email, setEmail] = useState(user.email || '');
 
   return (
     <div className="space-y-6 animate-fade-in">

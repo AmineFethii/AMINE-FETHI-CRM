@@ -53,8 +53,9 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
   }, [initialClientId]);
 
   const filteredClients = clients.filter(c => {
-    const matchesSearch = (c.companyName || '').toLowerCase().includes((searchTerm || '').toLowerCase()) || 
-                          (c.name || '').toLowerCase().includes((searchTerm || '').toLowerCase());
+    const searchLower = (searchTerm || '').toLowerCase();
+    const matchesSearch = (c.companyName || '').toLowerCase().includes(searchLower) || 
+                          (c.name || '').toLowerCase().includes(searchLower);
     const matchesFilter = filterType === 'all' || 
                           (filterType === 'completed' && c.progress === 100) ||
                           (filterType === 'in-progress' && c.progress < 100);
@@ -101,7 +102,7 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
   const handleAddTaskToClient = () => {
     if (!localClient || !newTaskTitle.trim()) return;
     const newTask: ClientTask = {
-      id: `task-${Date.now()}`,
+      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       title: newTaskTitle,
       description: 'Requirement from Legal Advisor',
       status: 'pending',
@@ -279,7 +280,7 @@ export const AdminFollowUpView: React.FC<AdminFollowUpViewProps> = ({ clients, o
                       <div className="bg-blue-900 rounded-2xl p-6 text-white shadow-xl shadow-blue-900/20 relative overflow-hidden group">
                          <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform"></div>
                          <p className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Public Status Display</p>
-                         <textarea value={localClient.statusMessage} onChange={(e) => setLocalClient({...localClient, statusMessage: e.target.value})} className="w-full bg-transparent border-none p-0 text-sm font-semibold text-slate-200 focus:ring-0 resize-none min-h-[60px]" />
+                         <textarea value={localClient.statusMessage || ''} onChange={(e) => setLocalClient({...localClient, statusMessage: e.target.value})} className="w-full bg-transparent border-none p-0 text-sm font-semibold text-slate-200 focus:ring-0 resize-none min-h-[60px]" />
                          <div className="mt-4 flex justify-between items-center text-[10px] font-black uppercase text-blue-400"><span>Mission Progress</span><span>{localClient.progress}%</span></div>
                          <div className="mt-2 w-full bg-white/10 h-1.5 rounded-full overflow-hidden"><div className="h-full bg-blue-500 transition-all duration-700" style={{ width: `${localClient.progress}%` }}></div></div>
                       </div>

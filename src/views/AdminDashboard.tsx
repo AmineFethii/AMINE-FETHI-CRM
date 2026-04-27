@@ -118,7 +118,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
     
-    const updatedDocs = client.documents.map(d => 
+    const updatedDocs = (client.documents || []).map(d => 
       d.id === docId ? { ...d, status: 'approved' as const, rejectionReason: undefined } : d
     );
     onUpdateClient(clientId, { documents: updatedDocs });
@@ -130,7 +130,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
     const client = clients.find(c => c.id === clientId);
     if (!client) return;
 
-    const updatedDocs = client.documents.map(d => 
+    const updatedDocs = (client.documents || []).map(d => 
       d.id === docId ? { ...d, status: 'rejected' as const, rejectionReason: rejectionReason } : d
     );
     
@@ -166,12 +166,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
     document.body.removeChild(link);
   };
 
-  const pendingActionsCount = clients.reduce((acc, client) => acc + client.documents.filter(d => d.status === 'uploaded').length, 0);
+  const pendingActionsCount = clients.reduce((acc, client) => acc + (client.documents || []).filter(d => d.status === 'uploaded').length, 0);
   const activeClientsCount = clients.filter(c => c.progress < 100).length;
   const completedClientsCount = clients.filter(c => c.progress === 100).length;
   
   const globalPendingDocs = clients.flatMap(client => 
-    client.documents
+    (client.documents || [])
       .filter(d => d.status === 'uploaded')
       .map(d => ({ ...d, client }))
   );
@@ -179,7 +179,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
   const filteredClients = clients.filter(c => {
     let matchesFilter = true;
     if (filterType === 'attention') {
-       matchesFilter = c.documents.some(d => d.status === 'uploaded') || c.paymentStatus === 'overdue';
+       matchesFilter = (c.documents || []).some(d => d.status === 'uploaded') || c.paymentStatus === 'overdue';
     } else if (filterType === 'completed') {
        matchesFilter = c.progress === 100;
     }
@@ -407,7 +407,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                 <tbody className="divide-y divide-slate-50">
                   {filteredClients.length > 0 ? (
                     filteredClients.map(client => {
-                       const hasPending = client.documents.some(d => d.status === 'uploaded');
+                       const hasPending = (client.documents || []).some(d => d.status === 'uploaded');
                        return (
                         <tr 
                           key={client.id} 
@@ -510,10 +510,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                   <div className="p-5 border-b border-slate-100 bg-slate-50/30">
                      <div className="flex items-center justify-between mb-3">
                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">{t.reviewQueue}</h4>
-                       {selectedClient.documents.filter(d => d.status === 'uploaded').length > 0 && <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>}
+                       {(selectedClient.documents || []).filter(d => d.status === 'uploaded').length > 0 && <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>}
                      </div>
                      <div className="space-y-3">
-                       {selectedClient.documents.map(doc => (
+                       {(selectedClient.documents || []).map(doc => (
                          <div key={doc.id} className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm transition-all hover:shadow-md">
                            <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
@@ -544,7 +544,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
                            ) : null}
                          </div>
                        ))}
-                       {selectedClient.documents.length === 0 && <p className="text-xs text-slate-400 italic text-center py-2">{t.noPending}</p>}
+                       {(selectedClient.documents || []).length === 0 && <p className="text-xs text-slate-400 italic text-center py-2">{t.noPending}</p>}
                      </div>
                   </div>
                   <div className="p-5">
