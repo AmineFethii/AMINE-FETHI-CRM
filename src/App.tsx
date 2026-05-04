@@ -27,14 +27,14 @@ import { User, ClientData, Role, Notification, Employee, ClientDocument, ClientT
 import { ShieldCheck, Info, X, ChevronRight, User as UserIcon, Building2 } from 'lucide-react';
 
 // MOCK EVENTS FOR INITIAL STATE
-const INITIAL_EVENTS = [
+export const INITIAL_EVENTS = [
   { id: 'e1', title: 'Consultation - SARL Setup', type: 'meeting', time: '10:00', duration: '1h', client: 'MPL DIGITAL', date: 15 },
   { id: 'e2', title: 'Tax Filing Deadline', type: 'deadline', time: 'All Day', date: 20 },
   { id: 'e3', title: 'Follow-up Call', type: 'followup', time: '14:30', client: 'The Brain', date: 10 },
 ];
 
 // COMPREHENSIVE RESTORED DATABASE
-const INITIAL_CLIENTS: ClientData[] = [
+export const INITIAL_CLIENTS: ClientData[] = [
   {
     id: 'c-demo',
     email: 'demo@newclient.com',

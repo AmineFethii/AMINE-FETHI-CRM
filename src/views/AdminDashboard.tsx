@@ -20,7 +20,8 @@ import {
   User
 } from 'lucide-react';
 import { ClientData, TimelineStep, User as UserType } from '../types';
-import { translations } from '../translations';
+import { seedDatabase } from '../seed';
+import { INITIAL_CLIENTS, INITIAL_EVENTS } from '../App';
 
 interface AdminDashboardProps {
   clients: ClientData[];
@@ -232,7 +233,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ clients, onUpdat
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto">
+          <div className="flex flex-col sm:flex-row gap-4 w-full xl:w-auto items-center">
+            <button 
+              onClick={() => seedDatabase(INITIAL_CLIENTS, INITIAL_EVENTS)}
+              className="px-4 py-2 bg-purple-600/20 text-purple-300 font-bold text-sm tracking-wide rounded-xl border border-purple-500/30 hover:bg-purple-600/30 transition-colors shadow-sm whitespace-nowrap"
+            >
+              Sync Test Data
+            </button>
             <div className="hidden md:flex items-center bg-white/5 border border-white/10 rounded-2xl p-2 backdrop-blur-sm shadow-lg">
                <div className="px-5 py-1 text-center border-r border-white/10">
                   <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider mb-0.5">{translations.en.common.pending}</p>

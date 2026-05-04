@@ -29,7 +29,7 @@ service cloud.firestore {
       
       allow read: if isAdmin() || (isOwner() && isValidId(clientId));
       allow list: if isAdmin() || (isSignedIn() && resource.data.email == request.auth.token.email);
-      allow create: if isAdmin() && isValidClient(incoming());
+      allow create: if isAdmin() || (isSignedIn() && clientId == request.auth.uid && isValidClient(incoming()));
       allow update: if (
         isAdmin() || 
         (isOwner() && isValidId(clientId) && isValidClient(incoming()))
