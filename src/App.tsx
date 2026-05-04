@@ -205,7 +205,7 @@ const App: React.FC = () => {
     return () => unsubs.forEach(u => u());
   }, [user]);
 
-  const handleLogin = async (email: string, pass: string, role: Role, mode: 'login' | 'register' = 'login'): Promise<boolean> => {
+  const handleLogin = async (email: string, pass: string, role: Role, mode: 'login' | 'register' = 'login'): Promise<boolean | string> => {
     try {
       if (mode === 'register') {
         const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
@@ -282,9 +282,9 @@ const App: React.FC = () => {
             return true;
          }
       }
-    } catch (e) {
+    } catch (e: any) {
        console.error("Login Error:", e);
-       return false;
+       return e?.message || 'An error occurred during authentication';
     }
     return false;
   };

@@ -1,10 +1,10 @@
 {
-  "projectId": "gen-lang-client-0384245390",
-  "appId": "1:752496999470:web:4def8508a79e76ad37f3bf",
-  "apiKey": "AIzaSyBu5hpHH38bQCEjm-xXYQxSNCSYYz-CMAQ",
-  "authDomain": "gen-lang-client-0384245390.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-969349e3-07fc-468a-8933-a8a6988b0d9c",
-  "storageBucket": "gen-lang-client-0384245390.firebasestorage.app",
-  "messagingSenderId": "752496999470",
-  "measurementId": ""
+  "projectId": "amine-fethi-business-crm",
+  "appId": "1:165254151660:web:92bce16b3893db0d0cd4c9",
+  "apiKey": "AIzaSyCKseEPMgt5Ds5cZyxZmAFwWWnyDLqwm3Y",
+  "authDomain": "amine-fethi-business-crm.firebaseapp.com",
+  "firestoreDatabaseId": "(default)",
+  "storageBucket": "amine-fethi-business-crm.firebasestorage.app",
+  "messagingSenderId": "165254151660",
+  "measurementId": "G-QH604EHNWD"
 }

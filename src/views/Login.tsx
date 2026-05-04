@@ -5,7 +5,7 @@ import { Role } from '../types';
 import { translations } from '../translations';
 
   interface LoginProps {
-  onLogin: (email: string, password: string, role: Role, mode: 'login' | 'register') => Promise<boolean>;
+  onLogin: (email: string, password: string, role: Role, mode: 'login' | 'register') => Promise<boolean | string>;
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -25,12 +25,12 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setIsLoading(true);
     
     try {
-      const success = await onLogin(email, password, role, mode);
-      if (!success) {
-        setError('Invalid credentials');
+      const result = await onLogin(email, password, role, mode);
+      if (result !== true) {
+        setError(typeof result === 'string' ? result : 'Invalid credentials');
       }
-    } catch (err) {
-      setError('An error occurred');
+    } catch (err: any) {
+      setError(err?.message || 'An error occurred');
     } finally {
       setIsLoading(false);
     }
